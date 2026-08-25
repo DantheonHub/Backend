@@ -10,3 +10,7 @@ Registro breve de cada clase, en el orden real en que se dieron. Sin fechas de c
   - **Proyecto integrador (grupal):** cada integrante tiene que generar sus propias ramas, commits y subidas — no vale que una sola persona centralice todo el trabajo del grupo. El profesor va a revisar el historial de commits de cada rama para evaluar la participación individual dentro del trabajo grupal, así que la prolijidad en los commits (mensajes claros, no subir archivos innecesarios) también cuenta para la evaluación.
   - **Entregas:** los repositorios de entrega tienen que estar en público (no hace falta agregar al profesor como colaborador) y se comparte el link — así se puede acceder y revisar sin gestionar permisos.
   - **Consultas entre clases:** el grupo de Telegram de la cursada es el canal recomendado para dudas fuera del horario de clase.
+
+- **Clase 03:** Resolución de dudas de Git (diferencias entre `git stash pop/apply/drop/clear`, resolución de conflictos de merge en consola y VS Code, `git merge --abort`, creación de Pull Requests con reviewer y etiquetas). Cierre de Unidad 1 e inicio de **Unidad 2 (JavaScript):** tipos de lenguajes de programación, scripting, EcmaScript y motores de JS, TypeScript, variables (`var`/`let`/`const`), tipado dinámico, tipos de datos, condicionales, objetos y tipos de funciones (declaración, expresión, anónima, arrow, parámetro vs. argumento).
+
+  **Logística de la cursada:** el viernes hay clase sincrónica compartida con la comisión de Frontend, como repaso de JavaScript para quienes cursan ambas materias.

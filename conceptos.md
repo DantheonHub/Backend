@@ -6,44 +6,63 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
 
 ## Índice
 
-- [Unidad 1 — Repositorios: Administración de proyectos y código](#unidad-1--repositorios-administración-de-proyectos-y-código)
-  - [1. Sistemas de Control de Versiones (VCS)](#1-sistemas-de-control-de-versiones-vcs)
-    - [1.1 ¿Qué es un VCS?](#11-qué-es-un-vcs)
-    - [1.2 Tipos de sistemas de control de versiones](#12-tipos-de-sistemas-de-control-de-versiones)
-    - [1.3 Ejemplos de VCS y repositorios online](#13-ejemplos-de-vcs-y-repositorios-online)
-  - [2. Git](#2-git)
-    - [2.1 ¿Qué es Git?](#21-qué-es-git)
-    - [2.2 Conceptos clave](#22-conceptos-clave)
-    - [2.3 Áreas de trabajo y flujo local](#23-áreas-de-trabajo-y-flujo-local)
-    - [2.4 Estados de los archivos](#24-estados-de-los-archivos)
-    - [2.5 Configuración inicial de Git](#25-configuración-inicial-de-git)
-    - [2.6 Comandos de consola / sistema operativo (no son de Git)](#26-comandos-de-consola--sistema-operativo-no-son-de-git)
-  - [3. Comandos de Git](#3-comandos-de-git)
-    - [3.1 Tabla general de comandos](#31-tabla-general-de-comandos)
-    - [3.2 git init / git clone](#32-git-init--git-clone)
-    - [3.3 git add / git status](#33-git-add--git-status)
-    - [3.4 git commit / git push / git pull / git fetch](#34-git-commit--git-push--git-pull--git-fetch)
-    - [3.5 git restore](#35-git-restore)
-    - [3.6 git stash](#36-git-stash)
-    - [3.7 git branch, git checkout y git switch](#37-git-branch-git-checkout-y-git-switch)
-    - [3.8 git merge, squash y rebase](#38-git-merge-squash-y-rebase)
-  - [4. Flujo de trabajo completo (Git Workflow)](#4-flujo-de-trabajo-completo-git-workflow)
-  - [5. .gitignore](#5-gitignore)
-  - [6. GitFlow](#6-gitflow)
-  - [7. Repositorios remotos y SSH](#7-repositorios-remotos-y-ssh)
-    - [7.1 ¿Por qué SSH y no usuario/contraseña?](#71-por-qué-ssh-y-no-usuariocontraseña)
-    - [7.2 Generar una clave SSH](#72-generar-una-clave-ssh)
-    - [7.3 Cargar la clave pública en GitHub](#73-cargar-la-clave-pública-en-github)
-    - [7.4 Clonar un repositorio con SSH y el error más común](#74-clonar-un-repositorio-con-ssh-y-el-error-más-común)
-    - [7.5 Crear un repositorio remoto en GitHub](#75-crear-un-repositorio-remoto-en-github)
-    - [7.6 Colaboradores](#76-colaboradores)
-  - [8. Seguridad y reglas de protección de ramas (GitHub)](#8-seguridad-y-reglas-de-protección-de-ramas-github)
-    - [8.1 Pull Request (PR / MR)](#81-pull-request-pr--mr)
-    - [8.2 Branch protection rules](#82-branch-protection-rules)
-    - [8.3 Eliminación automática de ramas al mergear](#83-eliminación-automática-de-ramas-al-mergear)
-  - [9. Herramientas complementarias](#9-herramientas-complementarias)
-    - [9.1 Git Graph (extensión de VS Code)](#91-git-graph-extensión-de-vs-code)
-  - [10. Programas utilizados en la materia](#10-programas-utilizados-en-la-materia)
+- [Backend — Biblioteca de Conceptos](#backend--biblioteca-de-conceptos)
+  - [Índice](#índice)
+  - [Unidad 1 — Repositorios: Administración de proyectos y código](#unidad-1--repositorios-administración-de-proyectos-y-código)
+    - [1. Sistemas de Control de Versiones (VCS)](#1-sistemas-de-control-de-versiones-vcs)
+      - [1.1 ¿Qué es un VCS?](#11-qué-es-un-vcs)
+      - [1.2 Tipos de sistemas de control de versiones](#12-tipos-de-sistemas-de-control-de-versiones)
+      - [1.3 Ejemplos de VCS y repositorios online](#13-ejemplos-de-vcs-y-repositorios-online)
+    - [2. Git](#2-git)
+      - [2.1 ¿Qué es Git?](#21-qué-es-git)
+      - [2.2 Conceptos clave](#22-conceptos-clave)
+      - [2.3 Áreas de trabajo y flujo local](#23-áreas-de-trabajo-y-flujo-local)
+      - [2.4 Estados de los archivos](#24-estados-de-los-archivos)
+      - [2.5 Configuración inicial de Git](#25-configuración-inicial-de-git)
+      - [2.6 Comandos de consola / sistema operativo (no son de Git)](#26-comandos-de-consola--sistema-operativo-no-son-de-git)
+    - [3. Comandos de Git](#3-comandos-de-git)
+      - [3.1 Tabla general de comandos](#31-tabla-general-de-comandos)
+      - [3.2 git init / git clone](#32-git-init--git-clone)
+      - [3.3 git add / git status](#33-git-add--git-status)
+      - [3.4 git commit / git push / git pull / git fetch](#34-git-commit--git-push--git-pull--git-fetch)
+      - [3.5 git restore](#35-git-restore)
+      - [3.6 git stash](#36-git-stash)
+      - [3.7 git branch, git checkout y git switch](#37-git-branch-git-checkout-y-git-switch)
+      - [3.8 git merge, squash y rebase](#38-git-merge-squash-y-rebase)
+      - [3.9 Resolución de conflictos de merge](#39-resolución-de-conflictos-de-merge)
+    - [4. Flujo de trabajo completo (Git Workflow)](#4-flujo-de-trabajo-completo-git-workflow)
+    - [5. .gitignore](#5-gitignore)
+    - [6. GitFlow](#6-gitflow)
+    - [7. Repositorios remotos y SSH](#7-repositorios-remotos-y-ssh)
+      - [7.1 ¿Por qué SSH y no usuario/contraseña?](#71-por-qué-ssh-y-no-usuariocontraseña)
+      - [7.2 Generar una clave SSH](#72-generar-una-clave-ssh)
+      - [7.3 Cargar la clave pública en GitHub](#73-cargar-la-clave-pública-en-github)
+      - [7.4 Clonar un repositorio con SSH y el error más común](#74-clonar-un-repositorio-con-ssh-y-el-error-más-común)
+      - [7.5 Crear un repositorio remoto en GitHub](#75-crear-un-repositorio-remoto-en-github)
+      - [7.6 Colaboradores](#76-colaboradores)
+    - [8. Seguridad y reglas de protección de ramas (GitHub)](#8-seguridad-y-reglas-de-protección-de-ramas-github)
+      - [8.1 Pull Request (PR / MR)](#81-pull-request-pr--mr)
+      - [8.2 Branch protection rules](#82-branch-protection-rules)
+      - [8.3 Eliminación automática de ramas al mergear](#83-eliminación-automática-de-ramas-al-mergear)
+    - [9. Herramientas complementarias](#9-herramientas-complementarias)
+      - [9.1 Git Graph (extensión de VS Code)](#91-git-graph-extensión-de-vs-code)
+    - [10. Programas utilizados en la materia](#10-programas-utilizados-en-la-materia)
+  - [Ejemplo práctico — Sesión de consola: SSH, ramas y stash](#ejemplo-práctico--sesión-de-consola-ssh-ramas-y-stash)
+  - [Unidad 2 — JavaScript](#unidad-2--javascript)
+    - [11. Tipos de lenguajes de programación](#11-tipos-de-lenguajes-de-programación)
+    - [12. Scripts y lenguajes de scripting](#12-scripts-y-lenguajes-de-scripting)
+    - [13. EcmaScript y motores de JavaScript](#13-ecmascript-y-motores-de-javascript)
+    - [14. ¿Y TypeScript?](#14-y-typescript)
+    - [15. Sintaxis básica de uso frecuente](#15-sintaxis-básica-de-uso-frecuente)
+    - [16. Variables en JavaScript](#16-variables-en-javascript)
+    - [17. Tipos de datos](#17-tipos-de-datos)
+    - [18. Condicionales](#18-condicionales)
+    - [19. Objetos](#19-objetos)
+    - [20. Funciones](#20-funciones)
+      - [20.1 Formas de definir una función](#201-formas-de-definir-una-función)
+      - [20.2 Parámetro vs. argumento](#202-parámetro-vs-argumento)
+      - [20.3 Funciones como objetos y callbacks (introducción)](#203-funciones-como-objetos-y-callbacks-introducción)
+  - [Ejemplo práctico — Tipos de funciones en JavaScript](#ejemplo-práctico--tipos-de-funciones-en-javascript)
 
 ---
 
@@ -357,7 +376,28 @@ Puntos importantes:
 - El stash es **del repositorio**, no de una rama en particular: se puede guardar un cambio parado en `develop` y recuperarlo estando parado en otra rama.
 - `stash@{0}` siempre es el más reciente; cada nuevo `stash` corre a los anteriores un número más abajo en la pila.
 - Si el archivo todavía está en estado *untracked* (nunca se le hizo `git add`), `git stash` puede no detectarlo — primero hay que agregarlo al staging con `git add` para que el stash lo tome.
-- Existe también `git stash pop --index N` o `git stash apply` para aplicar un stash sin sacarlo de la pila, pero lo esencial para el uso diario es `push`, `list` y `pop`.
+
+**Diferencia entre `pop`, `apply`, `drop` y `clear`:**
+
+Una buena forma de pensarlo (analogía usada en clase): el stash es como una estantería de la que sacás un documento para trabajar.
+
+| Comando | Qué hace | Analogía |
+|---|---|---|
+| `git stash pop` | Aplica el stash **y lo borra** de la pila. | Sacás el original de la estantería — la estantería se queda vacía en ese lugar. |
+| `git stash apply` | Aplica el stash pero **lo deja también en la pila** (no lo borra). | Sacás una fotocopia y la dejás en la mesa — el original sigue en la estantería. |
+| `git stash drop` | Elimina **un stash puntual** de la pila, sin aplicarlo. | Tirás un documento puntual de la estantería. |
+| `git stash clear` | Elimina **todos** los stashes de una — no se puede deshacer. | Vaciás toda la estantería. Usar con mucho cuidado. |
+
+```bash
+git stash apply           # Aplica el último stash, pero lo mantiene en la lista
+git stash apply stash@{2} # Aplica un stash puntual (no el último) por su índice
+git stash drop stash@{1}  # Elimina un stash puntual sin aplicarlo
+git stash clear           # Elimina TODOS los stashes — irreversible
+```
+
+**Comportamiento ante conflictos:** si al hacer `git stash pop` los cambios guardados chocan con cambios que llegaron mientras tanto a la rama (por ejemplo, después de un `git pull` alguien más modificó las mismas líneas), Git **no borra el stash automáticamente** — avisa que hubo conflicto y deja el stash guardado "por las dudas", para no perder ese respaldo hasta que el conflicto se resuelva a mano. Recién ahí conviene borrarlo manualmente si ya no hace falta.
+
+Se puede hacer todo esto también desde una interfaz gráfica (por ejemplo, clic derecho sobre un stash en Git Graph → *Drop*), que además suele pedir una confirmación antes de borrar.
 
 #### 3.7 git branch, git checkout y git switch
 
@@ -394,6 +434,43 @@ feature:      C1─C2─C3          se combinan en S)                     nuevos
 > ⚠️ **Rebase reescribe el historial.** Si se está trabajando en equipo y alguien ya tiene clonada la rama sobre la que se hace rebase, esa reescritura puede generar conflictos graves para el resto — porque los commits "viejos" y los "reescritos" no coinciden. Si se usa rebase en equipo, hay que avisar antes a todos los que están trabajando sobre esa rama (en muchos casos, lo más simple es que vuelvan a clonar el repo para evitar conflictos).
 
 **Recomendación para empezar:** usar `merge`. Es la estrategia más simple y menos riesgosa. Recién cuando se tiene soltura con Git conviene animarse a usar `rebase`, y siempre avisando al equipo.
+
+#### 3.9 Resolución de conflictos de merge
+
+Un **conflicto** ocurre cuando dos ramas modificaron **la misma línea del mismo archivo** de forma distinta, y Git no puede decidir por sí solo cuál versión priorizar al fusionarlas. Si dos ramas tocan archivos distintos, o líneas distintas del mismo archivo, Git generalmente resuelve el merge automáticamente sin pedir intervención.
+
+**Paso previo obligatorio:** antes de poder hacer un merge, el working directory tiene que estar limpio (sin cambios pendientes sin commitear). Si hay cambios pendientes, Git rechaza el merge directamente con un error — no llega siquiera a evaluar si hay conflicto o no. Hay que resolver eso primero (con un `commit` o un `git stash`) antes de reintentar el merge.
+
+**Cuando sí hay conflicto real:**
+
+```
+main:     ...──C7 (modificó línea X de archivo.js)
+                    \
+feature:             C8 (modificó la misma línea X de archivo.js)
+```
+
+1. Al intentar `git merge feature`, Git detiene el proceso y marca el/los archivo(s) en conflicto.
+2. En VS Code, el archivo aparece con un ícono de advertencia (⚠️), y **dentro** del archivo Git inserta marcadores especiales delimitando ambas versiones en conflicto (la propia y la entrante).
+3. VS Code ofrece botones visuales sobre cada bloque en conflicto:
+   - **Aceptar cambios actuales** (*current*): mantiene la versión que ya tenías vos.
+   - **Aceptar cambios entrantes** (*incoming*): toma la versión que viene de la otra rama.
+   - **Aceptar ambos cambios**: combina las dos versiones, una después de la otra.
+   - **Comparar cambios**: muestra ambas versiones lado a lado para decidir con más detalle.
+4. Una vez resuelto el contenido del archivo, hay que agregarlo al staging (`git add`) para marcarlo como "conflicto resuelto".
+5. Se completa el merge con un commit (a veces Git ya deja armado el mensaje del merge, solo hay que confirmarlo).
+
+También se puede resolver íntegramente por consola: Git va guiando con mensajes explícitos sobre qué archivos están en conflicto y qué falta hacer. La recomendación práctica es usar la consola para operaciones simples (clonar, traer ramas) y una interfaz visual como VS Code cuando hay que resolver conflictos en varios archivos a la vez — ahí ayuda mucho más ver el conflicto resaltado.
+
+**Si te arrepentís en medio de la resolución** y preferís cancelar todo el intento de merge para volver al estado anterior (sin conflicto), el comando estándar de Git para esto es:
+
+```bash
+git merge --abort
+```
+
+**Recomendaciones para reducir conflictos en equipo:**
+- Cada persona debería trabajar sobre **su propia rama** (una rama por feature/ficha), evitando que dos personas trabajen a la vez sobre la misma rama.
+- Si dos personas sí trabajan sobre el mismo archivo en ramas distintas, la probabilidad de conflicto al fusionar aumenta — es esperable y no significa que algo esté mal, simplemente hay que resolverlo a mano.
+- Ningún error de Git es irreversible: si un merge sale mal o genera conflictos inesperados, siempre hay una forma de deshacerlo o cancelarlo (`git merge --abort`, `git reset`, etc.) — no hace falta borrar y volver a clonar todo el repositorio salvo en casos extremos.
 
 ---
 
@@ -631,6 +708,14 @@ La persona invitada recibe un mail de invitación que debe aceptar. Una vez acep
 
 Un **Pull Request** (PR) — también llamado **Merge Request** (MR) en otras plataformas como GitLab — es una solicitud de incorporación de cambios: se indica desde qué rama y hacia qué rama se quiere fusionar el trabajo. A diferencia de un merge local, el PR no fusiona el código automáticamente al crearse — abre un espacio de revisión donde el equipo puede comentar, pedir cambios y aprobar antes de que el merge efectivamente se concrete.
 
+**Creación práctica de un PR en GitHub**, con las opciones más usadas al armarlo:
+- **Reviewer:** se le puede asignar a una o más personas del equipo para que revisen específicamente ese PR antes de aprobarlo.
+- **Etiquetas (labels):** por ejemplo, una etiqueta `feature` para indicar que el PR corresponde a una funcionalidad nueva (también existen convenciones como `bug`, `docs`, `hotfix`, etc., aunque no vienen predefinidas — las crea cada equipo según su necesidad).
+- **Asignado (assignee):** quién es responsable de ese PR — generalmente quien lo abrió se asigna a sí mismo.
+- **Project:** se puede vincular el PR a un tablero de proyecto de GitHub, si el equipo usa esa función para seguimiento.
+
+Una vez creado, el PR queda en estado **abierto**, mostrando qué archivos modifica, quién lo abrió, la etiqueta asignada y a quién está asignado. A partir de ahí, el equipo puede seguir comentando o subiendo más commits a esa misma rama (que se van a reflejar automáticamente en el PR) hasta que se apruebe y se mergee.
+
 #### 8.2 Branch protection rules
 
 Desde **Settings → Branches → Add rule** en GitHub, se pueden configurar reglas de protección sobre ramas específicas (por ejemplo, `main`). Algunas de las más relevantes:
@@ -731,3 +816,327 @@ git stash pop                # recupero los cambios guardados
 ```
 
 **Conceptos nuevos que aplica este ejemplo:** generación y registro de clave SSH, clonado por SSH, creación y push inicial de ramas (`--set-upstream`), y uso de `git stash` para preservar cambios sin commitear al cambiar de rama.
+
+---
+
+## Unidad 2 — JavaScript
+
+### 11. Tipos de lenguajes de programación
+
+Los lenguajes de programación se clasifican, según cómo se ejecuta su código, en tres grandes tipos:
+
+```
+                    TIPOS DE LENGUAJES
+                           │
+        ┌──────────────────┼──────────────────┐
+        ▼                  ▼                   ▼
+   COMPILADO          INTERMEDIO           INTERPRETADO
+        │                  │                   │
+El código se        Se compila el         Requiere un
+compila (traduce)   código fuente a       intérprete: un
+a código máquina,   un lenguaje           programa que lee
+generando binarios  intermedio, que       las instrucciones
+que lee directa-    se ejecuta sobre      en tiempo real y
+mente el sistema    una máquina           las va ejecutando,
+operativo.          virtual.              línea por línea.
+```
+
+- **Compilados:** C, C++, Rust, Go. El código se traduce por completo a lenguaje máquina antes de ejecutarse.
+- **Intermedios:** Java, Kotlin, C#. Se compilan a un lenguaje intermedio (bytecode) que corre sobre una máquina virtual (por ejemplo, la JVM para Java).
+- **Interpretados:** Ruby, Perl, PHP, Bash, Python, JavaScript, R. No se compilan de antemano — un intérprete traduce y ejecuta las instrucciones directamente desde el código fuente, en el momento.
+
+Para que la máquina entienda un lenguaje interpretado, el código igual tiene que pasar por algún proceso de traducción — solo que ese proceso ocurre en tiempo de ejecución (interpretación) en vez de antes (compilación). Un término relacionado es **transpilar**: traducir de un lenguaje de alto nivel a **otro lenguaje de alto nivel** (a diferencia de compilar, que traduce de alto nivel a bajo nivel). El ejemplo típico es TypeScript, que se transpila a JavaScript.
+
+### 12. Scripts y lenguajes de scripting
+
+**¿Qué es un script?** Un conjunto de instrucciones que se ejecutan en un ambiente de tiempo de ejecución — como una receta que indica paso a paso, y secuencialmente, lo que hay que hacer. Normalmente los scripts son interpretados: las instrucciones se leen y ejecutan una por una, en tiempo real, línea por línea.
+
+**Lenguaje de scripting:** es un lenguaje interpretado que se traduce a lenguaje de máquina recién cuando se ejecuta, a través de un programa llamado **intérprete**. Los comandos se interpretan directamente desde el código fuente, por lo tanto no hace falta compilación previa. *Los lenguajes de scripting son lenguajes de programación* — no son una categoría aparte, sino un subtipo de los interpretados.
+
+**Características de los lenguajes de scripting:**
+- **Declaración de variables:** usan tipado dinámico — se pueden declarar variables de forma más flexible, sin especificar el tipo de antemano.
+- **Lado servidor vs. lado cliente:** un mismo script puede ejecutarse tanto en un servidor web como en el navegador del usuario.
+- **Memoria:** la gestión de memoria la maneja automáticamente el intérprete (no hay que reservarla/liberarla manualmente).
+- **Multiplataforma:** se integran bien con distintos sistemas, siempre que el sistema tenga disponible el intérprete correspondiente.
+
+| Ventajas | Desventajas |
+|---|---|
+| Más flexibles | Ejecución más lenta comparado con un programa compilado |
+| Variables dinámicas | El código fuente queda visible (no se compila a binario) |
+| Tamaño de código fuente más chico | Necesita un intérprete disponible para correr |
+| Portable/multiplataforma (si hay intérprete) | Los errores se detectan recién en tiempo de ejecución |
+
+### 13. EcmaScript y motores de JavaScript
+
+**Ecma International** es una organización que crea estándares para tecnologías. **ECMA-262** es la especificación que define un lenguaje de scripting de propósito general — "262" es simplemente el número de referencia asignado a ese estándar. ECMAScript establece las reglas, detalles y directrices que un lenguaje de scripting debe seguir para considerarse conforme a ese estándar.
+
+**JavaScript** es un lenguaje de programación multiparadigma y dinámico (soporta programación orientada a objetos, imperativa y declarativa/funcional) que además es un lenguaje de scripting de propósito general que se ajusta a la especificación ECMAScript.
+
+**Motor de JavaScript** (*JavaScript engine*): es el programa/intérprete que entiende y ejecuta código JavaScript. Cada navegador (y Node.js) trae el suyo:
+
+| Motor | Dónde se usa |
+|---|---|
+| **V8** | Chrome y Node.js |
+| **SpiderMonkey** | Firefox |
+| **Chakra** | Edge (versiones históricas) |
+| **JavaScriptCore** | Safari |
+
+Cuando ECMAScript agrega especificaciones nuevas al estándar, cada motor tiene que actualizarse para poder interpretarlas — por eso hay mantenimiento constante de estos motores por parte de cada navegador.
+
+Dentro de un motor de JavaScript hay, como mínimo, dos piezas fundamentales: un **intérprete** (que ejecuta el código) y un **parser** (que analiza y traduce la sintaxis antes de ejecutarla), además de otros componentes internos (como el recolector de basura o *garbage collector*, que libera memoria automáticamente).
+
+### 14. ¿Y TypeScript?
+
+**TypeScript** es un superconjunto de JavaScript con tipado, que se **transpila** a JavaScript simple (no se ejecuta directamente — primero se traduce). Ofrece clases, módulos e interfaces adicionales para ayudar a construir componentes más robustos, y permite detectar errores de tipos antes de ejecutar el código (algo que JavaScript puro, al ser de tipado dinámico, no hace).
+
+Visual Studio Code entiende la sintaxis de TypeScript, pero **no incluye el compilador** (`tsc`) por defecto — hay que instalarlo aparte (global o dentro del proyecto) para poder transpilar el código fuente `.ts` a `.js`.
+
+### 15. Sintaxis básica de uso frecuente
+
+Antes de entrar en variables y funciones, una referencia rápida de elementos de sintaxis que van a aparecer todo el tiempo en el código de la materia, para no asumir que ya se conocen:
+
+| Elemento | Qué es / qué hace | Ejemplo |
+|---|---|---|
+| `console.log(valor)` | Escribe (imprime) un valor por la consola del navegador o de Node.js. Es la forma más básica de "ver" qué está pasando en el código mientras se ejecuta — no le muestra nada al usuario final de una página, es una herramienta de depuración para quien programa. | `console.log("Hola");` → imprime `Hola` |
+| `typeof valor` | Operador que devuelve, como texto, el tipo de dato de lo que se le pase (`"number"`, `"string"`, `"boolean"`, `"function"`, `"object"`, `"undefined"`, etc.). Se usa mucho para inspeccionar o depurar qué tipo tiene una variable en un momento dado. | `typeof "hola"` → `'string'` |
+| `//` | Comentario de una sola línea. Todo lo que sigue después de `//` en esa línea, Git y el motor de JS lo ignoran al ejecutar — sirve para dejar notas en el código. | `// esto es un comentario` |
+| `/* ... */` | Comentario de varias líneas (todo lo que quede entre `/*` y `*/`). | `/* esto  también es un comentario */` |
+| `;` | Separa instrucciones (el "punto y final" de una línea de código). En JavaScript es opcional en la mayoría de los casos, pero se usa por convención y prolijidad. | `let x = 5;` |
+| `+` (entre strings) | El operador `+` entre dos textos (`string`) los **concatena** (los une en uno solo) en vez de sumarlos matemáticamente. | `"Hola " + "mundo"` → `'Hola mundo'` |
+| `{ }` | Delimitan un **bloque de código** — el cuerpo de una función, de un `if`, de un objeto, etc. Todo lo que está entre llaves pertenece a ese bloque. | `if (true) { /* bloque */ }` |
+| `( )` | Después de un nombre de función, indican que se está **ejecutando/invocando** esa función (y ahí adentro van los argumentos, si los recibe). Sin paréntesis, el nombre solo hace referencia a la función en sí, sin ejecutarla. | `saludar()` ejecuta; `saludar` no ejecuta |
+
+### 16. Variables en JavaScript
+
+Una **variable** es un espacio en memoria donde se puede guardar un dato; a ese espacio se le asigna un nombre, y se puede guardar cualquier tipo de información que el programa necesite.
+
+```
+Variable
+Name → num
+Value → 5
+```
+
+Existen tres formas de declarar variables en JavaScript:
+
+| Palabra clave | Se puede reasignar | Alcance (scope) |
+|---|---|---|
+| `var` | Sí | De función (*function scope*) — histórica, hoy se evita salvo casos puntuales |
+| `let` | Sí | De bloque (*block scope*) — la recomendada por defecto |
+| `const` | No (el valor es inalterable) | De bloque (*block scope*) |
+
+**Sintaxis:** `TipoDeVariable Nombre = Valor;`
+
+```javascript
+let edad = 17;                          // Número
+const pi = 3.14;                        // Número
+const nombre = "José María";            // Texto (string)
+let fecha = "09/07/1816";               // Texto (string)
+let me_gusta_programar = true;          // Booleano
+```
+
+**Diferencia de alcance entre `var` y `let`:** es uno de los motivos por los que hoy se prefiere `let` (y `const`) por sobre `var`.
+
+```javascript
+function miFuncion() {
+  console.log(miVar);       // con var: undefined (no da error) | con let: error (no está definida todavía)
+  if (true) {
+    var miVar = "Hola mundo";   // con var: la variable "escapa" del bloque if
+    // let miVar = "Hola mundo"; // con let: la variable queda encerrada dentro del bloque if
+  }
+  console.log(miVar);       // con var: "Hola mundo" (la ve, aunque se declaró dentro del if)
+                             // con let: error, fuera del bloque {} no existe
+}
+```
+
+Con `var`, la variable queda "visible" para toda la función aunque se haya declarado dentro de un bloque `if` — esto puede generar comportamientos confusos. Con `let`, la variable solo existe dentro del bloque `{ }` donde se declaró (*block scope*), que es un comportamiento más predecible. Por eso la recomendación general es: **usar siempre `let` (o `const`), y reservar `var` solo para casos puntuales donde sea estrictamente necesario ese comportamiento distinto.**
+
+**Tipado dinámico y débil:** JavaScript permite declarar variables sin fijar su tipo de antemano, y ese tipo puede **cambiar a lo largo de la ejecución** del programa (por eso es *dinámico*). Además es *débilmente tipado*: no exige que los tipos coincidan estrictamente en muchas operaciones (por ejemplo, permite sumar un número y un texto sin lanzar error, concatenándolos). Esto le da flexibilidad, a costa de que ciertos errores de tipo solo aparezcan en tiempo de ejecución en vez de detectarse antes (algo que TypeScript busca mitigar).
+
+### 17. Tipos de datos
+
+| Tipo de dato | Descripción | Ejemplo básico |
+|---|---|---|
+| `Number` | Valor numérico (enteros, decimales, etc.) | `42` |
+| `BigInt` | Valor numérico grande, fuera del rango seguro de `Number` | `1234567890123456789n` |
+| `String` | Cadena de texto | `'hola'` |
+| `Boolean` | Valor booleano (verdadero/falso) | `true` |
+| `undefined` | Variable declarada pero sin valor asignado | `undefined` |
+| `Function` | Una función guardada en una variable | `function() {}` |
+| `Symbol` | Valor único e irrepetible | `Symbol(1)` |
+| `Object` | Estructura de datos más compleja (ver sección 18) | `{}` |
+
+### 18. Condicionales
+
+```javascript
+if (<primera condición>) {
+  // código que se ejecuta si <primera condición> se cumple
+} else if (<segunda condición>) {
+  // código si <primera condición> NO se cumple, pero <segunda condición> sí
+} else if (<tercera condición>) {
+  // código si las dos anteriores NO se cumplen, pero <tercera condición> sí
+} else {
+  // código si ninguna condición se cumple
+}
+```
+
+**Operador ternario:** es el único operador de JavaScript con **tres operandos**. Se usa frecuentemente como atajo para un `if` simple:
+
+```
+condición ? expr1 : expr2
+```
+
+Si `condición` es `true`, la expresión completa devuelve el valor de `expr1`; si es `false`, devuelve el valor de `expr2`.
+
+```javascript
+"La Cuota es de: " + (isMember ? "$2.00" : "$10.00");
+
+let stop = false;
+let age = 16;
+age > 18 ? console.log("puede ingresar") : (stop = true);
+```
+
+### 19. Objetos
+
+Además de las variables simples, JavaScript provee los **objetos** (`Object`): una estructura que permite reunir varios valores relacionados dentro de una misma variable. Los objetos tienen **propiedades**, que definen sus características.
+
+```javascript
+let miAuto = {
+  marca: "DeLorean",
+  modelo: 1980,
+  color: "gris",
+  timeMachine: "true"
+};
+```
+
+### 20. Funciones
+
+#### 20.1 Formas de definir una función
+
+| Forma | Sintaxis | Descripción |
+|---|---|---|
+| **Declaración** | `function nombre(p1, p2...) { }` | La forma clásica: usa la palabra reservada `function` seguida de un nombre. |
+| **Expresión** | `var nombre = function(p1, p2...) { }` | Se guarda una función (con o sin nombre) dentro de una variable. |
+| **Constructor de función** | `new Function(p1, p2..., code)` | Crea una función mediante el constructor de objeto `Function` (uso poco frecuente en la práctica). |
+
+```javascript
+// Declaración
+function saludar() {
+  return "Hola";
+}
+saludar();        // 'Hola'
+typeof saludar;    // 'function'
+
+// Función por expresión
+const saludo = function saludar() {
+  return "Hola";
+};
+saludo();          // 'Hola'
+
+// Función anónima (lambda): una expresión de función sin nombre
+const saludoLambda = function () {
+  return "Hola";
+};
+saludoLambda;       // f() { return 'Hola'; }  → esto es la función en sí
+saludoLambda();     // 'Hola'                  → esto es EJECUTAR la función
+
+// Función flecha (arrow): forma más compacta de escribir una función anónima
+const func = () => {
+  return "Función flecha.";
+};
+```
+
+**`typeof` sobre una función vs. invocarla:** una confusión común es la diferencia entre nombrar una función y ejecutarla.
+```javascript
+typeof saludoLambda    // 'function'  → estoy preguntando por el tipo de la variable en sí (la función)
+typeof saludoLambda()  // 'string'    → los paréntesis EJECUTAN la función, y typeof evalúa lo que ESA ejecución retorna
+```
+
+#### 20.2 Parámetro vs. argumento
+
+Son dos conceptos que suelen confundirse:
+- **Parámetro:** es el nombre que se define **al momento de declarar** la función — es un "placeholder" para el valor que va a recibir.
+- **Argumento:** es el valor real que se pasa **al momento de invocar/ejecutar** la función.
+
+```javascript
+function saludar(nombre, materia) {   // nombre y materia son PARÁMETROS
+  console.log("Hola " + nombre + ", bienvenido a " + materia);
+}
+
+saludar("Gustavo", "Backend");         // "Gustavo" y "Backend" son ARGUMENTOS
+```
+
+Los parámetros, al momento de ejecutarse la función, se comportan como variables locales dentro de ella, que toman el valor de los argumentos recibidos.
+
+#### 20.3 Funciones como objetos y callbacks (introducción)
+
+En JavaScript, **las funciones son objetos**. Esto tiene una consecuencia importante: se pueden guardar en variables o constantes, y también se pueden **pasar como argumento a otra función**.
+
+Una función que recibe otra función como argumento (o que retorna una función) se conoce como **callback** (retrollamada). Es uno de los conceptos centrales de JavaScript — se va a retomar con más profundidad más adelante, al ver sincronía y asincronía.
+
+```javascript
+// fB = Función B
+const fB = function () {
+  console.log("Función B ejecutada.");
+};
+
+// fA = Función A, que recibe una función como parámetro (callback)
+const fA = function (callback) {
+  callback();   // invoca la función que le pasaron por parámetro
+};
+
+fA(fB);   // fA ejecuta internamente a fB → "Función B ejecutada."
+```
+
+Combinando "recibe o no parámetros" con "retorna o no valor", una función puede ser de 4 combinaciones posibles: sin parámetros y sin retorno, sin parámetros y con retorno, con parámetros y sin retorno, con parámetros y con retorno — las cuatro son válidas y se usan según lo que se necesite en cada caso.
+
+> Nota de la cátedra: entender bien las callbacks es una base importante para el resto de la materia (asincronía, promesas, etc. se van a apoyar en este concepto).
+
+---
+
+## Ejemplo práctico — Tipos de funciones en JavaScript
+
+Código completo trabajado en clase, con las cuatro combinaciones de funciones (con/sin parámetros, con/sin retorno) y su forma de invocación:
+
+```javascript
+// TIPOS DE FUNCIONES
+
+// --- DECLARACIÓN ---
+
+// Recibe parámetros - No retorna valor
+function saludar(nombre) {
+  console.log("Bienvenido a JavaScript: " + nombre);
+}
+
+// Recibe parámetros - Retorna valor
+function saludarConRetorno(nombre) {
+  return "Bienvenido a JavaScript: " + nombre;
+}
+
+// No recibe parámetros - No retorna valor
+function saludarAClase() {
+  console.log("Bienvenido a la mejor clase después de Frontend");
+}
+
+// No recibe parámetros - Retorna valor
+function saludarAClaseApurada() {
+  return "Están apurados, pero cuando aceleremos no les va a gustar tanto :O";
+}
+
+// --- EJECUCIÓN ---
+
+saludar("Joaquin");                                  // imprime directo, no guarda nada
+
+let retornoSaludar = saludarConRetorno("Debora");     // guarda el string retornado en una variable
+console.log(retornoSaludar);
+
+saludarAClase("un valor");                            // el argumento se ignora: la función no declaró parámetros
+
+console.log(saludarAClaseApurada());                  // ejecuta la función y muestra lo que retorna
+console.log(saludarAClaseApurada);                    // muestra la función en sí (su definición), no la ejecuta
+```
+
+**Correcciones respecto al original tomado en clase:**
+- `saludarAClase("un valor")`: el argumento `"un valor"` se pasa pero la función no lo usa, porque se declaró sin parámetros — no genera un error, simplemente ese valor se descarta. Vale la pena notarlo porque es una fuente común de confusión (JavaScript no obliga a que la cantidad de argumentos coincida con la de parámetros).
+- Se agregó el comentario explícito en el último `console.log(saludarAClaseApurada)` (sin paréntesis) para remarcar la diferencia con la línea anterior — ver sección 20.1, `typeof` sobre una función vs. invocarla.
+
+**Conceptos nuevos que aplica este ejemplo:** los 4 tipos de función según reciban parámetros y/o retornen valor, diferencia entre definir e invocar una función, y qué pasa cuando se le pasan argumentos de más a una función que no los declaró.
