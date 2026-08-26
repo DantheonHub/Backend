@@ -56,12 +56,14 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
     - [15. Sintaxis básica de uso frecuente](#15-sintaxis-básica-de-uso-frecuente)
     - [16. Variables en JavaScript](#16-variables-en-javascript)
     - [17. Tipos de datos](#17-tipos-de-datos)
-    - [18. Condicionales](#18-condicionales)
-    - [19. Objetos](#19-objetos)
-    - [20. Funciones](#20-funciones)
-      - [20.1 Formas de definir una función](#201-formas-de-definir-una-función)
-      - [20.2 Parámetro vs. argumento](#202-parámetro-vs-argumento)
-      - [20.3 Funciones como objetos y callbacks (introducción)](#203-funciones-como-objetos-y-callbacks-introducción)
+    - [18. Operadores de comparación (`==` vs `===`) y `null` vs `undefined`](#18-operadores-de-comparación--vs--y-null-vs-undefined)
+    - [19. Condicionales](#19-condicionales)
+    - [20. Objetos](#20-objetos)
+    - [21. Funciones](#21-funciones)
+      - [21.1 Formas de definir una función](#211-formas-de-definir-una-función)
+      - [21.2 Parámetro vs. argumento](#212-parámetro-vs-argumento)
+      - [21.3 Funciones como objetos y callbacks (introducción)](#213-funciones-como-objetos-y-callbacks-introducción)
+      - [21.4 Ejemplo: callback en una función calculadora](#214-ejemplo-callback-en-una-función-calculadora)
   - [Ejemplo práctico — Tipos de funciones en JavaScript](#ejemplo-práctico--tipos-de-funciones-en-javascript)
 
 ---
@@ -952,6 +954,37 @@ Con `var`, la variable queda "visible" para toda la función aunque se haya decl
 
 **Tipado dinámico y débil:** JavaScript permite declarar variables sin fijar su tipo de antemano, y ese tipo puede **cambiar a lo largo de la ejecución** del programa (por eso es *dinámico*). Además es *débilmente tipado*: no exige que los tipos coincidan estrictamente en muchas operaciones (por ejemplo, permite sumar un número y un texto sin lanzar error, concatenándolos). Esto le da flexibilidad, a costa de que ciertos errores de tipo solo aparezcan en tiempo de ejecución en vez de detectarse antes (algo que TypeScript busca mitigar).
 
+**Declarar sin asignar un valor inicial:** con `let` se puede declarar una variable sin darle un valor todavía — JavaScript la crea y le asigna automáticamente `undefined` mientras tanto.
+
+```javascript
+let miNumero;
+console.log(miNumero);       // undefined (no da error)
+console.log(typeof miNumero); // 'undefined'
+```
+
+Con `const` esto **no se puede hacer**: como es un valor inalterable, tiene que declararse **con** su valor asignado en el mismo momento — si se intenta declarar una `const` vacía, tira un error de sintaxis (*"Missing initializer in const declaration"*).
+
+**Concatenación clásica vs. template literals:** para armar un texto combinando strings fijos con variables, la forma clásica es concatenar con `+`:
+
+```javascript
+console.log("Bienvenido a la mejor materia después de Front, " + nombre);
+```
+
+Esto es engorroso a medida que se combinan más variables (hay que estar pendiente de comillas y espacios en cada corte). JavaScript ofrece una alternativa más prolija: los **template literals** (también llamados *template strings* o "plantillas de string"), que se escriben entre **comillas invertidas** (`` ` ``, *backtick* — no confundir con la comilla simple `'` ni con el acento `´`) y permiten insertar variables directamente dentro del texto con la sintaxis `${variable}`:
+
+```javascript
+const nombre = "Carlos";
+const apellido = "Crovara";
+
+// Concatenación clásica:
+console.log("Bienvenido " + nombre + " " + apellido);
+
+// Template literal (equivalente, mucho más legible):
+console.log(`Bienvenido ${nombre} ${apellido}`);
+```
+
+En el teclado en español, el backtick generalmente está en la tecla ubicada arriba de "Enter" (la misma tecla física que tiene el cierre de llaves `}` como segundo símbolo) — se escribe con `Alt Gr` (o `Alt` derecho) presionando la tecla dos veces.
+
 ### 17. Tipos de datos
 
 | Tipo de dato | Descripción | Ejemplo básico |
@@ -963,9 +996,50 @@ Con `var`, la variable queda "visible" para toda la función aunque se haya decl
 | `undefined` | Variable declarada pero sin valor asignado | `undefined` |
 | `Function` | Una función guardada en una variable | `function() {}` |
 | `Symbol` | Valor único e irrepetible | `Symbol(1)` |
-| `Object` | Estructura de datos más compleja (ver sección 18) | `{}` |
+| `Object` | Estructura de datos más compleja (ver sección 20) | `{}` |
 
-### 18. Condicionales
+### 18. Operadores de comparación (`==` vs `===`) y `null` vs `undefined`
+
+JavaScript tiene dos formas de comparar si dos valores son "iguales":
+
+| Operador | Nombre | Qué compara |
+|---|---|---|
+| `==` | Igualdad débil (*loose equality*) | Solo el **contenido/valor** — si los tipos son distintos, JavaScript los convierte por dentro antes de comparar. |
+| `===` | Igualdad estricta (*strict equality*) | El **contenido y el tipo de dato**, sin conversión. Ambos tienen que coincidir para dar `true`. |
+
+```javascript
+let miNumero;             // undefined
+
+console.log(miNumero == undefined);   // true  → mismo contenido (vacío), no le importa el tipo
+console.log(miNumero === undefined);  // true  → mismo contenido Y mismo tipo (los dos son 'undefined')
+```
+
+> ⚠️ Un solo `=` **no es comparación, es asignación** (guarda un valor en la variable). Para comparar siempre hace falta `==` o `===`, nunca uno solo.
+
+**El caso especial de `null`:** `null` representa un valor vacío/nulo, igual que `undefined` — pero con una diferencia clave: **quién lo asigna**.
+
+- `undefined`: lo asigna automáticamente JavaScript cuando una variable existe pero todavía no tiene un valor cargado.
+- `null`: lo asigna **el programador**, a propósito, para decir explícitamente "esta variable está vacía a propósito".
+
+```javascript
+let miOtroNumero = null;
+console.log(typeof miOtroNumero);   // 'object'  → una rareza histórica de JavaScript (ver más abajo)
+```
+
+Por eso se recomienda **inicializar las variables con `null`** en vez de dejarlas sin asignar: da más control, porque uno mismo decide explícitamente que está vacía, en vez de depender del valor automático que pone el motor.
+
+**La rareza histórica de `typeof null`:** por un error heredado de las primeras versiones de JavaScript (que en su momento se intentó corregir, pero rompía demasiado código existente y se decidió no tocarlo), `typeof null` devuelve `'object'` en vez de `'null'`. Es la razón por la que la tabla de tipos de datos de la sección 17 no incluye una fila para `null` como tipo propio — a efectos de `typeof`, `null` se comporta como si fuera un objeto.
+
+```javascript
+console.log(miOtroNumero == undefined);   // true  → mismo contenido vacío, sin importar el tipo
+console.log(miOtroNumero === undefined);  // false → mismo contenido, pero tipos distintos ('object' vs 'undefined')
+console.log(miOtroNumero == null);        // true
+console.log(miOtroNumero === null);       // true → mismo contenido y mismo tipo ('object' los dos)
+```
+
+**Resumen práctico:** `undefined` y `null` representan los dos "estados vacíos" de JavaScript. Son iguales en contenido (`==` da `true` entre ambos) pero no en tipo (`===` da `false` entre ambos, porque `typeof undefined` es `'undefined'` y `typeof null` es `'object'`). Para chequear si una variable fue inicializada explícitamente como vacía, se prefiere comparar contra `null` en vez de contra `undefined`, justamente porque `null` es una decisión del programador y no un valor "por accidente".
+
+### 19. Condicionales
 
 ```javascript
 if (<primera condición>) {
@@ -995,7 +1069,7 @@ let age = 16;
 age > 18 ? console.log("puede ingresar") : (stop = true);
 ```
 
-### 19. Objetos
+### 20. Objetos
 
 Además de las variables simples, JavaScript provee los **objetos** (`Object`): una estructura que permite reunir varios valores relacionados dentro de una misma variable. Los objetos tienen **propiedades**, que definen sus características.
 
@@ -1008,9 +1082,9 @@ let miAuto = {
 };
 ```
 
-### 20. Funciones
+### 21. Funciones
 
-#### 20.1 Formas de definir una función
+#### 21.1 Formas de definir una función
 
 | Forma | Sintaxis | Descripción |
 |---|---|---|
@@ -1051,7 +1125,20 @@ typeof saludoLambda    // 'function'  → estoy preguntando por el tipo de la va
 typeof saludoLambda()  // 'string'    → los paréntesis EJECUTAN la función, y typeof evalúa lo que ESA ejecución retorna
 ```
 
-#### 20.2 Parámetro vs. argumento
+**Por qué el nombre interno de una función por expresión no sirve para invocarla:** es un punto que suele generar confusión. Al declarar una función por expresión con nombre, ese nombre queda **"encerrado" dentro de la función** — el intérprete no lo registra como una referencia utilizable desde afuera. Lo único accesible desde afuera es el nombre de la **constante/variable** donde se guardó.
+
+```javascript
+const bienvenida = function darBienvenida(nombre) {
+  console.log(`Bienvenido ${nombre}`);
+};
+
+darBienvenida("Dante");   // ❌ Error de referencia: darBienvenida no existe para el intérprete
+bienvenida("Dante");      // ✅ Funciona: la función se guardó en la constante "bienvenida"
+```
+
+Como ese nombre interno (`darBienvenida`) nunca se puede usar para invocar la función, ponerlo o no ponerlo es exactamente lo mismo en la práctica — **por eso se usa la función anónima (lambda)**: si el nombre no se puede aprovechar, se omite directamente para evitar que alguien lea el código y trate de invocarla por ese nombre (que fallaría). La única razón para mantener un nombre en una función por expresión sería fines de depuración (algunos entornos lo muestran en los mensajes de error de la pila de llamadas).
+
+#### 21.2 Parámetro vs. argumento
 
 Son dos conceptos que suelen confundirse:
 - **Parámetro:** es el nombre que se define **al momento de declarar** la función — es un "placeholder" para el valor que va a recibir.
@@ -1067,7 +1154,7 @@ saludar("Gustavo", "Backend");         // "Gustavo" y "Backend" son ARGUMENTOS
 
 Los parámetros, al momento de ejecutarse la función, se comportan como variables locales dentro de ella, que toman el valor de los argumentos recibidos.
 
-#### 20.3 Funciones como objetos y callbacks (introducción)
+#### 21.3 Funciones como objetos y callbacks (introducción)
 
 En JavaScript, **las funciones son objetos**. Esto tiene una consecuencia importante: se pueden guardar en variables o constantes, y también se pueden **pasar como argumento a otra función**.
 
@@ -1090,6 +1177,55 @@ fA(fB);   // fA ejecuta internamente a fB → "Función B ejecutada."
 Combinando "recibe o no parámetros" con "retorna o no valor", una función puede ser de 4 combinaciones posibles: sin parámetros y sin retorno, sin parámetros y con retorno, con parámetros y sin retorno, con parámetros y con retorno — las cuatro son válidas y se usan según lo que se necesite en cada caso.
 
 > Nota de la cátedra: entender bien las callbacks es una base importante para el resto de la materia (asincronía, promesas, etc. se van a apoyar en este concepto).
+
+#### 21.4 Ejemplo: callback en una función calculadora
+
+Un ejemplo más elaborado, que muestra por qué las callbacks hacen que una función sea mucho más reutilizable/flexible. La idea: una única función `calculadora` que recibe dos números y una **función que define qué operación hacer con ellos** — así, la misma función `calculadora` puede sumar, restar, multiplicar, etc., según qué callback se le pase.
+
+```javascript
+// Función que recibe dos números y una función (callback) que decide qué hacer con ellos
+const calculadora = (numero1, numero2, callback) => {
+  return callback(numero1, numero2);
+};
+
+// Funciones que se van a usar como callback
+const suma = (num1, num2) => {
+  return num1 + num2;
+};
+
+const resta = (num1, num2) => {
+  return num1 - num2;
+};
+
+// Uso 1: pasando una función ya declarada como argumento (sin ejecutarla, SIN paréntesis)
+let resultadoCalculadora = calculadora(2, 5, suma);
+console.log(resultadoCalculadora);   // 7
+
+// Uso 2: pasando directamente una función anónima/arrow como callback, definida en el momento
+console.log(calculadora(10, 5, (num1, num2) => num1 - num2));   // 5
+
+// La misma función "calculadora", con distinto callback, se comporta distinto:
+console.log(calculadora(10, 5, resta));                          // 5
+console.log(calculadora(10, 5, (num1, num2) => num1 * num2));    // 50
+```
+
+**Cuidado con mezclar argumento evaluado y callback en el mismo llamado.** Es un caso real que suele confundir:
+
+```javascript
+let resultado = calculadora(2, suma(2, 3), suma);
+console.log(resultado); // 7
+```
+
+Acá hay dos usos distintos de `suma` en la misma línea, y es clave distinguirlos:
+- `suma(2, 3)` **con paréntesis**: se ejecuta *ahí mismo*, antes de que `calculadora` reciba nada. Su resultado (`5`) es lo que efectivamente llega como segundo argumento — un número común, no una función.
+- `suma` **sin paréntesis** (el tercer argumento): esta sí se pasa como **callback**, sin ejecutar — recién se ejecuta *adentro* de `calculadora`.
+
+Entonces la llamada equivale a `calculadora(2, 5, suma)`, que adentro ejecuta `suma(2, 5)` → `7`. El error común es pensar que como se usó `suma` dos veces, el comportamiento es el mismo en ambos casos — pero los paréntesis cambian completamente qué se está pasando (un valor ya calculado vs. una función pendiente de ejecutar).
+
+**Puntos clave de este ejemplo:**
+- Al pasar `suma` como argumento (sin paréntesis), se está pasando **la función en sí** — no su resultado. Si se escribiera `calculadora(2, 5, suma())`, JavaScript intentaría ejecutar `suma()` inmediatamente sin argumentos, lo cual es un error distinto (habría que pasarle los argumentos ahí mismo, y de todas formas ya no sería "pasar la función", sino pasar el resultado de haberla ejecutado).
+- El callback se puede declarar **antes** y pasarlo por su nombre (`suma`, `resta`), o se puede escribir **directamente en el lugar del argumento**, sin necesidad de nombrarlo ni guardarlo en una constante — este es el uso más común de las arrow functions en la práctica.
+- `calculadora` no sabe (ni le importa) qué operación matemática va a hacer — solo sabe que va a recibir una función y la va a ejecutar con los dos números que le llegaron. Eso es lo que la hace reutilizable: para agregar una operación nueva (por ejemplo, dividir), no hace falta tocar `calculadora` en absoluto, alcanza con pasarle un callback distinto.
 
 ---
 
@@ -1124,9 +1260,9 @@ function saludarAClaseApurada() {
 
 // --- EJECUCIÓN ---
 
-saludar("Joaquin");                                  // imprime directo, no guarda nada
+saludar("Nikola");                                  // imprime directo, no guarda nada
 
-let retornoSaludar = saludarConRetorno("Debora");     // guarda el string retornado en una variable
+let retornoSaludar = saludarConRetorno("Dantz");     // guarda el string retornado en una variable
 console.log(retornoSaludar);
 
 saludarAClase("un valor");                            // el argumento se ignora: la función no declaró parámetros
@@ -1137,6 +1273,6 @@ console.log(saludarAClaseApurada);                    // muestra la función en 
 
 **Correcciones respecto al original tomado en clase:**
 - `saludarAClase("un valor")`: el argumento `"un valor"` se pasa pero la función no lo usa, porque se declaró sin parámetros — no genera un error, simplemente ese valor se descarta. Vale la pena notarlo porque es una fuente común de confusión (JavaScript no obliga a que la cantidad de argumentos coincida con la de parámetros).
-- Se agregó el comentario explícito en el último `console.log(saludarAClaseApurada)` (sin paréntesis) para remarcar la diferencia con la línea anterior — ver sección 20.1, `typeof` sobre una función vs. invocarla.
+- Se agregó el comentario explícito en el último `console.log(saludarAClaseApurada)` (sin paréntesis) para remarcar la diferencia con la línea anterior — ver sección 21.1, `typeof` sobre una función vs. invocarla.
 
 **Conceptos nuevos que aplica este ejemplo:** los 4 tipos de función según reciban parámetros y/o retornen valor, diferencia entre definir e invocar una función, y qué pasa cuando se le pasan argumentos de más a una función que no los declaró.
