@@ -59,12 +59,28 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
     - [18. Operadores de comparación (`==` vs `===`) y `null` vs `undefined`](#18-operadores-de-comparación--vs--y-null-vs-undefined)
     - [19. Condicionales](#19-condicionales)
     - [20. Objetos](#20-objetos)
+      - [20.1 Sintaxis: creación e inicialización](#201-sintaxis-creación-e-inicialización)
+      - [20.2 Propiedades: lectura y asignación](#202-propiedades-lectura-y-asignación)
+      - [20.3 Objetos declarados con `const`: qué se puede modificar y qué no](#203-objetos-declarados-con-const-qué-se-puede-modificar-y-qué-no)
+      - [20.4 Paso por referencia vs. paso por valor](#204-paso-por-referencia-vs-paso-por-valor)
+      - [20.5 Mutabilidad, inmutabilidad y *race conditions*](#205-mutabilidad-inmutabilidad-y-race-conditions)
     - [21. Funciones](#21-funciones)
       - [21.1 Formas de definir una función](#211-formas-de-definir-una-función)
       - [21.2 Parámetro vs. argumento](#212-parámetro-vs-argumento)
       - [21.3 Funciones como objetos y callbacks (introducción)](#213-funciones-como-objetos-y-callbacks-introducción)
       - [21.4 Ejemplo: callback en una función calculadora](#214-ejemplo-callback-en-una-función-calculadora)
+      - [21.5 Firma de una función (*function signature*)](#215-firma-de-una-función-function-signature)
+    - [22. Profundización de funciones callback](#22-profundización-de-funciones-callback)
+      - [22.1 Función de orden superior (*higher-order function*)](#221-función-de-orden-superior-higher-order-function)
+      - [22.2 Toda callback recibida como parámetro se tiene que invocar internamente](#222-toda-callback-recibida-como-parámetro-se-tiene-que-invocar-internamente)
+      - [22.3 Pasar la función, no su ejecución](#223-pasar-la-función-no-su-ejecución)
+      - [22.4 Buena práctica: la callback como último parámetro](#224-buena-práctica-la-callback-como-último-parámetro)
+      - [22.5 Múltiples callbacks](#225-múltiples-callbacks)
+      - [22.6 Orden de ejecución: una función no termina hasta que termina lo que invoca](#226-orden-de-ejecución-una-función-no-termina-hasta-que-termina-lo-que-invoca)
+  - [Función A no imprime *"Saliendo de función A"* hasta que función B termina de ejecutarse por completo — aunque función B haya sido "pasada como argumento" desde afuera, en la práctica quien decide cuándo (y si) se ejecuta es la función que la recibe.](#función-a-no-imprime-saliendo-de-función-a-hasta-que-función-b-termina-de-ejecutarse-por-completo--aunque-función-b-haya-sido-pasada-como-argumento-desde-afuera-en-la-práctica-quien-decide-cuándo-y-si-se-ejecuta-es-la-función-que-la-recibe)
   - [Ejemplo práctico — Tipos de funciones en JavaScript](#ejemplo-práctico--tipos-de-funciones-en-javascript)
+  - [Ejemplo práctico — Paso por referencia en objetos](#ejemplo-práctico--paso-por-referencia-en-objetos)
+  - [Ejemplo práctico — Función con múltiples callbacks condicionales](#ejemplo-práctico--función-con-múltiples-callbacks-condicionales)
 
 ---
 
@@ -973,8 +989,8 @@ console.log("Bienvenido a la mejor materia después de Front, " + nombre);
 Esto es engorroso a medida que se combinan más variables (hay que estar pendiente de comillas y espacios en cada corte). JavaScript ofrece una alternativa más prolija: los **template literals** (también llamados *template strings* o "plantillas de string"), que se escriben entre **comillas invertidas** (`` ` ``, *backtick* — no confundir con la comilla simple `'` ni con el acento `´`) y permiten insertar variables directamente dentro del texto con la sintaxis `${variable}`:
 
 ```javascript
-const nombre = "Carlos";
-const apellido = "Crovara";
+const nombre = "Linus";
+const apellido = "Torvalds";
 
 // Concatenación clásica:
 console.log("Bienvenido " + nombre + " " + apellido);
@@ -1071,18 +1087,199 @@ age > 18 ? console.log("puede ingresar") : (stop = true);
 
 ### 20. Objetos
 
-Además de las variables simples, JavaScript provee los **objetos** (`Object`): una estructura que permite reunir varios valores relacionados dentro de una misma variable. Los objetos tienen **propiedades**, que definen sus características.
+Además de las variables simples, JavaScript provee los **objetos** (`Object`): una estructura que permite reunir varios valores relacionados dentro de una misma variable. Los objetos tienen **propiedades**, que se llaman así porque a través de ellas se puede tanto **setear** (asignar) como **acceder** (leer) sus valores.
+
+#### 20.1 Sintaxis: creación e inicialización
+
+Un objeto se define entre llaves `{ }`. Dentro de las llaves, cada propiedad separa su nombre (clave) de su valor con **dos puntos** (`:`) — nunca con un igual (`=`); usar `=` ahí tira un error de sintaxis.
 
 ```javascript
 let miAuto = {
   marca: "DeLorean",
-  modelo: 1980,
+  cantidadPuertas: 2,
   color: "gris",
-  timeMachine: "true"
+  timeMachine: true
 };
 ```
 
+También se puede inicializar un objeto **vacío**, sin ninguna propiedad, y agregarle propiedades después:
+
+```javascript
+let miAuto = {};        // objeto vacío, válido
+console.log(miAuto);    // {}
+
+miAuto.marca = "DeLorean";
+miAuto.cantidadPuertas = 2;
+```
+
+#### 20.2 Propiedades: lectura y asignación
+
+Se accede al valor de una propiedad, tanto para leerlo como para modificarlo, con la notación **objeto.propiedad**:
+
+```javascript
+console.log(miAuto.marca);    // lectura → "DeLorean"
+miAuto.precio = 5000000;       // asignación → crea la propiedad si no existía, o la modifica si ya existía
+```
+
+**Leer una propiedad que no existe no genera un error: devuelve `undefined`.** Este comportamiento es consistente con el ya visto para variables no inicializadas (sección 18): como JavaScript es un lenguaje interpretado, el motor lee y ejecuta el código en tiempo real, línea a línea — si en ese momento la propiedad no está definida dentro del objeto, directamente devuelve `undefined` en vez de detener la ejecución con un error.
+
+```javascript
+console.log(miAuto.duracion);   // undefined (la propiedad "duracion" no existe en el objeto)
+```
+
+Este comportamiento flexible ante propiedades inexistentes es propio de los lenguajes interpretados: el error solo aparece si esa línea concreta llega a ejecutarse en tiempo real, en vez de detectarse antes de correr el programa (como sí pasaría en un lenguaje compilado). Puede pasar desapercibido durante el desarrollo y recién manifestarse en producción, cuando finalmente se ejecuta esa línea.
+
+#### 20.3 Objetos declarados con `const`: qué se puede modificar y qué no
+
+Un objeto se puede declarar tanto con `let` como con `const`. La diferencia entre ambos, para objetos, **no pasa por si se puede modificar el contenido** — pasa por si se puede **reasignar la variable a un objeto distinto**.
+
+| Se puede hacer con `const` | No se puede hacer con `const` |
+|---|---|
+| Modificar el valor de una propiedad existente | Reasignar la constante a un objeto nuevo (`miObjeto = { ... }`) |
+| Agregar una propiedad nueva | |
+
+```javascript
+const miPeli = {
+  nombre: "Terminator: la resistencia",
+  categoria: "Ciencia ficción"
+};
+
+miPeli.categoria = "Acción";      // ✅ funciona: modifica una propiedad existente
+miPeli.duracion = 5400;            // ✅ funciona: agrega una propiedad nueva
+miPeli = { nombre: "Otra" };       // ❌ TypeError: Assignment to constant variable.
+```
+
+La razón se explica en la sección 20.4: lo que la constante fija es la **referencia** a la "caja" de memoria del objeto, no el contenido de esa caja. Modificar o agregar propiedades cambia el contenido de la caja, pero la caja sigue siendo la misma — por eso `const` lo permite. Reasignar el objeto completo intentaría hacer que la constante apunte a otra caja distinta, y eso sí está prohibido.
+
+#### 20.4 Paso por referencia vs. paso por valor
+
+Uno de los conceptos más importantes para entender el comportamiento de los objetos en JavaScript — y una fuente muy común de errores difíciles de detectar cuando no está claro.
+
+**Tipos primitivos: paso por valor.** Al asignar una variable de tipo primitivo (`string`, `number`, `boolean`, `undefined`, `null`, etc.) a otra, JavaScript **copia el valor**. A partir de ese momento las dos variables son completamente independientes: modificar una no afecta a la otra.
+
+```javascript
+let mes = "febrero";
+let mes2 = mes;       // se copia el valor "febrero" a mes2
+
+mes2 = "diciembre";   // esto solo modifica mes2
+
+console.log(mes);     // "febrero"   → no cambió
+console.log(mes2);    // "diciembre"
+```
+
+**Objetos: paso por referencia.** Los objetos se comportan distinto. Al crear un objeto, JavaScript lo guarda en un espacio de memoria — una "caja" — y la variable no contiene el objeto en sí, sino una **referencia** a esa caja (en clase también se la nombró como "puntero" o "flecha": los tres términos apuntan a lo mismo, el mecanismo por el cual una variable señala hacia la caja de memoria de un objeto sin contener el objeto en sí). Al asignar un objeto ya existente a otra variable (`objeto2 = objeto1`), **no se copia el contenido de la caja: se copia la referencia**. Las dos variables terminan apuntando a la misma caja.
+
+```javascript
+let objeto1 = { id: 1 };
+let objeto2 = objeto1;   // objeto2 NO es una copia: apunta a la misma caja que objeto1
+```
+
+Como consecuencia directa, modificar el objeto desde cualquiera de las dos variables se refleja en la otra, porque en el fondo es **el mismo objeto** visto desde dos nombres distintos:
+
+```javascript
+objeto1.id = 10;
+console.log(objeto2.id);   // 10 → cambió también, porque apunta a la misma caja
+```
+
+Este comportamiento es exclusivo de los tipos por referencia (objetos, arrays, funciones): cada variable primitiva guarda su propio valor, copiado de forma independiente, así que modificar una nunca afecta a otra. Con objetos, en cambio, dos variables pueden estar apuntando a la misma caja, y modificar el contenido desde una se ve reflejado en la otra.
+
+**Dos objetos con el mismo contenido no son lo mismo que dos referencias al mismo objeto.** Si en vez de asignar una variable existente se crea un objeto **nuevo** con el mismo contenido, ese objeto vive en una caja distinta, aunque los valores sean idénticos:
+
+```javascript
+let objeto1 = { id: 1 };
+let objeto2 = objeto1;        // misma referencia que objeto1
+let objeto3 = { id: 1 };      // objeto NUEVO, mismo contenido, pero otra caja
+
+console.log(objeto1 === objeto2);   // true  → misma caja (misma referencia)
+console.log(objeto1 === objeto3);   // false → cajas distintas, aunque el contenido sea igual
+```
+
+El operador `===` sobre objetos no compara el contenido de las propiedades: compara si ambas variables **apuntan a la misma caja de memoria**.
+
+```mermaid
+flowchart LR
+    subgraph Memoria["Memoria (simplificado)"]
+        CajaA["Caja A: { id: 1 }"]
+        CajaB["Caja B: { id: 1 }"]
+    end
+    objeto1(["objeto1"]) --> CajaA
+    objeto2(["objeto2"]) --> CajaA
+    objeto3(["objeto3"]) --> CajaB
+```
+
+**Cadenas de referencias.** Si una variable que ya apunta a un objeto se asigna a su vez a una tercera, y esta a una cuarta, todas terminan apuntando a la misma caja original — modificarla desde cualquiera de ellas afecta a todas las demás.
+
+```javascript
+let objeto1 = { id: 1 };
+let objeto2 = objeto1;       // apunta a la caja de objeto1
+let objeto4 = objeto2;       // apunta a la misma caja
+const objeto5 = objeto4;     // también apunta a la misma caja
+
+objeto1.id = 10;
+console.log(objeto5.id);     // 10 → objeto5 apunta a la misma caja que objeto1, aunque nunca se lo tocó directamente
+
+objeto5.id = 300;            // ✅ funciona: modifica una propiedad de la caja compartida
+objeto5 = { id: 400 };       // ❌ TypeError: objeto5 es const, no se puede reasignar a otra caja
+```
+
+```mermaid
+flowchart LR
+    subgraph Memoria["Memoria (simplificado)"]
+        Caja["Caja: { id: 1 }"]
+    end
+    objeto1(["objeto1 (let)"]) --> Caja
+    objeto2(["objeto2 (let)"]) --> Caja
+    objeto4(["objeto4 (let)"]) --> Caja
+    objeto5(["objeto5 (const)"]) --> Caja
+```
+
+La idea de "cajas" es una simplificación para entender este comportamiento (referencia vs. valor), no una representación literal de cómo el motor implementa la memoria por dentro. A diferencia de lenguajes como C o C#, en JavaScript el manejo de memoria lo administra el motor y el desarrollador no tiene control directo sobre direcciones de memoria ni punteros.
+
+**¿Es esto una particularidad de JavaScript?** No. Es un concepto general de la mayoría de los lenguajes de programación (Java, Python, C#, etc. distinguen igual entre tipos primitivos/por valor y tipos de referencia/objetos) — no algo propio de que JavaScript sea interpretado, ni una decisión del compilador. Tampoco es uno de los motivos por los que se creó TypeScript: TypeScript se creó principalmente para agregar **tipado estático** a JavaScript (poder declarar y chequear tipos antes de ejecutar, con mejor autocompletado y detección temprana de errores — ver sección 21.5), no para cambiar cómo se comportan los objetos en memoria. De hecho, TypeScript compila a JavaScript y, en tiempo de ejecución, los objetos se siguen comportando exactamente igual: por referencia.
+
+#### 20.5 Mutabilidad, inmutabilidad y *race conditions*
+
+Que los objetos se pasen por referencia trae un riesgo: si distintas partes del código leen y modifican el mismo objeto en paralelo (por ejemplo, sin saberlo, apuntando a la misma caja), un cambio hecho en un lugar puede afectar silenciosamente a otro lugar del código que no lo esperaba. A este tipo de error — donde el resultado final depende del orden en que se ejecutan las cosas, y puede variar de una corrida a otra — se lo conoce como ***race condition*** (condición de carrera). Son errores particularmente difíciles de debuggear, porque no son deterministas: ejecutar el mismo código varias veces puede dar resultados distintos según el orden real en que sucede todo.
+
+```javascript
+function procesarPedido(pedido) {
+  pedido.estado = "procesado";   // modifica el objeto original directamente
+}
+
+function facturar(pedido) {
+  if (pedido.estado === "pendiente") {
+    console.log("Generando factura...");
+  }
+}
+
+let pedidoActual = { id: 1, estado: "pendiente" };
+
+procesarPedido(pedidoActual);
+facturar(pedidoActual);   // nunca entra al if: el estado ya cambió a "procesado" antes de llegar acá,
+                          // aunque facturar() nunca tocó pedidoActual directamente
+```
+
+`procesarPedido` y `facturar` reciben el mismo objeto por referencia. Como `procesarPedido` modifica `pedidoActual` directamente, cuando `facturar` lo lee ya se encuentra con el estado cambiado — sin que nada en `facturar` lo haya provocado. En un sistema real, con muchas funciones tocando el mismo objeto desde distintos lugares del código, este tipo de dependencia oculta es justamente lo que genera *race conditions*.
+
+Por este motivo, en patrones de arquitectura modernos se busca aplicar **inmutabilidad**: en vez de modificar un objeto original directamente, se genera una **copia** y se modifica esa copia, dejando el original intacto.
+
+```javascript
+function procesarPedido(pedido) {
+  return { ...pedido, estado: "procesado" };   // devuelve un objeto NUEVO, no toca el original
+}
+
+let pedidoActual = { id: 1, estado: "pendiente" };
+let pedidoProcesado = procesarPedido(pedidoActual);
+
+console.log(pedidoActual.estado);      // "pendiente"   → el original queda intacto
+console.log(pedidoProcesado.estado);   // "procesado"   → el cambio vive en la copia
+```
+
+La sintaxis `{ ...pedido, estado: "procesado" }` usa el **operador *spread*** (tres puntos, `...`), que genera un objeto nuevo copiando las propiedades de `pedido` y pisando solo la que se indique después. Se retoma con más profundidad más adelante; por ahora alcanza con tener claro el problema que resuelve: lograr una copia independiente en vez de una referencia a la misma caja.
+
 ### 21. Funciones
+
+Una función se declara una sola vez y se puede invocar todas las veces que haga falta a lo largo del programa — es la herramienta central para reutilizar código en vez de repetirlo. Como consecuencia directa, si en algún momento se modifica la definición de una función, ese cambio impacta en todos los lugares del código donde se la esté invocando, sin necesidad de tocar cada uno de esos lugares por separado.
 
 #### 21.1 Formas de definir una función
 
@@ -1229,6 +1426,213 @@ Entonces la llamada equivale a `calculadora(2, 5, suma)`, que adentro ejecuta `s
 
 ---
 
+#### 21.5 Firma de una función (*function signature*)
+
+La **firma** de una función es la información que describe cómo se la tiene que invocar, sin mirar su implementación interna: su **nombre**, la **cantidad de parámetros de entrada** (y, en lenguajes tipados, el tipo de cada uno) y, en esos mismos lenguajes, el **tipo del valor que retorna**. Mirando solo la firma alcanza para saber cómo llamar a la función y qué hay que pasarle — sin necesidad de leer el cuerpo (todo lo que está entre llaves), que es lo que define su comportamiento.
+
+```javascript
+function saludar(nombre, materia) {
+  const salida = `Hola ${nombre}, bienvenido a la materia ${materia}`;
+  return salida;
+}
+```
+
+De esta firma se lee: se llama `saludar`, recibe dos parámetros (`nombre` y `materia`) y — mirando el cuerpo — se sabe que retorna un `string`. En un lenguaje tipado (a diferencia de JavaScript), la firma incluye también el tipo de cada parámetro y el tipo de retorno de forma explícita, generalmente después de dos puntos — esto se ve en profundidad al llegar a TypeScript:
+
+```typescript
+function saludar(nombre: string, materia: string): string {
+  return `Hola ${nombre}, bienvenido a la materia ${materia}`;
+}
+```
+
+**Sobrecarga de funciones o métodos (*overloading*):** en lenguajes tipados es posible tener dos funciones (o métodos) con el mismo nombre, siempre que se diferencien en su firma — por ejemplo, una versión que recibe dos parámetros y otra que recibe tres. El lenguaje decide cuál ejecutar según los argumentos con los que se la invoque.
+
+```typescript
+// Dos firmas distintas para el mismo nombre "saludar"
+function saludar(nombre: string): string;
+function saludar(nombre: string, materia: string): string;
+
+// Una única implementación que cubre ambos casos
+function saludar(nombre: string, materia?: string): string {
+  return materia ? `Hola ${nombre}, bienvenido a ${materia}` : `Hola ${nombre}`;
+}
+
+saludar("Grace");                // usa la primera firma → "Hola Grace"
+saludar("Grace", "Backend");     // usa la segunda firma → "Hola Grace, bienvenido a Backend"
+```
+
+JavaScript, al ser de tipado dinámico, no tiene sobrecarga de funciones en este sentido: solo puede existir una definición activa con un nombre dado, y declarar una función con un nombre repetido no genera dos versiones invocables — la última definición pisa directamente a la anterior.
+
+```javascript
+function saludar(nombre) {
+  return `Hola ${nombre}`;
+}
+
+function saludar(nombre, materia) {
+  return `Hola ${nombre}, bienvenido a ${materia}`;
+}
+
+console.log(saludar("Grace"));   // "Hola Grace, bienvenido a undefined"
+// La primera definición de "saludar" queda completamente pisada por la segunda.
+// No hay dos versiones conviviendo: solo existe la última, y "materia" queda sin valor.
+```
+
+El concepto de firma con tipos explícitos, y la sobrecarga de funciones, se aplican de lleno recién en TypeScript — sus variables son de tipado dinámico (sección 16) y pueden cambiar de tipo a lo largo de la ejecución, así que JavaScript no tiene forma de distinguir "versiones" de una función por su firma.
+
+---
+
+### 22. Profundización de funciones callback
+
+Ya se había introducido el concepto de callback (ver sección 21.3): una función que se pasa como argumento a otra función. Acá se profundiza en las reglas de comportamiento que hacen que una callback sirva para algo.
+
+#### 22.1 Función de orden superior (*higher-order function*)
+
+Se llama **función de orden superior** (*high order function*, en inglés) a toda función que cumple al menos una de estas dos condiciones:
+
+- Recibe una o más funciones como parámetro de entrada, o
+- Retorna una función como resultado.
+
+Toda función que reciba una callback como parámetro es, por definición, una función de orden superior, porque cumple la primera condición:
+
+```javascript
+function calculadora(numero1, numero2, callback) {
+  return callback(numero1, numero2);
+}
+```
+
+`calculadora` es una función de orden superior: recibe `callback` como parámetro de entrada. Una función que no recibe ni retorna ninguna función, en cambio, no lo es:
+
+```javascript
+function sumar(numero1, numero2) {
+  return numero1 + numero2;
+}
+```
+
+`sumar` recibe dos números (no funciones) y retorna directamente un número — no es una función de orden superior.
+
+Varios métodos que ya vienen incorporados en JavaScript para trabajar con arrays (`forEach`, `map`, entre otros, que se ven en profundidad más adelante) son también funciones de orden superior: reciben como argumento una función que define qué hacer con cada elemento del array.
+
+#### 22.2 Toda callback recibida como parámetro se tiene que invocar internamente
+
+En la práctica, las funciones que se usan como callback casi siempre se escriben como **funciones por expresión** (sección 21.1) — guardadas dentro de una constante, ya sea como **función anónima** (sin nombre propio) o como **función flecha** (arrow):
+
+```javascript
+const funcionB = function () {                    // función por expresión, con función anónima
+  console.log("Entrando a función B");
+  console.log("Se ejecuta función B");
+  console.log("Saliendo de función B");
+};
+
+const funcionA = function (callback) {             // función por expresión, con función anónima
+  console.log("Entrando a función A");
+  // si nunca se hace callback(), lo que se pasó como argumento no llega a usarse
+  console.log("Saliendo de función A");
+};
+
+funcionA(funcionB);   // se le pasa funcionB, pero como funcionA nunca hace callback(), NUNCA se ejecuta funcionB
+```
+
+Si una función declara que va a recibir una callback como parámetro, pero nunca la ejecuta en ningún punto de su cuerpo, esa callback no cumple ninguna función — es lo mismo que declarar una función en el código y no invocarla nunca: no tiene ningún efecto.
+
+Para que la callback tenga efecto, la función que la recibe la tiene que invocar en algún punto de su cuerpo:
+
+```javascript
+const funcionA = function (callback) {
+  console.log("Entrando a función A");
+  callback();                          // acá sí se ejecuta lo que se le pasó
+  console.log("Saliendo de función A");
+};
+
+funcionA(funcionB);   // ahora sí: el log de funcionB aparece entre los dos logs de funcionA
+```
+
+La invocación puede ubicarse al principio, en el medio o al final del cuerpo de la función — lo único que importa es que se ejecute en algún punto. Incluso puede depender de una condición (`if`/`else`, ver 22.5): lo único obligatorio es que exista al menos un camino de ejecución donde efectivamente se la invoque, si se espera que cumpla algún propósito.
+
+#### 22.3 Pasar la función, no su ejecución
+
+Un error común es escribir el nombre de la callback **con paréntesis** al pasarla como argumento. Eso no pasa la función: pasa el **resultado de haberla ejecutado en ese momento**, que en general no es lo que se busca.
+
+```javascript
+funcionA(funcionB);     // ✅ correcto: se pasa la función en sí, sin ejecutar
+funcionA(funcionB());   // ❌ esto ejecuta funcionB ahí mismo y le pasa a funcionA lo que funcionB haya retornado (no una función)
+```
+
+Si a la función que espera una callback se le pasa cualquier otro valor que no sea una función (un string, un número, un objeto, `undefined`), va a fallar en el momento en que intente invocarlo, con un error del tipo `TypeError: callback is not a function` — porque JavaScript no puede "ejecutar" un valor que no es una función.
+
+```javascript
+funcionA("cualquier cosa");   // TypeError: callback is not a function
+funcionA({ id: 1 });          // TypeError: callback is not a function
+funcionA();                   // TypeError: callback is not a function → callback vale undefined
+```
+
+#### 22.4 Buena práctica: la callback como último parámetro
+
+Cuando una función recibe una callback, la convención (y buena práctica) es ubicarla como el **último parámetro** de la firma — mejora la legibilidad, ya que es más difícil de seguir si aparece en el medio de otros parámetros.
+
+```javascript
+// ✅ recomendado: callback al final
+function calculadora(numero1, numero2, callback) { /* ... */ }
+
+// ❌ menos legible: callback en el medio
+function calculadora(numero1, callback, numero2) { /* ... */ }
+```
+
+Nombrar el parámetro `callback` es también una convención, no una obligación del lenguaje: ayuda a que quien lea la firma entienda de entrada que ahí se espera una función que va a ser invocada internamente (lo mismo aplica a otros nombres convencionales del lenguaje, como el parámetro de `setTimeout`).
+
+En la práctica, muchas veces la callback se pasa directamente como una **función flecha**, definida ahí mismo en el lugar del argumento, sin necesidad de declararla y nombrarla antes:
+
+```javascript
+calculadora(4, 5, (numero1, numero2) => numero1 + numero2);   // callback flecha, definida en el momento
+```
+
+#### 22.5 Múltiples callbacks
+
+Una función puede recibir más de una callback como parámetro, y decidir cuál ejecutar (o si ejecutar ambas) según una condición:
+
+```javascript
+function funcionC(numero, primeraCallback, segundaCallback) {
+  console.log("Entrando a función C");
+
+  if (numero > 10) {
+    primeraCallback();
+    primeraCallback();
+    primeraCallback();
+  } else {
+    segundaCallback();
+  }
+
+  console.log("Saliendo de función C");
+}
+```
+
+Con esta definición, según el valor que se le pase como `numero`, `funcionC` ejecuta una u otra callback — y puede ejecutar la misma callback más de una vez, tantas veces como se la invoque dentro del cuerpo.
+
+#### 22.6 Orden de ejecución: una función no termina hasta que termina lo que invoca
+
+Cuando una función invoca a otra (una callback) dentro de su cuerpo, la ejecución "entra" a esa función invocada y no vuelve a la función original hasta que la invocada termine por completo. Esto se cumple sin importar cuántos niveles de anidamiento haya.
+
+Siguiendo el ejemplo de `funcionA(funcionB)` de 22.2, la secuencia real de ejecución es:
+
+```mermaid
+sequenceDiagram
+    participant Main as Código principal
+    participant A as función A
+    participant B as función B
+
+    Main->>A: funcionA(funcionB)
+    A->>A: console.log("Entrando a función A")
+    A->>B: callback() → invoca función B
+    B->>B: console.log("Entrando a función B")
+    B->>B: console.log("Se ejecuta función B")
+    B->>B: console.log("Saliendo de función B")
+    B-->>A: termina función B
+    A->>A: console.log("Saliendo de función A")
+    A-->>Main: termina función A
+```
+
+Función A no imprime *"Saliendo de función A"* hasta que función B termina de ejecutarse por completo — aunque función B haya sido "pasada como argumento" desde afuera, en la práctica quien decide cuándo (y si) se ejecuta es la función que la recibe.
+---
+
 ## Ejemplo práctico — Tipos de funciones en JavaScript
 
 Código completo trabajado en clase, con las cuatro combinaciones de funciones (con/sin parámetros, con/sin retorno) y su forma de invocación:
@@ -1260,7 +1664,7 @@ function saludarAClaseApurada() {
 
 // --- EJECUCIÓN ---
 
-saludar("Nikola");                                  // imprime directo, no guarda nada
+saludar("Ada");                                     // imprime directo, no guarda nada
 
 let retornoSaludar = saludarConRetorno("Dantz");     // guarda el string retornado en una variable
 console.log(retornoSaludar);
@@ -1276,3 +1680,97 @@ console.log(saludarAClaseApurada);                    // muestra la función en 
 - Se agregó el comentario explícito en el último `console.log(saludarAClaseApurada)` (sin paréntesis) para remarcar la diferencia con la línea anterior — ver sección 21.1, `typeof` sobre una función vs. invocarla.
 
 **Conceptos nuevos que aplica este ejemplo:** los 4 tipos de función según reciban parámetros y/o retornen valor, diferencia entre definir e invocar una función, y qué pasa cuando se le pasan argumentos de más a una función que no los declaró.
+
+---
+
+## Ejemplo práctico — Paso por referencia en objetos
+
+Código completo trabajado en clase, mostrando cómo se comportan las referencias a medida que se van encadenando asignaciones entre objetos:
+
+```javascript
+// Dos variables apuntando al mismo objeto (misma referencia)
+let objeto1 = { id: 1 };
+let objeto2 = objeto1;
+
+console.log(objeto1, objeto2);   // { id: 1 } { id: 1 }
+
+objeto1.id = 10;
+console.log(objeto1, objeto2);   // { id: 10 } { id: 10 }  → objeto2 cambió sin haberlo tocado directamente
+
+// Un tercer objeto, con el mismo contenido, pero en una caja distinta
+let objeto3 = { id: 1 };
+console.log(objeto1 === objeto3);   // false → mismo contenido, distinta referencia
+
+// Si objeto3 se reasigna a la referencia de objeto2, los tres terminan apuntando a la misma caja
+objeto3 = objeto2;
+objeto3.id = 15;
+console.log(objeto1, objeto2, objeto3);   // los tres quedan en { id: 15 }
+
+// Encadenando más variables sobre la misma referencia
+let objeto4 = objeto2;
+const objeto5 = objeto4;
+
+console.log(objeto5);        // { id: 15 } → objeto5 ya nace apuntando a la caja compartida
+
+objeto5.id = 300;            // ✅ permitido: modifica una propiedad de la caja
+console.log(objeto1.id);     // 300 → se refleja en todas las variables que comparten la referencia
+
+objeto5 = { id: 400 };       // ❌ TypeError: Assignment to constant variable.
+                              //    (objeto5 es const: no se puede reasignar a una caja distinta,
+                              //     pero sí modificar el contenido de la caja a la que ya apunta)
+```
+
+**Puntos clave de este ejemplo:**
+- `objeto2 = objeto1` no crea una copia: hace que `objeto2` apunte a la misma caja de memoria que `objeto1`. Cualquier modificación de una se ve reflejada en la otra.
+- Crear un objeto nuevo con `{ }` (como `objeto3` al principio) genera una caja distinta, aunque el contenido sea idéntico — por eso la comparación con `===` da `false`.
+- Reasignar una variable existente a la referencia de otra (`objeto3 = objeto2`) hace que, de ahí en adelante, ambas compartan la misma caja — sin importar que antes apuntaran a cajas distintas.
+- Declarar con `const` (como `objeto5`) no impide modificar el contenido de la caja a la que apunta (agregar o cambiar propiedades) — solo impide reasignar esa variable a una caja distinta.
+
+---
+
+## Ejemplo práctico — Función con múltiples callbacks condicionales
+
+Código completo trabajado en clase, combinando condicionales con múltiples callbacks:
+
+```javascript
+function saludar(nombre) {
+  console.log("Entrando a función saludar");
+  console.log(`Hola ${nombre}`);
+  console.log("Saliendo de función saludar");
+}
+
+function funcionB() {
+  console.log("Entrando a función B");
+  console.log("Se ejecuta función B");
+  console.log("Saliendo de función B");
+}
+
+function funcionC(numero, primeraCallback, segundaCallback) {
+  console.log("Entrando a función C");
+  console.log(`El valor del primer parámetro es ${numero}`);
+
+  if (numero > 10) {
+    primeraCallback();
+    primeraCallback();
+    primeraCallback();
+  } else {
+    segundaCallback();
+  }
+
+  console.log("Saliendo de función C");
+}
+
+// Caso 1: numero > 10 → ejecuta la primera callback (saludar) tres veces
+funcionC(25, saludar, funcionB);
+
+// Caso 2: numero <= 10 → ejecuta la segunda callback (funcionB) una vez
+funcionC(5, saludar, funcionB);
+```
+
+**Flujo del Caso 1** (`funcionC(25, saludar, funcionB)`): como `25 > 10`, entra al `if` y ejecuta `primeraCallback` (en este llamado, `saludar`) tres veces seguidas — cada ejecución completa de `saludar` (entrando → `Hola 25` → saliendo) termina antes de que arranque la siguiente. Recién cuando terminan las tres, `funcionC` imprime su mensaje de salida.
+
+**Flujo del Caso 2** (`funcionC(5, saludar, funcionB)`): como `5` no es mayor a `10`, entra al `else` y ejecuta `segundaCallback` (en este llamado, `funcionB`) una única vez.
+
+**Puntos clave de este ejemplo:**
+- Los nombres `primeraCallback` y `segundaCallback` son solo los nombres de los **parámetros** — qué función se ejecuta en cada rama depende exclusivamente del **orden de los argumentos** con los que se invoca `funcionC` en cada llamado. Invertir el orden de los argumentos (`funcionC(25, funcionB, saludar)`) invierte cuál función se ejecuta en cada caso.
+- Si a `funcionC` se le pasa un valor que no sea una función en la posición de alguna de las dos callbacks (por ejemplo, si por error faltara un argumento y quedara `undefined`), el código falla exactamente en el punto donde se intenta invocar esa callback — con `TypeError: primeraCallback is not a function` (o el nombre que corresponda) — no antes.
