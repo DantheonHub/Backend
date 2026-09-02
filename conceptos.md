@@ -64,12 +64,15 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [20.3 Objetos declarados con `const`: qué se puede modificar y qué no](#203-objetos-declarados-con-const-qué-se-puede-modificar-y-qué-no)
       - [20.4 Paso por referencia vs. paso por valor](#204-paso-por-referencia-vs-paso-por-valor)
       - [20.5 Mutabilidad, inmutabilidad y *race conditions*](#205-mutabilidad-inmutabilidad-y-race-conditions)
+      - [20.6 Objetos incorporados en JavaScript](#206-objetos-incorporados-en-javascript)
+      - [20.7 JSON: `JSON.stringify` y `JSON.parse`](#207-json-jsonstringify-y-jsonparse)
     - [21. Funciones](#21-funciones)
       - [21.1 Formas de definir una función](#211-formas-de-definir-una-función)
       - [21.2 Parámetro vs. argumento](#212-parámetro-vs-argumento)
       - [21.3 Funciones como objetos y callbacks (introducción)](#213-funciones-como-objetos-y-callbacks-introducción)
       - [21.4 Ejemplo: callback en una función calculadora](#214-ejemplo-callback-en-una-función-calculadora)
       - [21.5 Firma de una función (*function signature*)](#215-firma-de-una-función-function-signature)
+      - [21.6 *Hoisting*: por qué gana la última definición](#216-hoisting-por-qué-gana-la-última-definición)
     - [22. Profundización de funciones callback](#22-profundización-de-funciones-callback)
       - [22.1 Función de orden superior (*higher-order function*)](#221-función-de-orden-superior-higher-order-function)
       - [22.2 Toda callback recibida como parámetro se tiene que invocar internamente](#222-toda-callback-recibida-como-parámetro-se-tiene-que-invocar-internamente)
@@ -77,10 +80,20 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [22.4 Buena práctica: la callback como último parámetro](#224-buena-práctica-la-callback-como-último-parámetro)
       - [22.5 Múltiples callbacks](#225-múltiples-callbacks)
       - [22.6 Orden de ejecución: una función no termina hasta que termina lo que invoca](#226-orden-de-ejecución-una-función-no-termina-hasta-que-termina-lo-que-invoca)
-  - [Función A no imprime *"Saliendo de función A"* hasta que función B termina de ejecutarse por completo — aunque función B haya sido "pasada como argumento" desde afuera, en la práctica quien decide cuándo (y si) se ejecuta es la función que la recibe.](#función-a-no-imprime-saliendo-de-función-a-hasta-que-función-b-termina-de-ejecutarse-por-completo--aunque-función-b-haya-sido-pasada-como-argumento-desde-afuera-en-la-práctica-quien-decide-cuándo-y-si-se-ejecuta-es-la-función-que-la-recibe)
+    - [23. Arrays](#23-arrays)
+      - [23.1 Elementos e índices](#231-elementos-e-índices)
+      - [23.2 Arrays fuertemente tipados vs. arrays en JavaScript](#232-arrays-fuertemente-tipados-vs-arrays-en-javascript)
+      - [23.3 Formas de crear un array](#233-formas-de-crear-un-array)
+      - [23.4 Los arrays son objetos: acceso a sus métodos](#234-los-arrays-son-objetos-acceso-a-sus-métodos)
+      - [23.5 Métodos que modifican el array original](#235-métodos-que-modifican-el-array-original)
+      - [23.6 `forEach`: iteración con una callback](#236-foreach-iteración-con-una-callback)
+      - [23.7 `filter`: filtrar elementos según una condición](#237-filter-filtrar-elementos-según-una-condición)
+      - [23.8 `map`: transformar cada elemento en un array nuevo](#238-map-transformar-cada-elemento-en-un-array-nuevo)
   - [Ejemplo práctico — Tipos de funciones en JavaScript](#ejemplo-práctico--tipos-de-funciones-en-javascript)
   - [Ejemplo práctico — Paso por referencia en objetos](#ejemplo-práctico--paso-por-referencia-en-objetos)
   - [Ejemplo práctico — Función con múltiples callbacks condicionales](#ejemplo-práctico--función-con-múltiples-callbacks-condicionales)
+  - [Ejemplo práctico — Arrays: creación, mutación e iteración](#ejemplo-práctico--arrays-creación-mutación-e-iteración)
+
 
 ---
 
@@ -1085,6 +1098,28 @@ let age = 16;
 age > 18 ? console.log("puede ingresar") : (stop = true);
 ```
 
+**Operadores lógicos: `&&` (Y) y `||` (O).** Permiten combinar dos o más condiciones en una sola expresión booleana.
+
+- **`&&` (AND, "Y"):** el resultado es `true` únicamente si **todas** las condiciones que conecta son verdaderas. Alcanza con que una sola sea falsa para que toda la expresión dé `false`.
+- **`||` (OR, "O"):** el resultado es `true` si **al menos una** de las condiciones que conecta es verdadera. Solo da `false` si todas lo son.
+
+```javascript
+let edad = 20;
+let tieneEntrada = true;
+
+edad > 18 && tieneEntrada;   // true solo si CUMPLE LAS DOS: ser mayor de 18 Y tener la entrada
+edad > 18 || tieneEntrada;   // true si se cumple CUALQUIERA de las dos (o ambas)
+```
+
+Un cambio de `&&` a `||` en la misma condición puede alterar completamente el resultado, porque cambia la exigencia de "se tienen que cumplir todas" a "alcanza con que se cumpla una":
+
+```javascript
+let elemento = 1;
+
+elemento > 2 && elemento < 7;   // false → 1 no es mayor a 2, y con && ALCANZA con que una falle para que dé false
+elemento > 2 || elemento < 7;   // true  → 1 sí es menor a 7, y con || alcanza con que UNA se cumpla
+```
+
 ### 20. Objetos
 
 Además de las variables simples, JavaScript provee los **objetos** (`Object`): una estructura que permite reunir varios valores relacionados dentro de una misma variable. Los objetos tienen **propiedades**, que se llaman así porque a través de ellas se puede tanto **setear** (asignar) como **acceder** (leer) sus valores.
@@ -1276,6 +1311,49 @@ console.log(pedidoProcesado.estado);   // "procesado"   → el cambio vive en la
 ```
 
 La sintaxis `{ ...pedido, estado: "procesado" }` usa el **operador *spread*** (tres puntos, `...`), que genera un objeto nuevo copiando las propiedades de `pedido` y pisando solo la que se indique después. Se retoma con más profundidad más adelante; por ahora alcanza con tener claro el problema que resuelve: lograr una copia independiente en vez de una referencia a la misma caja.
+
+#### 20.6 Objetos incorporados en JavaScript
+
+No todos los objetos con los que se trabaja los crea el propio programador — JavaScript ya trae varios objetos incorporados, disponibles para usar desde cualquier parte del código sin necesidad de definirlos. `console`, usado desde la primera clase, es uno de ellos: es un objeto que ya viene creado por el motor de JavaScript, y a través de él se accede a varios métodos, entre ellos `log` (el más usado), pero también `error`, `warn` e `info`, que imprimen mensajes en consola con distinto formato según el tipo.
+
+```javascript
+console.log("mensaje normal");
+console.error("mensaje de error");
+console.warn("mensaje de advertencia");
+console.info("mensaje informativo");
+```
+
+`JSON` es otro ejemplo de objeto incorporado, con varios métodos propios — se desarrolla en profundidad en la sección 20.7.
+
+El patrón para reconocerlos es siempre el mismo, sin importar si el objeto lo creó el programador o ya venía incluido en el lenguaje: **nombre, punto, algo** — ese "algo" es una propiedad del objeto que tiene a la izquierda del punto, y si a esa propiedad se la está ejecutando con paréntesis, es una función (un método). No hace falta conocer todos los objetos incorporados de memoria para poder leer código: alcanza con reconocer este patrón para saber que, delante de un punto, siempre hay un objeto.
+
+#### 20.7 JSON: `JSON.stringify` y `JSON.parse`
+
+**JSON no es un tipo de dato: es una notación** — una convención sobre cómo representar información como texto plano, para que cualquier sistema o lenguaje de programación (más allá de si trabaja con objetos como JavaScript o no) pueda leerla e interpretarla de la misma manera. El nombre es un acrónimo de *JavaScript Object Notation*, aunque hoy se usa como estándar de intercambio de datos entre sistemas mucho más allá de JavaScript — es, por ejemplo, el formato en el que suele viajar la información entre un cliente y un servidor a través de una API.
+
+**`JSON.stringify(objeto)`** convierte un objeto de JavaScript a un `string` con formato JSON: recorre todas sus propiedades y arma una cadena de texto que reproduce esa misma estructura de clave-valor, entre comillas y con la sintaxis específica de JSON.
+
+```javascript
+let persona = { nombre: "Ada", edad: 30 };
+
+let personaComoJSON = JSON.stringify(persona);
+
+console.log(personaComoJSON);        // '{"nombre":"Ada","edad":30}'  → esto es un string, no un objeto
+console.log(typeof personaComoJSON);  // "string"
+```
+
+Esto es distinto de lo que hacían los template literals al insertar un objeto (sección 20.2): un template literal usa la conversión a texto por defecto de JavaScript, que solo indica el tipo general del valor (`[object Object]`); `JSON.stringify`, en cambio, convierte el objeto completo a una cadena de texto con formato JSON, respetando cada una de sus propiedades y valores.
+
+**`JSON.parse(string)`** hace el camino inverso: toma un `string` con formato JSON y lo convierte de nuevo en un objeto de JavaScript.
+
+```javascript
+let personaRecuperada = JSON.parse(personaComoJSON);
+
+console.log(personaRecuperada);         // { nombre: "Ada", edad: 30 }
+console.log(typeof personaRecuperada);  // "object"
+```
+
+Este par de métodos es central para el trabajo con APIs: la información que viaja entre un cliente y un servidor no puede viajar como un objeto de JavaScript tal cual (no todos los sistemas del otro lado hablan JavaScript, ni los objetos son un formato adecuado para transmitir por red) — viaja como texto plano con formato JSON, y cada lado la convierte a su propia estructura de datos según la necesite. `JSON.stringify` prepara la información para el envío; `JSON.parse` reconstruye el objeto a partir de la información recibida.
 
 ### 21. Funciones
 
@@ -1479,6 +1557,22 @@ console.log(saludar("Grace"));   // "Hola Grace, bienvenido a undefined"
 
 El concepto de firma con tipos explícitos, y la sobrecarga de funciones, se aplican de lleno recién en TypeScript — sus variables son de tipado dinámico (sección 16) y pueden cambiar de tipo a lo largo de la ejecución, así que JavaScript no tiene forma de distinguir "versiones" de una función por su firma.
 
+#### 21.6 *Hoisting*: por qué gana la última definición
+
+El motivo puntual por el que, al declarar dos funciones con el mismo nombre, "gana" la última (sección 21.5) tiene un nombre: ***hoisting*** (de *hoist*, "izar" o "levantar"). Antes de ejecutar el código línea por línea, el motor de JavaScript hace una primera pasada por todo el archivo y **sube las declaraciones de función hacia arriba**, dejándolas disponibles desde el principio de la ejecución — esto es lo que permite, por ejemplo, invocar una función antes del punto del código en el que aparece escrita su declaración.
+
+Cuando hay dos declaraciones con el mismo nombre, ambas se "izan" en el orden en que aparecen en el archivo — y como la segunda se procesa después que la primera, **sobreescribe** la referencia que había quedado guardada con ese nombre. Por eso, al momento de invocar la función, lo único que queda disponible es la última definición: no es que JavaScript "elija" la mejor versión (como pasaría con la sobrecarga de un lenguaje tipado), es que solo sobrevive una, por orden de escritura en el archivo.
+
+```javascript
+saludar("Ada");   // se puede invocar ANTES de la línea donde está escrita, gracias al hoisting
+
+function saludar(nombre) {
+  console.log(`Hola ${nombre}`);
+}
+```
+
+*Hoisting* aplica a las funciones declaradas con la palabra `function` (sección 21.1). Las funciones por expresión (`const saludar = function () {}`) y las funciones flecha no se "izan" de la misma manera: la variable existe desde el principio, pero sin el valor de función asignado todavía, así que invocarlas antes de la línea donde se les asigna la función produce un error.
+
 ---
 
 ### 22. Profundización de funciones callback
@@ -1631,6 +1725,150 @@ sequenceDiagram
 ```
 
 Función A no imprime *"Saliendo de función A"* hasta que función B termina de ejecutarse por completo — aunque función B haya sido "pasada como argumento" desde afuera, en la práctica quien decide cuándo (y si) se ejecuta es la función que la recibe.
+
+---
+
+### 23. Arrays
+
+Un **array** (o arreglo/*raíz*, en la jerga de la clase) es una colección de elementos ordenados por posición, todos asociados a una sola variable. Se puede pensar como una fila de "cajitas" contiguas en memoria, cada una identificada por su posición: cada cajita guarda un elemento, y a través de esa posición se puede acceder, leer o modificar lo que contiene.
+
+#### 23.1 Elementos e índices
+
+No hay que confundir el **elemento** (el valor guardado en una cajita) con el **índice** (la posición de esa cajita dentro del array). La numeración de los índices arranca en **cero**, no en uno — esto es así en la gran mayoría de los lenguajes de programación, no solo en JavaScript.
+
+Como consecuencia directa, el índice de un elemento siempre es **uno menos** que su posición contada "naturalmente" (como se contaría a mano, empezando de 1): el primer elemento está en el índice `0`, el quinto elemento está en el índice `4`, y así sucesivamente. También se puede usar el índice más alto para saber cuántos elementos tiene el array: si el índice más alto es `10`, el array tiene 11 elementos (del índice `0` al `10`).
+
+```javascript
+let frutas = ["manzana", "banana", "pera", "tomate", "ananá"];
+
+frutas[0];   // "manzana" → primer elemento, índice 0
+frutas[2];   // "pera"    → tercer elemento, índice 2
+frutas.length;   // 5 → cantidad total de elementos
+```
+
+#### 23.2 Arrays fuertemente tipados vs. arrays en JavaScript
+
+En la mayoría de los lenguajes fuertemente tipados, un array solo puede guardar elementos de un único tipo de dato: un array de números enteros no admite un `float` en el medio, un array de `string` no admite un objeto, etc.
+
+JavaScript, al ser un lenguaje de tipado dinámico e interpretado (secciones 13 y 16), no impone esa restricción: un mismo array puede mezclar números, strings, objetos y booleanos sin ningún error, porque el motor va leyendo y evaluando cada posición en tiempo real, línea a línea, sin necesidad de que todas coincidan en tipo de antemano.
+
+```javascript
+let mezclado = [1, "dos", { id: 3 }, true];   // válido en JavaScript, sin ningún error
+```
+
+Que el lenguaje lo permita no significa que sea recomendable: mezclar tipos de datos en un mismo array es considerada una mala práctica, porque después, en otra parte del código, no queda claro qué tipo de valor se puede llegar a encontrar en cada posición. Por eso, salvo que haya una razón concreta, conviene mantener un único tipo de dato por array.
+
+#### 23.3 Formas de crear un array
+
+Al igual que los objetos (sección 20), un array se puede crear de más de una manera:
+
+```javascript
+// Array literal: la forma más común, entre corchetes
+let frutas = ["manzana", "banana", "pera"];
+let vacio = [];
+
+// Con el operador `new`, invocando el constructor de Array
+let frutas2 = new Array("manzana", "banana", "pera");
+let vacio2 = new Array();
+```
+
+Un array **es, en el fondo, un objeto** (`Array` es una clase incorporada de JavaScript): al usar el operador `new`, lo que se está invocando es el **método constructor** de esa clase — recordando lo visto de programación orientada a objetos, invocar con `new` siempre significa "instanciar la clase e invocar su constructor", y el resultado es el objeto recién creado. Por eso a `"manzana"`, `"banana"` y `"pera"` en `new Array(...)` se los llama **argumentos**: se está *invocando* el constructor, no declarándolo.
+
+#### 23.4 Los arrays son objetos: acceso a sus métodos
+
+Como un array es un objeto, tiene **propiedades** — y muchas de esas propiedades son funciones (métodos) que sirven para operar sobre sus elementos. Se accede a ellas de la misma forma que a cualquier propiedad de un objeto: con la notación de punto (sección 20.2).
+
+```javascript
+frutas.push("kiwi");   // frutas es el objeto, push es el método (una propiedad de tipo función)
+```
+
+Reconocer esto no requiere memorizar cada método de antemano: siempre que aparezca el patrón **nombre, punto, algo, paréntesis**, lo que está antes del punto es un objeto, y lo que sigue es una propiedad que en ese caso es una función que se está invocando.
+
+#### 23.5 Métodos que modifican el array original
+
+Los siguientes métodos **mutan** (modifican) el array sobre el que se invocan — no generan una copia, alteran directamente el original:
+
+| Método | Qué hace | Qué retorna |
+|---|---|---|
+| `push(valor)` | Agrega uno o más elementos al **final** del array | La nueva longitud del array |
+| `pop()` | Elimina el **último** elemento del array | El elemento eliminado |
+| `unshift(valor)` | Agrega uno o más elementos al **principio** del array | La nueva longitud del array |
+| `shift()` | Elimina el **primer** elemento del array | El elemento eliminado |
+
+```javascript
+let numeros = [10, 20, 30];
+
+numeros.push(40);      // numeros ahora es [10, 20, 30, 40] → retorna 4 (nueva longitud)
+numeros.pop();          // numeros ahora es [10, 20, 30]     → retorna 40 (el elemento eliminado)
+numeros.unshift(5);     // numeros ahora es [5, 10, 20, 30]  → retorna 4 (nueva longitud)
+numeros.shift();        // numeros ahora es [10, 20, 30]     → retorna 5 (el elemento eliminado)
+```
+
+Agregar o quitar un elemento al **principio** del array (`unshift`/`shift`) es más costoso que hacerlo al **final** (`push`/`pop`): como los índices tienen que mantenerse consecutivos, insertar o eliminar al principio obliga a correr de posición a todos los demás elementos. Por eso, salvo que haya una necesidad puntual de trabajar sobre el principio del array, en general conviene preferir operar sobre el final.
+
+#### 23.6 `forEach`: iteración con una callback
+
+`forEach` es un **método de iteración**: recorre un array de punta a punta, ejecutando una callback una vez por cada elemento. Como recibe una función (la callback) como argumento y es la responsable de invocarla internamente, `forEach` es, por definición, una **función de orden superior** (sección 22.1).
+
+```javascript
+let frutas = ["manzana", "banana", "pera", "tomate", "ananá"];
+
+frutas.forEach(function (elemento, indice) {
+  console.log(`La fruta ${elemento} se encuentra en la posición ${indice}`);
+});
+
+// La fruta manzana se encuentra en la posición 0
+// La fruta banana se encuentra en la posición 1
+// La fruta pera se encuentra en la posición 2
+// La fruta tomate se encuentra en la posición 3
+// La fruta ananá se encuentra en la posición 4
+```
+
+Quien define la callback que se le pasa a `forEach` **no elige** qué valores va a recibir esa callback en cada parámetro — eso ya lo decidió quien definió `forEach`: siempre va a invocar la callback pasándole, como primer argumento, el **elemento actual** de esa vuelta, y como segundo argumento, su **índice**. Lo único que se define al escribir la callback son los **nombres** de esos dos parámetros (`elemento` e `indice` en el ejemplo, pero podrían llamarse de cualquier otra forma) y qué hacer con esos valores en cada vuelta.
+
+`forEach` no retorna ningún valor (retorna `undefined`) — solo sirve para *hacer algo* con cada elemento (como imprimirlo), no para construir un array nuevo a partir de ellos. Para eso existen `filter` y `map`.
+
+#### 23.7 `filter`: filtrar elementos según una condición
+
+`filter` recorre el array y devuelve un **array nuevo**, con únicamente los elementos para los que la callback haya devuelto `true` — no modifica el array original. También es una función de orden superior: recibe una callback y es responsable de ejecutarla por cada elemento.
+
+```javascript
+let numeros = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+
+let filtrados = numeros.filter(function (elemento) {
+  return elemento > 2 && elemento < 7;
+});
+
+console.log(filtrados);   // [3, 4, 5, 6]
+console.log(numeros);     // [0, 1, 2, 3, 4, 5, 6, 7, 8]  → el original no cambia
+```
+
+La condición que decide si un elemento se incluye o no puede combinar varias comparaciones con los operadores lógicos de la sección 19: cambiar el `&&` de este ejemplo por un `||` altera completamente el resultado, porque pasa de exigir "las dos condiciones a la vez" a alcanzar con que se cumpla "cualquiera de las dos":
+
+```javascript
+numeros.filter(function (elemento) {
+  return elemento > 2 || elemento < 7;
+});
+// con || casi todos los elementos entran, porque alcanza con cumplir una de las dos condiciones
+```
+
+#### 23.8 `map`: transformar cada elemento en un array nuevo
+
+`map` recorre el array y devuelve un **array nuevo, de la misma longitud**, con el resultado de aplicar la callback a cada elemento. Al igual que `filter`, es una función de orden superior, y **no modifica el array original**.
+
+```javascript
+let numeros = [0, 3, 6, 4];
+
+let sumados = numeros.map(function (elemento) {
+  return elemento + 10;
+});
+
+console.log(sumados);   // [10, 13, 16, 14]
+console.log(numeros);   // [0, 3, 6, 4]   → el original no cambia
+```
+
+**Diferencia clave entre `forEach` y `map`:** `forEach` itera sobre el array original sin generar ninguna copia — solo ejecuta la callback por cada elemento, no arma un array de resultados. `map`, en cambio, genera una **copia nueva** del array y va completando esa copia con el resultado de la callback en cada posición, dejando el original intacto. Esta es una de las razones por las que se prefiere `map` por sobre `forEach` cuando el objetivo es transformar los datos de un array: respeta el principio de **inmutabilidad** (sección 20.5), evitando modificar por accidente el array original desde otra parte del código que todavía lo necesite tal cual estaba.
+
 ---
 
 ## Ejemplo práctico — Tipos de funciones en JavaScript
@@ -1774,3 +2012,49 @@ funcionC(5, saludar, funcionB);
 **Puntos clave de este ejemplo:**
 - Los nombres `primeraCallback` y `segundaCallback` son solo los nombres de los **parámetros** — qué función se ejecuta en cada rama depende exclusivamente del **orden de los argumentos** con los que se invoca `funcionC` en cada llamado. Invertir el orden de los argumentos (`funcionC(25, funcionB, saludar)`) invierte cuál función se ejecuta en cada caso.
 - Si a `funcionC` se le pasa un valor que no sea una función en la posición de alguna de las dos callbacks (por ejemplo, si por error faltara un argumento y quedara `undefined`), el código falla exactamente en el punto donde se intenta invocar esa callback — con `TypeError: primeraCallback is not a function` (o el nombre que corresponda) — no antes.
+
+---
+
+## Ejemplo práctico — Arrays: creación, mutación e iteración
+
+Código que recorre los distintos puntos vistos sobre arrays, de punta a punta:
+
+```javascript
+// --- Creación ---
+let frutas = ["manzana", "banana", "pera", "tomate", "ananá"];
+
+console.log(frutas.length);   // 5
+console.log(frutas[0]);       // "manzana" → índice 0, primer elemento
+
+// --- Métodos que mutan el array original ---
+frutas.push("kiwi");     // ["manzana", "banana", "pera", "tomate", "ananá", "kiwi"]
+frutas.pop();             // ["manzana", "banana", "pera", "tomate", "ananá"]
+frutas.unshift("uva");    // ["uva", "manzana", "banana", "pera", "tomate", "ananá"]
+frutas.shift();           // ["manzana", "banana", "pera", "tomate", "ananá"]
+
+// --- forEach: recorrer e imprimir, sin generar un array nuevo ---
+frutas.forEach(function (elemento, indice) {
+  console.log(`La fruta ${elemento} se encuentra en la posición ${indice}`);
+});
+
+// --- filter: array nuevo, solo con los elementos que cumplen la condición ---
+let numeros = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+
+let numerosFiltrados = numeros.filter(function (elemento) {
+  return elemento > 2 && elemento < 7;
+});
+console.log(numerosFiltrados);   // [3, 4, 5, 6]
+
+// --- map: array nuevo, de la misma longitud, con cada elemento transformado ---
+let numerosSumados = numeros.map(function (elemento) {
+  return elemento + 10;
+});
+console.log(numerosSumados);   // [10, 11, 12, 13, 14, 15, 16, 17, 18]
+
+console.log(numeros);   // [0, 1, 2, 3, 4, 5, 6, 7, 8] → el original sigue intacto después de filter y map
+```
+
+**Puntos clave de este ejemplo:**
+- `push`/`pop`/`unshift`/`shift` modifican `frutas` directamente: no hace falta (ni se puede) guardar su resultado en una variable nueva para "quedarse con el array modificado" — el array original ya cambió.
+- `forEach` sirve para *hacer algo* con cada elemento (en este caso, imprimirlo) — no arma ningún array nuevo, y su valor de retorno (`undefined`) no se usa nunca.
+- `filter` y `map` sí retornan un array nuevo, y ese valor de retorno es lo que hay que guardar en una variable para poder usarlo — `numeros` nunca se modifica, sin importar cuántas veces se lo pase por `filter` o `map`.
