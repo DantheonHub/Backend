@@ -73,6 +73,7 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [21.4 Ejemplo: callback en una función calculadora](#214-ejemplo-callback-en-una-función-calculadora)
       - [21.5 Firma de una función (*function signature*)](#215-firma-de-una-función-function-signature)
       - [21.6 *Hoisting*: por qué gana la última definición](#216-hoisting-por-qué-gana-la-última-definición)
+      - [21.7 Alcance (*scope*) de una variable declarada dentro de una función](#217-alcance-scope-de-una-variable-declarada-dentro-de-una-función)
     - [22. Profundización de funciones callback](#22-profundización-de-funciones-callback)
       - [22.1 Función de orden superior (*higher-order function*)](#221-función-de-orden-superior-higher-order-function)
       - [22.2 Toda callback recibida como parámetro se tiene que invocar internamente](#222-toda-callback-recibida-como-parámetro-se-tiene-que-invocar-internamente)
@@ -93,6 +94,12 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
   - [Ejemplo práctico — Paso por referencia en objetos](#ejemplo-práctico--paso-por-referencia-en-objetos)
   - [Ejemplo práctico — Función con múltiples callbacks condicionales](#ejemplo-práctico--función-con-múltiples-callbacks-condicionales)
   - [Ejemplo práctico — Arrays: creación, mutación e iteración](#ejemplo-práctico--arrays-creación-mutación-e-iteración)
+  - [Ejemplo práctico — Objeto con métodos, validación y scope](#ejemplo-práctico--objeto-con-métodos-validación-y-scope)
+  - [Unidad 3 — Node.js](#unidad-3--nodejs)
+    - [24. Node.js: qué es y por qué existe](#24-nodejs-qué-es-y-por-qué-existe)
+    - [25. Características de Node.js](#25-características-de-nodejs)
+    - [26. Módulos, paquetes y dependencias](#26-módulos-paquetes-y-dependencias)
+    - [27. NPM (*Node Package Manager*)](#27-npm-node-package-manager)
 
 
 ---
@@ -1120,6 +1127,39 @@ elemento > 2 && elemento < 7;   // false → 1 no es mayor a 2, y con && ALCANZA
 elemento > 2 || elemento < 7;   // true  → 1 sí es menor a 7, y con || alcanza con que UNA se cumpla
 ```
 
+**Concepto de veracidad (*truthiness*).** Dentro de una condición (`if`, operador ternario, `&&`, `||`), JavaScript no exige que el valor evaluado sea literalmente `true` o `false` — cualquier valor se puede evaluar en ese contexto, y el motor lo trata como uno de los dos según a qué grupo pertenezca. La mayoría de los valores se comportan como verdaderos; existe un grupo específico y acotado de valores que se comportan como falsos, llamados ***falsy***:
+
+| Valor *falsy* | Ejemplo |
+|---|---|
+| `false` | el booleano en sí |
+| `0` | el número cero |
+| `""` | un string vacío (con comillas simples, dobles o backticks) |
+| `null` | |
+| `undefined` | |
+| `NaN` | *Not a Number* |
+
+Cualquier valor que no esté en esta lista se comporta como verdadero dentro de una condición — incluyendo casos que podrían parecer "vacíos" pero no lo son, como un objeto vacío `{}` o un array vacío `[]`: ninguno de los dos es *falsy*.
+
+```javascript
+if (0) { }              // no entra: 0 es falsy
+if ("") { }              // no entra: string vacío es falsy
+if (null) { }            // no entra: null es falsy
+if ({}) { console.log("entra"); }   // SÍ entra: un objeto vacío no es falsy
+if ([]) { console.log("entra"); }   // SÍ entra: un array vacío no es falsy
+```
+
+Esto permite simplificar comparaciones: en vez de escribir explícitamente `if (array.length > 0)`, alcanza con `if (array.length)` — si `length` vale `0`, ya se comporta como falso sin necesidad de forzar la comparación con `> 0`. El resultado es el mismo, pero se evita una comparación adicional; en un ciclo que se repite una gran cantidad de veces (por ejemplo, iterando un array de millones de elementos), evitar esa comparación de más en cada vuelta también suma en términos de rendimiento.
+
+```javascript
+let numeros = [];
+
+if (numeros.length) {
+  console.log("el array tiene elementos");
+} else {
+  console.log("el array está vacío");   // esto es lo que se imprime: length es 0, y 0 es falsy
+}
+```
+
 ### 20. Objetos
 
 Además de las variables simples, JavaScript provee los **objetos** (`Object`): una estructura que permite reunir varios valores relacionados dentro de una misma variable. Los objetos tienen **propiedades**, que se llaman así porque a través de ellas se puede tanto **setear** (asignar) como **acceder** (leer) sus valores.
@@ -1573,6 +1613,56 @@ function saludar(nombre) {
 
 *Hoisting* aplica a las funciones declaradas con la palabra `function` (sección 21.1). Las funciones por expresión (`const saludar = function () {}`) y las funciones flecha no se "izan" de la misma manera: la variable existe desde el principio, pero sin el valor de función asignado todavía, así que invocarlas antes de la línea donde se les asigna la función produce un error.
 
+#### 21.7 Alcance (*scope*) de una variable declarada dentro de una función
+
+Una variable declarada con `let` o `const` **dentro del cuerpo de una función** solo existe mientras esa función se está ejecutando: su alcance (*scope*) es esa función. Cada vez que la función se invoca, la variable se **crea de nuevo**, sin memoria de ejecuciones anteriores.
+
+```javascript
+function frenar() {
+  let velocidad = 100;
+  velocidad -= 10;
+  console.log(velocidad);
+}
+
+frenar();   // 90
+frenar();   // 90 de nuevo — no 80
+frenar();   // sigue dando 90
+```
+
+Por más veces que se invoque `frenar`, siempre imprime `90`: en cada invocación, `velocidad` se vuelve a crear e inicializar en `100`, se le resta `10`, se imprime, y ahí termina la ejecución de la función. Cuando la función termina, esa variable deja de existir — queda disponible para que el ***garbage collector*** (el mecanismo del motor de JavaScript que libera memoria que ya no se usa) la elimine.
+
+Si en cambio la variable se declara **fuera** de la función, pero la función la usa dentro de su cuerpo, esa variable sigue viva entre una invocación y la siguiente — porque nunca se vuelve a crear, es siempre la misma:
+
+```javascript
+let velocidad = 100;
+
+function frenar() {
+  velocidad -= 10;
+  console.log(velocidad);
+}
+
+frenar();   // 90
+frenar();   // 80
+frenar();   // 70
+```
+
+Acá `velocidad` no vive dentro de `frenar`: vive en un alcance más amplio, y `frenar` simplemente tiene acceso a ella y la modifica cada vez que se ejecuta. Por eso el valor se conserva entre invocaciones, en vez de reiniciarse.
+
+Un error común es declarar la variable fuera de la función, pero **seguir inicializándola con un valor fijo dentro de la función** — el resultado termina siendo el mismo que si estuviera declarada adentro, porque ese valor fijo pisa lo que hubiera quedado de la ejecución anterior:
+
+```javascript
+let velocidad = 100;
+
+function frenar() {
+  velocidad = 100;   // esto pisa el valor cada vez, aunque la variable esté afuera
+  velocidad -= 10;
+  console.log(velocidad);
+}
+
+frenar();   // 90
+frenar();   // 90 de nuevo — el = 100 de arriba anula el efecto de tenerla afuera
+```
+
 ---
 
 ### 22. Profundización de funciones callback
@@ -1806,6 +1896,38 @@ numeros.shift();        // numeros ahora es [10, 20, 30]     → retorna 5 (el e
 
 Agregar o quitar un elemento al **principio** del array (`unshift`/`shift`) es más costoso que hacerlo al **final** (`push`/`pop`): como los índices tienen que mantenerse consecutivos, insertar o eliminar al principio obliga a correr de posición a todos los demás elementos. Por eso, salvo que haya una necesidad puntual de trabajar sobre el principio del array, en general conviene preferir operar sobre el final.
 
+Esto se puede comprobar mirando cómo cambia el elemento que está en el índice `0` después de un `shift`:
+
+```javascript
+let numeros = [10, 20, 30];
+
+console.log(numeros[0]);   // 10
+
+numeros.shift();           // elimina el 10
+
+console.log(numeros[0]);   // 20 → lo que estaba en el índice 1 ahora está en el índice 0
+```
+
+Si `shift` solo borrara el valor sin desplazar el resto, el índice `0` debería quedar vacío (`undefined`) después de eliminar el primer elemento. Que en cambio aparezca `20` confirma que todos los elementos posteriores se corrieron una posición hacia el principio — el trabajo real que hace `shift` (y, en la dirección opuesta, `unshift`) por cada elemento que agrega o quita.
+
+**Si `pop` o `shift` se invocan sobre un array vacío, no hay nada para eliminar:** el array queda igual (vacío) y el método retorna `undefined`, en vez de lanzar un error.
+
+```javascript
+let vacio = [];
+
+let resultado = vacio.pop();
+
+console.log(resultado);   // undefined → no había nada para eliminar
+console.log(vacio);       // []         → el array sigue vacío, no se rompió nada
+```
+
+**`length` es una propiedad, no un método:** a diferencia de `push`, `pop`, `forEach`, etc., `length` no se invoca con paréntesis — es un valor (un número), no una función.
+
+```javascript
+numeros.length;     // ✅ correcto: es una propiedad
+numeros.length();   // ❌ TypeError: numeros.length is not a function
+```
+
 #### 23.6 `forEach`: iteración con una callback
 
 `forEach` es un **método de iteración**: recorre un array de punta a punta, ejecutando una callback una vez por cada elemento. Como recibe una función (la callback) como argumento y es la responsable de invocarla internamente, `forEach` es, por definición, una **función de orden superior** (sección 22.1).
@@ -1868,6 +1990,12 @@ console.log(numeros);   // [0, 3, 6, 4]   → el original no cambia
 ```
 
 **Diferencia clave entre `forEach` y `map`:** `forEach` itera sobre el array original sin generar ninguna copia — solo ejecuta la callback por cada elemento, no arma un array de resultados. `map`, en cambio, genera una **copia nueva** del array y va completando esa copia con el resultado de la callback en cada posición, dejando el original intacto. Esta es una de las razones por las que se prefiere `map` por sobre `forEach` cuando el objetivo es transformar los datos de un array: respeta el principio de **inmutabilidad** (sección 20.5), evitando modificar por accidente el array original desde otra parte del código que todavía lo necesite tal cual estaba.
+
+Cuando la callback recibe un único parámetro y su cuerpo es una sola expresión que se retorna, se puede escribir como función flecha con **retorno implícito** (sin `{ }` ni la palabra `return`, y sin paréntesis alrededor del único parámetro):
+
+```javascript
+let sumados = numeros.map(elemento => elemento + 10);   // mismo resultado que la versión anterior, más corto
+```
 
 ---
 
@@ -2058,3 +2186,87 @@ console.log(numeros);   // [0, 1, 2, 3, 4, 5, 6, 7, 8] → el original sigue int
 - `push`/`pop`/`unshift`/`shift` modifican `frutas` directamente: no hace falta (ni se puede) guardar su resultado en una variable nueva para "quedarse con el array modificado" — el array original ya cambió.
 - `forEach` sirve para *hacer algo* con cada elemento (en este caso, imprimirlo) — no arma ningún array nuevo, y su valor de retorno (`undefined`) no se usa nunca.
 - `filter` y `map` sí retornan un array nuevo, y ese valor de retorno es lo que hay que guardar en una variable para poder usarlo — `numeros` nunca se modifica, sin importar cuántas veces se lo pase por `filter` o `map`.
+
+---
+
+## Ejemplo práctico — Objeto con métodos, validación y scope
+
+Código trabajado en clase: un objeto `auto` con acciones guardadas como funciones flecha en sus propiedades (sección 20.1, 21.1), parámetros para hacerlas configurables, validación de esos parámetros con `if`/`else`, y una propiedad (`velocidad`) que persiste entre invocaciones gracias a su alcance (sección 21.7).
+
+```javascript
+let velocidad = 100;
+
+const auto = {
+  marca: "DeLorean",
+  acciones: {
+    arrancar: () => {
+      velocidad = 0;
+      console.log(`Velocidad: ${velocidad}`);
+    },
+    acelerar: (cantidadAceleracion) => {
+      velocidad += cantidadAceleracion;
+      console.log(`Acelerando: ${velocidad}`);
+    },
+    frenar: (cantidadFrenado) => {
+      if (cantidadFrenado >= 0 && cantidadFrenado <= velocidad) {
+        velocidad -= cantidadFrenado;
+        console.log(`Frenando: ${velocidad}`);
+      } else {
+        console.log("El valor que recibe el frenado tiene que ser un número entre 0 y la velocidad actual");
+      }
+    },
+  },
+};
+
+auto.acciones.arrancar();      // Velocidad: 0
+auto.acciones.acelerar(10);    // Acelerando: 10
+auto.acciones.acelerar(20);    // Acelerando: 30
+auto.acciones.frenar(15);      // Frenando: 15
+auto.acciones.frenar(9999);    // El valor que recibe el frenado tiene que ser un número entre 0 y la velocidad actual
+```
+
+**Puntos clave de este ejemplo:**
+- `acciones` es un objeto anidado dentro de `auto` (sección 20.1); cada una de sus propiedades (`arrancar`, `acelerar`, `frenar`) guarda una función flecha — por eso se accede y se invoca encadenando puntos: `auto.acciones.arrancar()`.
+- `velocidad` está declarada **fuera** del objeto, no como una propiedad de `auto`. Como las funciones de `acciones` la usan dentro de su cuerpo, tienen acceso a ella por alcance (sección 21.7) y la modifican directamente — por eso el valor se mantiene entre una llamada y la siguiente, en vez de reiniciarse. (Lo más prolijo sería que `velocidad` fuera una propiedad más de `auto`, pero eso implica un tema — el valor de `this` dentro de una función flecha — que todavía no se vio.)
+- `frenar` valida su parámetro con una condición doble (sección 19: operadores lógicos): el valor tiene que ser mayor o igual a `0` **y** menor o igual a la `velocidad` actual — evita tanto un frenado negativo como uno mayor a la velocidad real, sin necesidad de romper la ejecución del programa (el `else` solo imprime un mensaje, no detiene nada).
+- Si a `frenar` se le pasa un valor no numérico (por ejemplo `undefined`, por no pasarle ningún argumento), la resta contra `velocidad` da como resultado `NaN` (sección "Concepto de veracidad") — la validación con `if` evita que ese caso llegue a ejecutar la resta.
+
+## Unidad 3 — Node.js
+
+> Esta unidad quedó a mitad de dar en la Clase 07 (la clase se cortó con Node.js recién presentado y NPM a medio explicar) — se retoma y completa en la clase siguiente.
+
+### 24. Node.js: qué es y por qué existe
+
+**Node.js no es un lenguaje de programación, no es un framework y no es una librería: es un *entorno de ejecución*** (*runtime*). Un framework es un marco de trabajo que trae funcionalidades preestablecidas para resolver un problema puntual; Node no hace eso — lo que provee es el entorno completo necesario para que el código JavaScript (o TypeScript, que en definitiva termina transpilado a JavaScript — sección 14) se pueda ejecutar **fuera del navegador**, del lado del servidor.
+
+El motor que usa Node para interpretar y ejecutar JavaScript es **V8**, el mismo motor que usa Google Chrome (sección 13) — es de código abierto, y Node lo toma y lo ejecuta dentro de un entorno propio, en vez de depender de un navegador. Esto es necesario porque un navegador no está pensado para correr como servidor: no tiene buena gestión de los recursos del sistema por sí mismo (delega buena parte de eso al sistema operativo), y no fue diseñado para ese propósito. Node arma alrededor de V8 un entorno completo, con acceso a los recursos del sistema operativo necesarios para actuar como servidor.
+
+### 25. Características de Node.js
+
+- **Basado en eventos, orientado a callbacks, y no bloqueante (*event-driven*, *non-blocking I/O*):** Node no se queda "frenado" esperando a que termine una operación de entrada/salida (por ejemplo, leer un archivo o consultar una base de datos) — sigue procesando otras cosas mientras tanto, y retoma cuando esa operación termina. El "no bloqueante" no quiere decir que Node sea literalmente imposible de bloquear, sino que su arquitectura está pensada específicamente para evitarlo en la mayoría de los casos. Esto se relaciona directamente con el concepto de *asincronía*, que se desarrolla en profundidad más adelante.
+- **Corre sobre un único hilo (*single-threaded*):** un **núcleo** (o procesador) puede gestionar una cierta cantidad de **hilos** — no son lo mismo, un núcleo puede manejar varios hilos. Node ejecuta el código de la aplicación sobre un solo hilo. Cómo se relaciona esto con la concurrencia se desarrolla en profundidad más adelante.
+- **Basado en módulos:** permite dividir una aplicación grande y compleja en partes más chicas y manejables — el mismo principio de reutilización de código que ya se vio con las funciones (sección 21), pero aplicado a nivel de archivos/módulos completos.
+- **Rápido y escalable:** diseñado para poder atender desde una solicitud hasta millones, sin perder rendimiento a medida que crece la demanda — mientras el servidor donde corre tenga capacidad de procesamiento.
+- **Multiplataforma:** corre sobre Windows, Linux y macOS.
+- **Comunidad activa:** una gran cantidad de desarrolladores contribuyendo con librerías, soluciones y mejoras constantemente.
+
+Algunos usos típicos de Node.js: servidores de una API REST (el caso central de esta materia), el backend de una *Single Page Application*, aplicaciones de IoT (Internet de las Cosas), servidores de streaming, y aplicaciones de chat en tiempo real.
+
+### 26. Módulos, paquetes y dependencias
+
+Antes de hablar de NPM hace falta distinguir tres conceptos relacionados, que suelen confundirse entre sí:
+
+- **Módulo:** una funcionalidad organizada en uno o varios archivos, pensada para ser reutilizada dentro de la aplicación. Es, en esencia, el mismo problema que resuelven las funciones (evitar copiar y pegar el mismo código en varios archivos), pero a una escala mayor.
+- **Paquete:** un módulo que además tiene un archivo `package.json` describiéndolo, lo cual lo deja en condiciones de publicarse (por ejemplo, en el registro de NPM) para que otras personas lo puedan reutilizar.
+- **Dependencia:** un paquete que otro paquete necesita para funcionar correctamente. Si el módulo A necesita al módulo B para funcionar, A tiene una dependencia directa de B.
+
+### 27. NPM (*Node Package Manager*)
+
+**NPM es el gestor de paquetes de Node.js** — viene instalado por defecto junto con el entorno de ejecución de Node. Es la herramienta de gestión de dependencias predeterminada de los proyectos de Node: no solo instala las dependencias que un proyecto declara directamente, sino que también resuelve, en cadena, todas las dependencias que esas dependencias necesitan a su vez (si un paquete necesita a otros diez paquetes internamente, NPM se encarga de instalarlos a todos).
+
+- **`package.json`:** el archivo de configuración de un proyecto de Node — describe, entre otras cosas, sus dependencias, sus scripts, y dónde vive su repositorio. Cuando se ejecuta `npm install`, NPM lee este archivo para saber qué paquetes tiene que descargar.
+- **`node_modules`:** la carpeta donde NPM descarga y guarda todos los paquetes instalados (las dependencias declaradas, y las dependencias de esas dependencias). Por su tamaño, esta carpeta no se sube al repositorio: alcanza con subir `package.json`, ya que contiene toda la información necesaria para que cualquier otra persona pueda regenerar `node_modules` corriendo `npm install`.
+
+Node.js también trae, además del entorno de ejecución en sí, un conjunto de **paquetes nativos** ya incluidos — esos no se gestionan a través de NPM, sino que se actualizan junto con la versión del propio Node.
+
+*Existen alternativas a NPM como gestor de paquetes (por ejemplo, PNPM, mencionado en clase como una opción más segura en cuanto a cómo instala y actualiza los paquetes) — se desarrollan más adelante.*
