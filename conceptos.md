@@ -90,6 +90,14 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [23.6 `forEach`: iteración con una callback](#236-foreach-iteración-con-una-callback)
       - [23.7 `filter`: filtrar elementos según una condición](#237-filter-filtrar-elementos-según-una-condición)
       - [23.8 `map`: transformar cada elemento en un array nuevo](#238-map-transformar-cada-elemento-en-un-array-nuevo)
+      - [23.9 `find` y `findIndex`: buscar un elemento puntual](#239-find-y-findindex-buscar-un-elemento-puntual)
+      - [23.10 `some` y `every`: verificar una condición sobre el array](#2310-some-y-every-verificar-una-condición-sobre-el-array)
+      - [23.11 `fill`: rellenar o reemplazar elementos por posición](#2311-fill-rellenar-o-reemplazar-elementos-por-posición)
+      - [23.12 `splice`: agregar, eliminar y reemplazar en un mismo método](#2312-splice-agregar-eliminar-y-reemplazar-en-un-mismo-método)
+      - [23.13 `slice`: copiar una porción del array](#2313-slice-copiar-una-porción-del-array)
+      - [23.14 `concat`: unir arrays](#2314-concat-unir-arrays)
+      - [23.15 `sort`: ordenar el array](#2315-sort-ordenar-el-array)
+      - [23.16 Los arrays no son "listas": una aclaración de vocabulario](#2316-los-arrays-no-son-listas-una-aclaración-de-vocabulario)
   - [Ejemplo práctico — Tipos de funciones en JavaScript](#ejemplo-práctico--tipos-de-funciones-en-javascript)
   - [Ejemplo práctico — Paso por referencia en objetos](#ejemplo-práctico--paso-por-referencia-en-objetos)
   - [Ejemplo práctico — Función con múltiples callbacks condicionales](#ejemplo-práctico--función-con-múltiples-callbacks-condicionales)
@@ -99,7 +107,15 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
     - [24. Node.js: qué es y por qué existe](#24-nodejs-qué-es-y-por-qué-existe)
     - [25. Características de Node.js](#25-características-de-nodejs)
     - [26. Módulos, paquetes y dependencias](#26-módulos-paquetes-y-dependencias)
+      - [26.1 Tipos de módulos](#261-tipos-de-módulos)
+      - [26.2 Tipos de dependencias](#262-tipos-de-dependencias)
+      - [26.3 Caso real: el incidente de *left-pad*](#263-caso-real-el-incidente-de-left-pad)
+      - [26.4 Sistemas de módulos: CommonJS vs. ES Modules](#264-sistemas-de-módulos-commonjs-vs-es-modules)
     - [27. NPM (*Node Package Manager*)](#27-npm-node-package-manager)
+      - [27.1 Comandos más usados](#271-comandos-más-usados)
+      - [27.2 Scripts de NPM](#272-scripts-de-npm)
+      - [27.3 Cómo leer la página de un paquete en npmjs.com](#273-cómo-leer-la-página-de-un-paquete-en-npmjscom)
+    - [28. Módulos locales: crear y exportar código propio](#28-módulos-locales-crear-y-exportar-código-propio)
 
 
 ---
@@ -1946,7 +1962,7 @@ frutas.forEach(function (elemento, indice) {
 // La fruta ananá se encuentra en la posición 4
 ```
 
-Quien define la callback que se le pasa a `forEach` **no elige** qué valores va a recibir esa callback en cada parámetro — eso ya lo decidió quien definió `forEach`: siempre va a invocar la callback pasándole, como primer argumento, el **elemento actual** de esa vuelta, y como segundo argumento, su **índice**. Lo único que se define al escribir la callback son los **nombres** de esos dos parámetros (`elemento` e `indice` en el ejemplo, pero podrían llamarse de cualquier otra forma) y qué hacer con esos valores en cada vuelta.
+Quien define la callback que se le pasa a `forEach` **no elige** qué valores va a recibir esa callback en cada parámetro — eso ya lo decidió quien definió `forEach`: siempre va a invocar la callback pasándole, como primer argumento, el **elemento actual** de esa vuelta, como segundo argumento su **índice**, y como tercer argumento (menos usado, pero disponible) **el array completo** que se está recorriendo. Lo único que se define al escribir la callback son los **nombres** de esos parámetros (`elemento`, `indice` y `array` en el ejemplo, pero podrían llamarse de cualquier otra forma) y qué hacer con esos valores en cada vuelta. Este mismo patrón de tres parámetros (elemento, índice, array) se repite en varios de los métodos de iteración que siguen (`filter`, `map`, `find`, entre otros).
 
 `forEach` no retorna ningún valor (retorna `undefined`) — solo sirve para *hacer algo* con cada elemento (como imprimirlo), no para construir un array nuevo a partir de ellos. Para eso existen `filter` y `map`.
 
@@ -1995,6 +2011,159 @@ Cuando la callback recibe un único parámetro y su cuerpo es una sola expresió
 
 ```javascript
 let sumados = numeros.map(elemento => elemento + 10);   // mismo resultado que la versión anterior, más corto
+```
+
+#### 23.9 `find` y `findIndex`: buscar un elemento puntual
+
+`find` recorre el array y devuelve el **primer elemento** para el que la callback devuelva `true` — no un array con todas las coincidencias, un único valor. Si ninguno cumple la condición, devuelve `undefined`. `findIndex` hace exactamente lo mismo, pero en vez de devolver el elemento devuelve su **índice** (y, si no encuentra nada, devuelve `-1` en vez de `undefined`).
+
+```javascript
+let frutas = ["manzana", "banana", "pera", "banana", "ananá"];
+
+let encontrada = frutas.find(function (elemento) {
+  return elemento === "banana";
+});
+console.log(encontrada);   // "banana" → la primera que encuentra, aunque haya otra más adelante
+
+let indice = frutas.findIndex(function (elemento) {
+  return elemento === "banana";
+});
+console.log(indice);   // 1 → el índice de esa primera coincidencia
+```
+
+**Diferencia clave entre `find` y `filter`:** ambos reciben una condición, pero `filter` sigue recorriendo el array completo y devuelve **todas** las coincidencias en un array nuevo, mientras que `find` se detiene apenas encuentra la primera y devuelve un único valor. En un array muy grande, si el elemento buscado está cerca del principio, `find` termina mucho antes que `filter` — que de todas formas va a recorrer el array entero, incluso aunque solo pueda existir una coincidencia. Por eso, cuando alcanza con un solo resultado, conviene usar `find` (o `some`, `every`, `findIndex`) antes que `filter`: son más eficientes porque pueden cortar la iteración apenas tienen la respuesta.
+
+#### 23.10 `some` y `every`: verificar una condición sobre el array
+
+Ambos devuelven un booleano (`true`/`false`), nunca un array:
+
+- **`some`** devuelve `true` si **al menos un** elemento cumple la condición (y corta la iteración apenas encuentra uno).
+- **`every`** devuelve `true` solo si **todos** los elementos cumplen la condición (y corta apenas encuentra uno que no la cumple).
+
+```javascript
+let numeros = [2, 4, 6, 8];
+
+numeros.some(function (elemento) { return elemento % 2 !== 0; });    // false → ninguno es impar
+numeros.every(function (elemento) { return elemento % 2 === 0; });   // true  → todos son pares
+```
+
+#### 23.11 `fill`: rellenar o reemplazar elementos por posición
+
+`fill` **modifica el array original**: reemplaza sus elementos por el valor indicado, entre un índice de inicio (incluido) y uno de fin (no incluido) — si no se indican los índices, rellena el array completo.
+
+```javascript
+let frutas = ["manzana", "banana", "pera", "tomate", "ananá", "kiwi"];
+
+frutas.fill("naranja", 2, 5);
+console.log(frutas);   // ["manzana", "banana", "naranja", "naranja", "naranja", "kiwi"]
+```
+
+Reemplaza desde el índice `2` (incluido) hasta el índice `5` (no incluido) — la misma convención de "desde incluido, hasta no incluido" que se repite en varios de los métodos siguientes.
+
+#### 23.12 `splice`: agregar, eliminar y reemplazar en un mismo método
+
+`splice` **modifica el array original**, y es el método más versátil de todos: según los argumentos que reciba, puede eliminar elementos, insertar elementos nuevos, o reemplazar unos por otros — todo con la misma sintaxis. El orden de sus argumentos es siempre: **índice de inicio, cantidad de elementos a eliminar, y (opcionalmente) los elementos a insertar en su lugar**.
+
+```javascript
+let numeros = [1, 2, 3, 4, 5];
+
+// Eliminar: índice 2, elimina 1 elemento, no inserta nada
+numeros.splice(2, 1);
+console.log(numeros);   // [1, 2, 4, 5] → se eliminó el 3
+```
+
+```javascript
+let numeros2 = [1, 2, 3, 4, 5];
+
+// Insertar: índice 2, elimina 0 elementos, inserta dos nuevos
+numeros2.splice(2, 0, "melón", "sandía");
+console.log(numeros2);   // [1, 2, "melón", "sandía", 3, 4, 5] → nada se eliminó, se insertó en el medio
+```
+
+```javascript
+let numeros3 = [1, 2, 3, 4, 5];
+
+// Reemplazar: índice 2, elimina 2 elementos, inserta dos nuevos en su lugar
+numeros3.splice(2, 2, 99, 100);
+console.log(numeros3);   // [1, 2, 99, 100, 5] → el 3 y el 4 fueron reemplazados por 99 y 100
+```
+
+`splice` además **retorna un array con los elementos que eliminó** (vacío si no eliminó ninguno) — si ese array no se guarda en una variable, esos elementos se pierden para siempre, ya que el array original ya quedó modificado.
+
+```javascript
+let numeros4 = [1, 2, 3, 4, 5];
+
+let eliminados = numeros4.splice(2, 2, 99, 100);
+console.log(numeros4);     // [1, 2, 99, 100, 5]
+console.log(eliminados);   // [3, 4] → lo que splice sacó, disponible por si hace falta
+```
+
+Como `splice` modifica el array original de forma irreversible (si no se guarda lo eliminado), conviene aplicarlo con cuidado y, siempre que sea posible, preferir un método que no mute el original (como `slice`, `filter` o `map`) — retomando el principio de inmutabilidad de la sección 20.5.
+
+#### 23.13 `slice`: copiar una porción del array
+
+`slice` **no modifica el array original**: devuelve un array **nuevo** con los elementos comprendidos entre un índice de inicio (incluido) y uno de fin (no incluido).
+
+```javascript
+let frutas = ["manzana", "banana", "pera", "tomate", "ananá", "kiwi"];
+
+let porcion = frutas.slice(2, 5);
+console.log(porcion);   // ["pera", "tomate", "ananá"]  → índices 2, 3 y 4
+console.log(frutas);    // el original no cambia
+```
+
+Es fácil confundir `slice` con `splice` porque se escriben parecido y ambos trabajan con índices — la diferencia central es que `slice` **no muta** el array original (genera una copia de una porción), mientras que `splice` **sí lo muta** (y además puede insertar o reemplazar, no solo extraer).
+
+#### 23.14 `concat`: unir arrays
+
+`concat` devuelve un **array nuevo**, resultado de unir el array original con uno o más arrays adicionales — no modifica ninguno de los arrays originales.
+
+```javascript
+let frutas = ["manzana", "banana"];
+let verduras = ["lechuga", "tomate"];
+
+let combinado = frutas.concat(verduras);
+console.log(combinado);   // ["manzana", "banana", "lechuga", "tomate"]
+```
+
+#### 23.15 `sort`: ordenar el array
+
+`sort` **modifica el array original**. Sin argumentos, ordena los elementos **como si fueran texto** (orden alfabético/Unicode), comparando carácter por carácter — lo cual da resultados inesperados con números, porque compara el primer dígito de cada uno en vez de su valor numérico completo:
+
+```javascript
+let numeros = [3, 9, 8, 5, 7, 1, 4, 10, 22, 30, 15];
+
+numeros.sort();
+console.log(numeros);
+// [1, 10, 15, 22, 3, 30, 4, 5, 7, 8, 9]  → ordenado como texto: "10" queda antes que "3"
+```
+
+Para ordenar por valor numérico real (o con cualquier otro criterio propio), `sort` acepta una **función de comparación** como argumento, que recibe dos elementos a la vez (por convención llamados `a` y `b`):
+
+```javascript
+numeros.sort(function (a, b) {
+  return a - b;
+});
+console.log(numeros);   // [1, 3, 4, 5, 7, 8, 9, 10, 15, 22, 30]  → ahora sí, orden numérico ascendente
+```
+
+La lógica de la función de comparación: si `a - b` da un resultado **positivo**, quiere decir que `a` es mayor que `b`, y `sort` los invierte de posición; si da **negativo**, `a` ya está antes de `b` y los deja como están. `sort` no hace esto en una sola pasada: va comparando pares de elementos repetidamente hasta terminar de ordenar todo el array — en un array muy grande, esto puede impactar en el rendimiento, así que vale la pena tenerlo en cuenta antes de ordenar estructuras con una gran cantidad de elementos.
+
+#### 23.16 Los arrays no son "listas": una aclaración de vocabulario
+
+JavaScript **no tiene un tipo de dato "lista"** como estructura propia (a diferencia de otros lenguajes, como las *Lists* de Java). Lo que existe es el array, que es un **objeto incorporado** (sección 20.6) que implementa el concepto de una colección ordenada de elementos. A nivel conceptual, cumple una función parecida a la de una lista en otros lenguajes, pero no es lo mismo: no hay en JavaScript un tipo `List` que se pueda usar como tal.
+
+Esto también explica por qué `typeof` no sirve para distinguir un array de un objeto común — para ambos devuelve `"object"` (sección 20.4 tiene el mismo comportamiento con `null`, por otro motivo). Para saber específicamente si un valor es un array, existe el método `Array.isArray()`:
+
+```javascript
+let miArray = [1, 2, 3];
+let miObjeto = { id: 1 };
+
+console.log(typeof miArray);        // "object" → no alcanza para saber si es un array
+console.log(typeof miObjeto);       // "object" → mismo resultado, aunque no sea un array
+
+console.log(Array.isArray(miArray));    // true
+console.log(Array.isArray(miObjeto));   // false
 ```
 
 ---
@@ -2257,8 +2426,66 @@ Algunos usos típicos de Node.js: servidores de una API REST (el caso central de
 Antes de hablar de NPM hace falta distinguir tres conceptos relacionados, que suelen confundirse entre sí:
 
 - **Módulo:** una funcionalidad organizada en uno o varios archivos, pensada para ser reutilizada dentro de la aplicación. Es, en esencia, el mismo problema que resuelven las funciones (evitar copiar y pegar el mismo código en varios archivos), pero a una escala mayor.
-- **Paquete:** un módulo que además tiene un archivo `package.json` describiéndolo, lo cual lo deja en condiciones de publicarse (por ejemplo, en el registro de NPM) para que otras personas lo puedan reutilizar.
+- **Paquete:** un módulo que además tiene un archivo `package.json` describiéndolo, lo cual lo deja en condiciones de publicarse (por ejemplo, en el registro de NPM) para que otras personas lo puedan reutilizar. No hace falta que un paquete tenga dependencias para ser considerado paquete — alcanza con que tenga su `package.json`.
 - **Dependencia:** un paquete que otro paquete necesita para funcionar correctamente. Si el módulo A necesita al módulo B para funcionar, A tiene una dependencia directa de B.
+
+#### 26.1 Tipos de módulos
+
+| Tipo | Qué es | Se sube al repositorio |
+|---|---|---|
+| **Incorporados** (*built-in*) | Vienen ya incluidos en Node (por ejemplo `http`, `fs`, `os`, `path`, `console`) — para actualizarlos hay que actualizar la versión de Node | No aplica: vienen con el propio Node |
+| **Locales** | Los escribe el propio equipo de desarrollo, viven dentro del proyecto | Sí |
+| **Externos** | Paquetes de terceros instalados con NPM (`Express`, etc.) | **No** — se declaran en `package.json` y NPM los reinstala con `npm install` |
+
+Con un módulo **local** se tiene control total: está en el proyecto, se puede editar o eliminar libremente. Con un módulo **externo** la situación es distinta: al instalarlo, el proyecto pasa a **depender directamente de código que no se escribió ni se controla**. Como JavaScript es un lenguaje interpretado (secciones 12-13), su código fuente queda expuesto como texto plano y es habitualmente de código abierto — lo cual también significa que, si alguien logra comprometer un paquete externo (inyectando código malicioso en una actualización), ese código se ejecuta tal cual dentro del proyecto que lo instaló, sin que haya un paso de compilación intermedio que lo intercepte.
+
+**Ejemplo de un módulo incorporado: `os`.** Da acceso a información del sistema operativo sobre el que corre Node — algo que un código corriendo dentro de un navegador no podría hacer, y que es posible acá justamente porque Node corre directamente sobre el sistema operativo (sección 24).
+
+```javascript
+const os = require("node:os");
+
+console.log(os.platform());    // el sistema operativo (ej: "linux", "darwin", "win32")
+console.log(os.release());     // la versión del sistema operativo
+console.log(os.cpus());        // información de los procesadores disponibles
+console.log(os.freemem() / 1024 / 1024);   // memoria libre, convertida de bytes a megabytes
+```
+
+El prefijo `node:` antes del nombre del módulo (`require("node:os")`) es una buena práctica al importar un módulo **incorporado**: le indica directamente al sistema de módulos que vaya a buscarlo entre los módulos nativos, sin necesidad de buscar primero entre los locales o externos — una carga más rápida. Sin ese prefijo (`require("os")`), Node igual lo encuentra, pero primero revisa si existe un módulo local o externo con ese nombre antes de recurrir a los incorporados.
+
+#### 26.2 Tipos de dependencias
+
+| Tipo | Se declara en `package.json` como | Se instala en producción |
+|---|---|---|
+| **Directas** (de producción) | `dependencies` | Sí — el código las necesita para funcionar |
+| **De desarrollo** | `devDependencies` | No — herramientas de compilación, testing o control de calidad, solo necesarias mientras se desarrolla |
+| **Opcionales** | `optionalDependencies` | No aplica directamente — el proyecto funciona con o sin ellas |
+
+Instalar un paquete como dependencia de desarrollo se hace agregando `--save-dev` (o su forma abreviada `-D`) al comando de instalación — se retoma en la sección 27.1.
+
+#### 26.3 Caso real: el incidente de *left-pad*
+
+Este caso, ocurrido en marzo de 2016, ilustra por qué hay que ser consciente de cada dependencia que se agrega a un proyecto (sección 26.1). Un desarrollador de software, Azer Koçulu, había publicado en NPM más de 250 módulos, entre ellos uno llamado `left-pad`: un archivo de apenas once líneas de código, con una única función que agregaba caracteres de relleno a la izquierda de un string hasta completar una longitud determinada (por ejemplo, para convertir `"5"` en `"005"`).
+
+Por una disputa de nombres con NPM (otra empresa reclamó el nombre de otro de sus paquetes), Koçulu decidió eliminar de NPM **todos** sus módulos publicados, incluido `left-pad`. El problema fue que una enorme cantidad de proyectos —entre ellos herramientas muy usadas como Node y Babel— tenían una dependencia directa o indirecta de ese paquete de once líneas. De un día para el otro, todos esos proyectos empezaron a fallar al intentar instalar sus dependencias, con un error de NPM indicando que el paquete ya no existía en el registro.
+
+Lo que este caso deja como lección: **una dependencia externa, por más pequeña o trivial que parezca, deja el funcionamiento del propio proyecto atado a una decisión que no está bajo su control.** A raíz de este incidente, NPM cambió su política: hoy, si un paquete tiene al menos otro paquete publicado que depende de él, ya no se puede eliminar por completo (sigue perteneciendo a quien lo publicó, y se le pueden subir actualizaciones, pero no borrarlo) — precisamente para que un caso así no se pueda repetir.
+
+#### 26.4 Sistemas de módulos: CommonJS vs. ES Modules
+
+Node soporta dos sistemas distintos para importar y exportar código entre módulos:
+
+| | CommonJS (`.cjs`) | ES Modules (`.mjs`) |
+|---|---|---|
+| Palabra clave para importar | `require()` | `import` |
+| Palabra clave para exportar | `module.exports` | `export` |
+| Tipo de carga | Sincrónica | Asincrónica |
+| Historia | Sistema de módulos original de Node | El mismo estándar que usan los navegadores (y, por lo tanto, el Front); Node le agregó soporte más adelante |
+
+`CommonJS` es, todavía hoy, el sistema **por defecto en Node**, salvo que se indique explícitamente lo contrario en `package.json` (sección 27). `ES Modules` es el que se usa históricamente del lado del navegador — Node le agregó soporte con el tiempo, entre otras razones para que un mismo desarrollador *full-stack* pueda importar código de la misma manera tanto en el Front como en el Back, sin tener que acordarse de dos sintaxis distintas según en qué lado del proyecto esté parado.
+
+**Los dos sistemas pueden convivir dentro de un mismo proyecto** — algo útil para el caso de un módulo externo viejo que nunca se migró a `import`/`export` y que, para poder seguir usándose, hay que seguir requiriendo con `require()`.
+
+La diferencia entre carga sincrónica y asincrónica (por qué existe esa distinción, y cómo repercute en el rendimiento) se retoma en profundidad más adelante, junto con el resto de los conceptos de sincronía y asincronía en JavaScript.
 
 ### 27. NPM (*Node Package Manager*)
 
@@ -2269,4 +2496,81 @@ Antes de hablar de NPM hace falta distinguir tres conceptos relacionados, que su
 
 Node.js también trae, además del entorno de ejecución en sí, un conjunto de **paquetes nativos** ya incluidos — esos no se gestionan a través de NPM, sino que se actualizan junto con la versión del propio Node.
 
-*Existen alternativas a NPM como gestor de paquetes (por ejemplo, PNPM, mencionado en clase como una opción más segura en cuanto a cómo instala y actualiza los paquetes) — se desarrollan más adelante.*
+*Existen alternativas a NPM como gestor de paquetes (por ejemplo, PNPM, mencionado en clase como una opción más segura en cuanto a cómo instala y actualiza los paquetes, o Yarn) — todos cumplen la misma función (gestionar dependencias y paquetes), difieren en cómo lo hacen por dentro.*
+
+#### 27.1 Comandos más usados
+
+| Comando | Qué hace |
+|---|---|
+| `npm install` (sin argumentos) | Lee `package.json` e instala todas las dependencias declaradas — es lo que se corre después de clonar un proyecto |
+| `npm install <paquete>` | Instala un paquete puntual y lo agrega a `dependencies` |
+| `npm install <paquete>@<versión>` | Instala una versión específica del paquete |
+| `npm install <paquete> --save-dev` (o `-D`) | Instala el paquete como dependencia de desarrollo (`devDependencies`, sección 26.2) |
+| `npm uninstall <paquete>` | Desinstala el paquete **y** las dependencias propias de ese paquete que ya no use ningún otro (evita dejar paquetes huérfanos) |
+| `npm prune --production` | Elimina del proyecto instalado las dependencias de desarrollo, dejando solo las necesarias para producción |
+| `npm update <paquete>` | Actualiza el paquete a su última versión disponible |
+| `npm install -g <paquete>` (o `--global`) | Instala el paquete de forma global en el sistema, no solo dentro del proyecto actual |
+| `npm cache clean --force` | Limpia la caché local de NPM |
+| `npm init` | Inicializa un paquete nuevo: genera `package.json`, preguntando nombre, versión, descripción, punto de entrada, autor, licencia, etc. |
+| `npm init -y` | Igual que `npm init`, pero acepta automáticamente todos los valores por defecto sin preguntar |
+| `npm -v` | Muestra la versión de NPM instalada |
+
+Como convención de la terminal (no específica de NPM): los flags de una sola letra se escriben con un solo guión (`-D`, `-g`), y los flags de palabra completa con doble guión (`--save-dev`, `--global`) — por eso `-D` y `--save-dev` son equivalentes, al igual que `-g` y `--global`.
+
+Al instalar o desinstalar un paquete, NPM además **audita** el resto de las dependencias ya instaladas en el proyecto, revisando si hay actualizaciones o vulnerabilidades reportadas en alguna de ellas — no solo evalúa el paquete que se está por instalar.
+
+#### 27.2 Scripts de NPM
+
+Dentro de `package.json`, la propiedad `scripts` permite definir comandos cortos y reutilizables para tareas frecuentes del proyecto (compilar, correr tests, levantar el servidor, etc.), en vez de tener que escribir el comando completo cada vez.
+
+```json
+{
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
+```
+
+Se ejecutan con `npm run <nombre-del-script>` — con dos excepciones que tienen un atajo propio, sin necesidad de escribir `run`: `npm start` (ejecuta el script `start`) y `npm test` (ejecuta el script `test`). El **punto de entrada** de un paquete (qué archivo se ejecuta primero) se declara en la propiedad `main` de `package.json`; si no se declara explícitamente, por convención se asume `index.js`.
+
+#### 27.3 Cómo leer la página de un paquete en npmjs.com
+
+Antes de agregar una dependencia a un proyecto (recordando el caso de la sección 26.3), la página de cada paquete en [npmjs.com](https://www.npmjs.com) da información útil para evaluarlo:
+
+- **Versión actual** y **fecha de la última publicación** — un paquete sin actualizaciones desde hace mucho tiempo es una señal de alerta.
+- **Descargas semanales** — una noción de qué tan usado y probado está en la práctica.
+- **Tipo de licencia**.
+- **Cantidad de paquetes que dependen de él** (*dependents*) — cuantos más, más impacto tendría un problema con ese paquete (como el caso de `left-pad`).
+- **Sus propias dependencias** — cuántos paquetes más va a traer instalados como consecuencia.
+- **Repositorio del código fuente** — al ser JavaScript un lenguaje interpretado y open source, el código del paquete se puede leer directamente antes de decidir instalarlo.
+
+### 28. Módulos locales: crear y exportar código propio
+
+Para poder reutilizar código propio entre distintos archivos de un proyecto (en vez de repetirlo, o de arrastrarlo copiando y pegando), se lo separa en un **módulo local**: un archivo nuevo, dentro del mismo proyecto, que declara qué de todo lo que contiene queda disponible para el resto del proyecto.
+
+```javascript
+// archivo: modulo-consola.js
+function separador() {
+  console.log("--------------------");
+}
+
+module.exports = { separador };
+```
+
+`module.exports` es una propiedad del objeto `module` (todo archivo de Node tiene automáticamente acceso a este objeto) que determina qué queda expuesto hacia afuera cuando otro archivo importe este módulo. Guardar ahí un objeto con `separador` como propiedad (usando la forma abreviada de propiedad, ya vista en la sección 20.1, ya que el nombre de la propiedad coincide con el nombre de la variable) es lo que permite que otro archivo acceda a esa función.
+
+```javascript
+// archivo: index.js
+const modulo = require("./modulo-consola");
+
+modulo.separador();   // accede a la función a través de la propiedad "separador" del objeto importado
+```
+
+Si el módulo tiene más de una función para exportar, se agregan como propiedades adicionales del mismo objeto:
+
+```javascript
+module.exports = { separador, saludar, calcularTotal };
+```
+
+**`module` es, en sí mismo, un objeto** — con varias propiedades propias, entre ellas `exports` (el objeto que se acaba de completar), `id`, `filename`, `path` y `children`. Esto es consistente con lo ya visto sobre objetos y sus propiedades (sección 20): importar un módulo, en el fondo, es acceder a una propiedad (`exports`) de un objeto (`module`) que ya viene incorporado en cada archivo.
