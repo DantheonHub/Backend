@@ -116,6 +116,23 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [27.2 Scripts de NPM](#272-scripts-de-npm)
       - [27.3 Cómo leer la página de un paquete en npmjs.com](#273-cómo-leer-la-página-de-un-paquete-en-npmjscom)
     - [28. Módulos locales: crear y exportar código propio](#28-módulos-locales-crear-y-exportar-código-propio)
+      - [28.1 Importar solo lo necesario, con el nombre que se quiera](#281-importar-solo-lo-necesario-con-el-nombre-que-se-quiera)
+      - [28.2 Alias al exportar: nombre interno vs. nombre expuesto](#282-alias-al-exportar-nombre-interno-vs-nombre-expuesto)
+      - [28.3 Por qué conviene modularizar: un cambio, un solo lugar](#283-por-qué-conviene-modularizar-un-cambio-un-solo-lugar)
+      - [28.4 Errores comunes al exportar: `exports` sin `module.`, y ejecuciones sueltas dentro del módulo](#284-errores-comunes-al-exportar-exports-sin-module-y-ejecuciones-sueltas-dentro-del-módulo)
+    - [29. Pila (*Stack*) y Cola (*Queue*): dos estructuras de datos](#29-pila-stack-y-cola-queue-dos-estructuras-de-datos)
+    - [30. Programación sincrónica y el *Call Stack*](#30-programación-sincrónica-y-el-call-stack)
+    - [31. Programación asincrónica: *Callback Queue* y *Event Loop*](#31-programación-asincrónica-callback-queue-y-event-loop)
+    - [32. Módulo `timers`: `setTimeout`, `setInterval` y `setImmediate`](#32-módulo-timers-settimeout-setinterval-y-setimmediate)
+    - [33. Módulo `fs` (*File System*): trabajar con archivos y carpetas](#33-módulo-fs-file-system-trabajar-con-archivos-y-carpetas)
+    - [34. Promesas (*Promises*)](#34-promesas-promises)
+      - [34.1 Los tres estados de una promesa](#341-los-tres-estados-de-una-promesa)
+      - [34.2 Crear una promesa](#342-crear-una-promesa)
+      - [34.3 Consumir una promesa: `.then()`, `.catch()` y `.finally()`](#343-consumir-una-promesa-then-catch-y-finally)
+      - [34.4 Las promesas también son asincrónicas](#344-las-promesas-también-son-asincrónicas)
+      - [34.5 `resolve` y `reject` solo trabajan con un único valor](#345-resolve-y-reject-solo-trabajan-con-un-único-valor)
+  - [Ejemplo práctico — Promesa completa: comprar la crema](#ejemplo-práctico--promesa-completa-comprar-la-crema)
+  - [Ejemplo práctico — Promesa con dos valores, depurada paso a paso](#ejemplo-práctico--promesa-con-dos-valores-depurada-paso-a-paso)
 
 
 ---
@@ -2574,3 +2591,457 @@ module.exports = { separador, saludar, calcularTotal };
 ```
 
 **`module` es, en sí mismo, un objeto** — con varias propiedades propias, entre ellas `exports` (el objeto que se acaba de completar), `id`, `filename`, `path` y `children`. Esto es consistente con lo ya visto sobre objetos y sus propiedades (sección 20): importar un módulo, en el fondo, es acceder a una propiedad (`exports`) de un objeto (`module`) que ya viene incorporado en cada archivo.
+
+#### 28.1 Importar solo lo necesario, con el nombre que se quiera
+
+`require(...)` es una función que retorna un objeto (el `module.exports` del archivo importado). Hasta acá se venía guardando ese objeto completo en una constante y accediendo a cada función con la notación de punto (`modulo.separador()`). Pero también se puede importar **una única propiedad puntual**, usando destructuring (la misma sintaxis abreviada `{ }` ya vista para objetos):
+
+```javascript
+const { separador } = require("./modulo-consola");
+
+separador();   // ya no hace falta anteponer "modulo."
+```
+
+El nombre entre llaves tiene que coincidir exactamente con el nombre de la propiedad exportada — pero, como con cualquier constante, se le puede dar cualquier otro nombre a la variable local con la sintaxis `{ propiedadOriginal: nombreLocal }`:
+
+```javascript
+const { separador: separadorConsola } = require("./modulo-consola");
+
+separadorConsola();   // misma función, con otro nombre en este archivo
+```
+
+Importar solo lo que se va a usar (en vez de todo el módulo completo) es buena práctica: evita cargar código que después no se va a ejecutar — algo que puede importar especialmente en entornos con recursos limitados, como una aplicación mobile.
+
+#### 28.2 Alias al exportar: nombre interno vs. nombre expuesto
+
+De la misma manera que se puede renombrar algo al importarlo, también se puede exportar una función con un nombre **distinto** al que tiene dentro del archivo — usando la forma larga de propiedad (`propiedadExpuesta: nombreInterno`) en vez de la abreviada:
+
+```javascript
+function separadorConEntradaLarga(entrada) {
+  console.log(entrada.repeat(10));
+}
+
+module.exports = {
+  separador: separadorConEntradaLarga,   // se expone como "separador", aunque internamente se llame distinto
+};
+```
+
+Quien importe este módulo va a acceder a la función como `modulo.separador(...)` — nunca va a ver el nombre `separadorConEntradaLarga`, que queda como un detalle interno del módulo.
+
+#### 28.3 Por qué conviene modularizar: un cambio, un solo lugar
+
+El beneficio concreto de mover una función a un módulo en vez de repetirla en cada archivo que la necesita: si más adelante hay que modificar esa función (cambiar el símbolo que usa un separador, por ejemplo), el cambio se hace **una sola vez**, en el módulo — y se refleja automáticamente en todos los archivos que lo importan. La alternativa (tener la misma función copiada en varios archivos) obliga a encontrar y corregir cada copia una por una, con el riesgo de olvidarse alguna.
+
+#### 28.4 Errores comunes al exportar: `exports` sin `module.`, y ejecuciones sueltas dentro del módulo
+
+**Escribir `exports.algo = ...` sin anteponer `module.` no tira ningún error — pero tampoco exporta nada.** JavaScript, al no encontrar la propiedad `exports` sobre el objeto que se le indicó (por ejemplo, escribiendo `objeto.pepe = valor` en vez de `module.exports = valor`), simplemente **crea una propiedad nueva con ese nombre** en vez de fallar (el mismo comportamiento flexible ya visto en la sección 20.2 para propiedades inexistentes). El módulo importador, que sí busca específicamente en `module.exports`, no va a encontrar ahí lo que se quiso exportar, y va a fallar con un error del tipo `no es una función` al intentar invocar algo que en realidad nunca se exportó.
+
+```javascript
+// archivo de módulo — ERROR común
+module.pepe = { separador };   // crea una propiedad "pepe" en vez de exportar nada
+
+// archivo que lo importa
+const modulo = require("./modulo-consola");
+modulo.separador();   // TypeError: modulo.separador is not a function → exports sigue vacío
+```
+
+La recomendación es simple: siempre `module.exports`, con la **s** al final — nunca `module.export` (sin s) ni una propiedad inventada.
+
+**Un módulo no debería tener código que se ejecute por sí solo** (como un `console.log` suelto fuera de cualquier función) — solo declaraciones de funciones para exportar. La razón: `require(...)` **lee el archivo completo como texto, línea por línea**, y ejecuta cualquier instrucción que encuentre en el camino, no solo la parte que se termina exportando.
+
+```javascript
+// archivo de módulo — mala práctica
+console.log("cargando el módulo...");   // esto se ejecuta CADA VEZ que alguien haga require() de este archivo
+
+function separador() { /* ... */ }
+
+module.exports = { separador };
+```
+
+Esto es, en los hechos, uno de los mecanismos por los que un paquete externo comprometido (sección 26.3) puede ejecutar código malicioso: si en vez de un `console.log` inocente hay una instrucción que envía información a un servidor externo, esa instrucción se ejecuta automáticamente apenas alguien importa el paquete — sin que haga falta invocar ninguna función en particular.
+
+### 29. Pila (*Stack*) y Cola (*Queue*): dos estructuras de datos
+
+Antes de entender cómo JavaScript maneja la sincronía y la asincronía, hace falta conocer dos estructuras de datos que se usan para ordenar tareas: la pila y la cola. Las dos organizan elementos de forma lineal, pero se diferencian en el orden en que los liberan.
+
+| | Pila (*Stack*) | Cola (*Queue*) |
+|---|---|---|
+| Orden de salida | El **último** que entró es el **primero** en salir | El **primero** que entró es el **primero** en salir |
+| Sigla | **LIFO** (*Last In, First Out*) | **FIFO** (*First In, First Out*) |
+| Acceso | Desde un solo extremo | Desde los dos extremos (entra por uno, sale por el otro) |
+| Ejemplos cotidianos | Una pila de platos o de libros (se saca el de arriba); el historial de navegación (`atrás` vuelve al último visitado); `Ctrl+Z`; `git stash` (el último guardado es el primero que vuelve con `git stash pop`) | Una fila de supermercado o de banco; un sistema de turnos; las solicitudes entrantes de un servidor, que se van resolviendo en el orden en que llegaron |
+
+```mermaid
+flowchart LR
+    subgraph Pila["Pila (LIFO)"]
+        direction TB
+        P3["3 ← sale primero"] --> P2["2"] --> P1["1 ← entró primero, sale último"]
+    end
+    subgraph Cola["Cola (FIFO)"]
+        direction LR
+        C1["1 ← entró primero, sale primero"] --> C2["2"] --> C3["3 ← entró último"]
+    end
+```
+
+### 30. Programación sincrónica y el *Call Stack*
+
+Dentro del entorno de ejecución de Node hay una **pila de ejecución de funciones**, llamada ***call stack*** (o pila de llamadas): cada vez que se invoca una función, esa llamada se apila; cuando la función termina de ejecutarse, se desapila. Como es una pila, sigue el orden LIFO de la sección 29.
+
+**Invocaciones secuenciales** (una función termina antes de que se invoque la siguiente): cada llamada se apila, se ejecuta por completo, y se desapila antes de que se apile la siguiente.
+
+```mermaid
+sequenceDiagram
+    participant CS as Call Stack
+    Note over CS: invoco función1()
+    CS->>CS: función1 se apila y se ejecuta
+    CS->>CS: función1 termina y se desapila
+    Note over CS: invoco función2()
+    CS->>CS: función2 se apila y se ejecuta
+    CS->>CS: función2 termina y se desapila
+```
+
+**Invocaciones anidadas** (una función invoca a otra dentro de su propio cuerpo — el caso más habitual): la función externa queda apilada mientras la interna se ejecuta, porque todavía no terminó su propio trabajo.
+
+```javascript
+function funcion1() { /* ... */ }
+function funcion2() { funcion1(); /* ... */ }
+function funcion3() { funcion2(); /* ... */ }
+
+funcion3();
+```
+
+Al invocar `funcion3`, esta se apila; dentro de su cuerpo invoca a `funcion2`, que se apila **encima** de `funcion3` (porque `funcion3` todavía no terminó); `funcion2` a su vez invoca a `funcion1`, que se apila encima de las otras dos. `funcion1` es la primera en terminar y desapilarse (es la última que entró), después `funcion2`, y por último `funcion3` — exactamente el comportamiento LIFO de una pila.
+
+### 31. Programación asincrónica: *Callback Queue* y *Event Loop*
+
+El término "asincronía" en JavaScript no significa que el código se ejecute en paralelo — Node corre sobre un **único hilo** (sección 25), así que dos cosas nunca se están ejecutando literalmente al mismo tiempo. Lo que sí ocurre es que ciertas tareas (una que tarda un tiempo indeterminado, como esperar una respuesta de un servidor) no bloquean el resto del programa mientras se resuelven — se van resolviendo aparte, y el resultado se atiende cuando haya lugar.
+
+Para lograr esto, además del *call stack* interviene una **cola de callbacks** (*callback queue*), y un mecanismo llamado ***event loop*** (bucle de eventos) que se encarga de ir llevando llamadas de esa cola hacia el *call stack*, a medida que este se va liberando.
+
+```javascript
+function funcion1() {
+  console.log("Función 1");
+}
+
+function funcion2() {
+  console.log("Función 2");
+}
+
+function main() {
+  console.log("Main");
+  setTimeout(funcion1, 5000);   // asincrónico: no bloquea, se resuelve aparte
+  funcion2();
+}
+
+main();
+```
+
+Cómo se ejecuta esto, paso a paso:
+
+1. `main()` se apila en el *call stack*.
+2. Dentro de `main`, el primer `console.log("Main")` se apila, se ejecuta, y se desapila.
+3. `setTimeout` se apila — pero como es asincrónico, no ejecuta `funcion1` ahí mismo: la deja en espera aparte (en Node, gestionada internamente; en el navegador, a través de las *Web APIs*) durante el tiempo indicado, y se desapila.
+4. `funcion2()` se apila, imprime `"Función 2"`, y se desapila.
+5. `main` ya no tiene más instrucciones, así que se desapila — el *call stack* queda vacío.
+6. Recién ahí, cuando pasó el tiempo indicado y el *call stack* está libre, el *event loop* saca a `funcion1` de la cola de callbacks y la apila para que se ejecute, imprimiendo `"Función 1"`.
+
+El resultado impreso en consola es: `Main`, `Función 2`, `Función 1` — no en el orden en que aparecen escritas las instrucciones, sino según cuándo termina de resolverse cada una.
+
+*El *event loop* generalmente respeta el orden de llegada de la cola (FIFO, sección 29), pero puede alterar las prioridades en casos puntuales — de forma parecida a como una fila del supermercado, sin dejar de ser una fila, le da preferencia a alguien con una necesidad puntual, sin que eso rompa el orden del resto.*
+
+### 32. Módulo `timers`: `setTimeout`, `setInterval` y `setImmediate`
+
+El módulo `timers` es un módulo incorporado (sección 26.1) con funciones para ejecutar código después de un tiempo determinado — todas son asincrónicas.
+
+| Función | Qué hace |
+|---|---|
+| `setTimeout(callback, retraso, ...args)` | Ejecuta `callback` una única vez, como mínimo después de `retraso` milisegundos (el tiempo es un umbral **mínimo**, no exacto — no sirve para medir tiempo con precisión) |
+| `setInterval(callback, intervalo, ...args)` | Ejecuta `callback` repetidamente, cada `intervalo` milisegundos, de forma indefinida hasta que se cancele |
+| `clearInterval(id)` | Cancela un `setInterval` en marcha, usando el identificador que `setInterval` retornó al crearlo |
+| `setImmediate(callback, ...args)` | Ejecuta `callback` en la siguiente vuelta del *event loop* — hoy en día se usa poco |
+
+Los argumentos que se agregan después del tiempo/intervalo son los que se le van a pasar a `callback` cuando finalmente se invoque:
+
+```javascript
+function mostrarTema(tema) {
+  console.log(`Estoy aprendiendo ${tema}`);
+}
+
+setTimeout(mostrarTema, 5000, "Node.js");   // a los 5 segundos (como mínimo): "Estoy aprendiendo Node.js"
+```
+
+**`setTimeout(callback, 0)` vs. `setImmediate(callback)`: orden no determinista.** Ambos buscan ejecutar la callback "lo antes posible", pero en momentos distintos del *event loop* (`setImmediate` después de la fase de *poll*, `setTimeout(..., 0)` en la fase de *timers*). Cuál de los dos se ejecuta primero **no está garantizado**: corriendo exactamente el mismo código varias veces, el orden entre ambos puede variar de una ejecución a otra. Esta falta de previsibilidad es, junto con los problemas ya vistos del módulo `timers` (sección 32), una de las razones por las que `setImmediate` se usa cada vez menos: un mismo código no debería dar resultados distintos en cada corrida.
+
+`setInterval` retorna un identificador que hay que guardar para poder cancelarlo más adelante con `clearInterval` — si nunca se cancela, sigue ejecutándose indefinidamente:
+
+```javascript
+let vuelta = 0;
+
+const intervalId = setInterval(() => {
+  console.log(`Estoy en la vuelta ${vuelta}`);
+
+  if (vuelta === 10) {
+    clearInterval(intervalId);   // acá se corta el ciclo
+  } else {
+    vuelta += 1;
+  }
+}, 1000);
+```
+
+### 33. Módulo `fs` (*File System*): trabajar con archivos y carpetas
+
+`fs` es un módulo incorporado para crear, leer, modificar, copiar y eliminar archivos y carpetas. **Todos sus métodos son asincrónicos por defecto** — si se necesita la versión sincrónica de alguno, se le agrega el sufijo `Sync` al nombre (`fs.renameSync`, `fs.statSync`, etc.).
+
+```javascript
+const fs = require("node:fs");
+
+// Asincrónico (por defecto): recibe una callback con la convención "error primero"
+fs.readFile("archivo.txt", "utf8", (error, contenido) => {
+  if (error) {
+    console.log("Hubo un error:", error);
+    return;
+  }
+  console.log(contenido);
+});
+```
+
+La callback de `fs.readFile` recibe siempre dos parámetros, en este orden: primero un posible **error** (`null` si no hubo ninguno), y después el **contenido** leído. Esta convención — el error como primer parámetro de la callback — es un patrón muy usado en Node para funciones asincrónicas basadas en callbacks, más allá de este módulo puntual.
+
+### 34. Promesas (*Promises*)
+
+Una **promesa** es un objeto que representa el resultado eventual (todavía desconocido en el momento de crearla) de una operación asincrónica — típicamente algo cuya duración no se puede predecir, como una consulta a una base de datos o una solicitud a un servidor externo.
+
+**Por qué no alcanza con "esperar un rato" y ya está.** Una tentación frecuente, antes de conocer las promesas, es intentar resolver una dependencia entre una operación asincrónica y el código que necesita su resultado agregando un retraso adivinado con `setTimeout` — por ejemplo, "esta consulta tarda más o menos 2 segundos, así que espero 2 segundos antes de usar el resultado". El problema es que **nunca se sabe con certeza cuánto va a tardar** una operación asincrónica real: si se adivina de más, se agrega una demora innecesaria incluso cuando la respuesta ya estaba lista (afectando el rendimiento); si se adivina de menos, el código sigue adelante sin el dato todavía disponible, y falla igual. Las promesas resuelven este problema de raíz: en vez de adivinar un tiempo, el código reacciona recién **cuando la operación efectivamente termina**, sea que haya tardado poco o mucho.
+
+#### 34.1 Los tres estados de una promesa
+
+Una promesa siempre arranca en estado **pendiente** (*pending*), y desde ahí solo puede pasar a uno de estos dos estados — nunca directamente entre ellos, siempre pasando primero por pendiente:
+
+| Estado | Nombre en inglés | Qué significa |
+|---|---|---|
+| Pendiente | *pending* | Todavía no se sabe el resultado; la operación sigue en curso |
+| Cumplida | *fulfilled* (se resuelve con `resolve`) | La operación terminó con éxito |
+| Rechazada | *rejected* (se resuelve con `reject`) | La operación falló |
+
+Es equivalente a pedirle a alguien que vaya a comprar algo a un negocio: mientras esa persona está en camino, el pedido queda en un estado pendiente — no se sabe todavía si va a volver con lo pedido (cumplida), si va a volver diciendo que no había (rechazada), ni cuánto va a tardar. Recién cuando esa persona vuelve, el pedido deja de estar pendiente.
+
+#### 34.2 Crear una promesa
+
+Una promesa se crea invocando al constructor de la clase `Promise` con el operador `new` (sección 23.3 repasa esta misma mecánica para arrays). Al constructor se le pasa como argumento una función — llamada **ejecutor** (*executor*) — que a su vez recibe dos parámetros: `resolve` y `reject`, dos funciones que sirven para definir en qué momento la promesa pasa a estar cumplida o rechazada.
+
+```javascript
+const miPromesa = new Promise((resolve, reject) => {
+  const exito = true;   // acá iría la condición real de la operación asincrónica
+
+  if (exito) {
+    resolve("La operación terminó bien");
+  } else {
+    reject("La operación falló");
+  }
+});
+```
+
+`resolve` y `reject` no las define ni las invoca quien escribe este código: son parámetros del ejecutor, y quien los termina invocando (según corresponda) es el propio motor de JavaScript, al ejecutar el constructor de `Promise`.
+
+#### 34.3 Consumir una promesa: `.then()`, `.catch()` y `.finally()`
+
+El objeto que retorna `new Promise(...)` tiene tres propiedades (métodos) para reaccionar según cómo termine:
+
+| Método | Se ejecuta cuando | Recibe como argumento |
+|---|---|---|
+| `.then(callback)` | La promesa se cumple (`resolve`) | Una callback que recibe el valor con el que se resolvió |
+| `.catch(callback)` | La promesa se rechaza (`reject`) | Una callback que recibe el motivo del error |
+| `.finally(callback)` | Siempre, sin importar el resultado | Una callback sin parámetros |
+
+```javascript
+miPromesa
+  .then((resultado) => {
+    console.log("Éxito:", resultado);
+  })
+  .catch((error) => {
+    console.log("Error:", error);
+  })
+  .finally(() => {
+    console.log("Esto se ejecuta siempre, haya salido bien o mal");
+  });
+```
+
+Cada uno de estos tres métodos recibe, a su vez, **una callback** (siguiendo el mismo concepto ya visto en profundidad en la sección 22): `.then` es quien va a ejecutar la callback que recibió con el valor de `resolve`, y `.catch` la que recibió con el motivo de `reject`.
+
+#### 34.4 Las promesas también son asincrónicas
+
+El código que sigue **después** de crear una promesa no espera a que esa promesa se resuelva — sigue ejecutándose de inmediato, igual que pasaba con `setTimeout` (sección 31). El resultado de la promesa (a través de `.then`/`.catch`/`.finally`) se atiende recién cuando la operación asincrónica que hay dentro termine.
+
+```javascript
+console.log("Antes de la promesa");
+
+miPromesa.then(...).catch(...).finally(...);
+
+console.log("Después de la promesa");
+```
+
+Si la operación dentro de `miPromesa` tarda, por ejemplo, 4 segundos en resolverse, la salida en consola va a ser: `"Antes de la promesa"`, `"Después de la promesa"`, y recién 4 segundos más tarde lo que corresponda a `.then`/`.catch`/`.finally` — no importa que la promesa se haya declarado en el medio del código, su resolución no bloquea las líneas que siguen.
+
+#### 34.5 `resolve` y `reject` solo trabajan con un único valor
+
+Un error común es intentar pasarle **más de un valor** a `resolve` o a `reject`, como si fueran una función cualquiera que acepta varios argumentos — pero, a diferencia de una función propia, el comportamiento interno de `resolve`/`reject` no se puede alterar: **toman un único valor**. Si se les pasa más de uno, solo el primero llega a `.then`/`.catch`; el resto se pierde en silencio, sin ningún error.
+
+```javascript
+const miPromesaSuma = new Promise((resolve, reject) => {
+  if (numero1 !== undefined && numero2 !== undefined) {
+    resolve(numero1, numero2);   // ❌ el segundo valor (numero2) nunca llega a .then
+  } else {
+    reject("No pudimos obtener los números");
+  }
+});
+
+miPromesaSuma.then((resultado) => {
+  console.log(resultado);   // solo imprime numero1 — numero2 se perdió en el camino
+});
+```
+
+La solución es sencilla: si hace falta que `.then` reciba más de un dato, hay que **combinarlos en un único valor** antes de resolver la promesa — por ejemplo, calculando el resultado final dentro del ejecutor y pasando solo ese resultado, o empaquetando varios valores relacionados en un objeto o un array:
+
+```javascript
+const miPromesaSuma = new Promise((resolve, reject) => {
+  if (numero1 !== undefined && numero2 !== undefined) {
+    resolve(numero1 + numero2);   // ✅ un único valor: el resultado ya calculado
+  } else {
+    reject("No pudimos obtener los números");
+  }
+});
+
+miPromesaSuma.then((resultado) => {
+  console.log(resultado);   // el total, sin ambigüedad
+});
+```
+
+---
+
+## Ejemplo práctico — Promesa completa: comprar la crema
+
+Código trabajado en clase: una promesa que simula ir a comprar crema para una torta, con un resultado que puede ser favorable o no, resuelto recién después de un retraso simulado con `setTimeout`.
+
+```javascript
+let hayCrema = true;   // simula el resultado, todavía desconocido, de la operación asincrónica
+
+const comprarCrema = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    if (hayCrema) {
+      resolve("Te traje la crema");
+    } else {
+      reject("No había crema");
+    }
+  }, 4000);
+});
+
+const manejarPromesaCumplida = (valor) => {
+  console.log("Entrando al then");
+  console.log("Manejar promesa cumplida, el valor recibido es:", valor);
+  console.log("Saliendo del then");
+};
+
+const manejarPromesaRechazada = (error) => {
+  console.log("Entrando al catch");
+  console.log("Manejar promesa rechazada, el valor recibido es:", error);
+  console.log("Saliendo del catch");
+};
+
+console.log("Antes de la promesa");
+
+comprarCrema
+  .then(manejarPromesaCumplida)
+  .catch(manejarPromesaRechazada)
+  .finally(() => {
+    console.log("Terminamos con la promesa");
+  });
+
+console.log("Después de la promesa");
+```
+
+Con `hayCrema` en `true`, la salida (en este orden, y con 4 segundos de por medio) es:
+
+```
+Antes de la promesa
+Después de la promesa
+Entrando al then
+Manejar promesa cumplida, el valor recibido es: Te traje la crema
+Saliendo del then
+Terminamos con la promesa
+```
+
+**Puntos clave de este ejemplo:**
+- `hayCrema` cumple el rol de la condición real que, en un caso concreto, vendría de una consulta a una base de datos o a un servicio externo (por ejemplo, si una cuenta tiene saldo suficiente para una transferencia) — acá se simula con un valor fijo para poder probar los dos caminos (`true`/`false`).
+- `manejarPromesaCumplida` y `manejarPromesaRechazada` son funciones declaradas aparte, con nombre propio, y **pasadas por referencia** a `.then` y `.catch` (sección 22.2) — nunca invocadas ahí mismo (nunca `manejarPromesaCumplida()`, siempre `manejarPromesaCumplida` a secas). Quien las termina ejecutando, con el valor correspondiente, es `.then`/`.catch`.
+- `"Antes de la promesa"` y `"Después de la promesa"` salen impresos **antes** que cualquier mensaje de `.then`/`.catch`/`.finally`, aunque la promesa se declare en el medio del código — confirma lo visto en 34.4: la promesa no bloquea la ejecución de lo que sigue.
+- Cambiar `hayCrema` a `false` cambia el resultado completo: la promesa termina rechazada, y la salida pasa por `manejarPromesaRechazada` en vez de `manejarPromesaCumplida` — pero `.finally` se ejecuta en los dos casos por igual.
+
+---
+
+## Ejemplo práctico — Promesa con dos valores, depurada paso a paso
+
+Código trabajado en clase: una promesa que necesita **dos** números para poder resolverse, con el error real (`resolve` recibiendo dos valores en vez de uno, sección 34.5) encontrado siguiendo el mismo método de depuración que usó el profesor.
+
+```javascript
+let numero1;   // undefined
+let numero2 = 20;
+
+setTimeout(() => {
+  numero1 = 5;
+}, 2000);
+
+function sumar(numeroA, numeroB) {
+  console.log(`Sumando ${numeroA} y ${numeroB}`);
+  return numeroA + numeroB;
+}
+
+const promesaSuma = new Promise((resolve, reject) => {
+  console.log("Tenemos resultado:", numero1 !== undefined && numero2 !== undefined);
+
+  if (numero1 !== undefined && numero2 !== undefined) {
+    resolve(numero1, numero2);   // el bug: acá solo va a llegar numero1 a .then
+  } else {
+    reject("No pudimos obtener los números, por favor intente de nuevo más tarde");
+  }
+});
+
+promesaSuma
+  .then((resultado) => {
+    const total = sumar(resultado, numero2);   // resultado ya perdió a numero2 en el camino
+    console.log(total);
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+```
+
+**Cómo se depuró este código (técnica de trazabilidad con `console.log`):** en vez de adivinar dónde está el problema, se van agregando `console.log` estratégicos en los puntos clave del flujo para confirmar, paso por paso, hasta dónde efectivamente llega la ejecución y qué valor tiene cada variable en ese punto:
+
+1. Un `console.log` justo antes del `if`/`else` del ejecutor confirma si la condición dio `true` o `false` — sirve para saber, sin ambigüedad, si el código entró por `resolve` o por `reject`.
+2. Si aparece el mensaje del `console.log` que está dentro del `.catch`, ya se sabe que la promesa se rechazó — no hace falta seguir revisando el resto del flujo para eso.
+3. Si el problema persiste después de confirmar que se entró al `if` correcto, el siguiente paso es revisar, valor por valor, qué le llega a cada función en el camino — hasta encontrar el punto exacto donde un valor esperado aparece como `undefined`.
+
+Siguiendo ese camino se encuentra el problema real: `numero2` sí tenía un valor en el momento de llamar a `resolve(numero1, numero2)`, pero `resolve` solo toma su primer argumento — `numero2` nunca llegó a la callback de `.then`. La solución (sección 34.5) es resolver la promesa con el resultado ya combinado:
+
+```javascript
+const promesaSuma = new Promise((resolve, reject) => {
+  if (numero1 !== undefined && numero2 !== undefined) {
+    resolve(sumar(numero1, numero2));   // ✅ un único valor: el total, ya calculado
+  } else {
+    reject("No pudimos obtener los números, por favor intente de nuevo más tarde");
+  }
+});
+
+promesaSuma
+  .then((resultado) => {
+    console.log(resultado);   // 25 → directo, sin depender de una variable externa
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+```
+
+**Puntos clave de este ejemplo:**
+- Antes de tener el valor real de `numero1` (mientras el `setTimeout` todavía no se ejecutó), `numero1 !== undefined` da `false` — por eso la condición depende de que haya pasado tiempo suficiente para que la asignación asincrónica ya haya ocurrido.
+- Los `console.log` de depuración se agregan de forma temporal, para entender un flujo que no se comporta como se esperaba — no quedan en el código una vez resuelto el problema, salvo que cumplan un propósito propio (como un registro de errores real).
+- El mensaje de error que da el editor al pasar el mouse sobre `resolve` (mostrando que solo acepta un parámetro) es, en sí mismo, información útil para depurar — vale la pena prestarle atención antes de seguir adivinando.
