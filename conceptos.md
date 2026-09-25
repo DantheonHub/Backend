@@ -133,6 +133,17 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [34.5 `resolve` y `reject` solo trabajan con un único valor](#345-resolve-y-reject-solo-trabajan-con-un-único-valor)
   - [Ejemplo práctico — Promesa completa: comprar la crema](#ejemplo-práctico--promesa-completa-comprar-la-crema)
   - [Ejemplo práctico — Promesa con dos valores, depurada paso a paso](#ejemplo-práctico--promesa-con-dos-valores-depurada-paso-a-paso)
+    - [35. Promesas encadenadas (anidadas)](#35-promesas-encadenadas-anidadas)
+      - [35.1 Por qué hace falta encadenar](#351-por-qué-hace-falta-encadenar)
+      - [35.2 La regla más importante: `return` dentro del `.then`](#352-la-regla-más-importante-return-dentro-del-then)
+      - [35.3 Un único `.catch` para toda la cadena](#353-un-único-catch-para-toda-la-cadena)
+  - [Ejemplo práctico — Promesas encadenadas: validar stock antes de vender](#ejemplo-práctico--promesas-encadenadas-validar-stock-antes-de-vender)
+    - [36. `async`/`await`: azúcar sintáctico para trabajar con promesas](#36-asyncawait-azúcar-sintáctico-para-trabajar-con-promesas)
+      - [36.1 Sintaxis básica](#361-sintaxis-básica)
+      - [36.2 `await` no bloquea todo el programa, solo esa función](#362-await-no-bloquea-todo-el-programa-solo-esa-función)
+      - [36.3 Manejo de errores: `try`/`catch` en vez de `.catch`](#363-manejo-de-errores-trycatch-en-vez-de-catch)
+      - [36.4 Tres errores comunes con `async`/`await`](#364-tres-errores-comunes-con-asyncawait)
+    - [37. Eventos: introducción (*preview* — se retoma con código en una próxima clase)](#37-eventos-introducción-preview--se-retoma-con-código-en-una-próxima-clase)
 
 
 ---
@@ -3045,3 +3056,183 @@ promesaSuma
 - Antes de tener el valor real de `numero1` (mientras el `setTimeout` todavía no se ejecutó), `numero1 !== undefined` da `false` — por eso la condición depende de que haya pasado tiempo suficiente para que la asignación asincrónica ya haya ocurrido.
 - Los `console.log` de depuración se agregan de forma temporal, para entender un flujo que no se comporta como se esperaba — no quedan en el código una vez resuelto el problema, salvo que cumplan un propósito propio (como un registro de errores real).
 - El mensaje de error que da el editor al pasar el mouse sobre `resolve` (mostrando que solo acepta un parámetro) es, en sí mismo, información útil para depurar — vale la pena prestarle atención antes de seguir adivinando.
+
+### 35. Promesas encadenadas (anidadas)
+
+Las promesas encadenadas son la solución para una necesidad muy común: ejecutar **dos o más operaciones asincrónicas seguidas**, cuando la segunda **depende del resultado** de la primera. Por ejemplo: antes de ejecutar una venta, hay que validar que haya stock del producto — ejecutar la venta depende de una consulta asincrónica (validar el stock) que primero tiene que resolverse con éxito.
+
+#### 35.1 Por qué hace falta encadenar
+
+`validarStock` y `ejecutarVenta` son dos funciones asincrónicas, cada una retornando su propia promesa. Como no se sabe cuánto va a tardar en resolverse la primera, no se puede simplemente escribir una función después de la otra en líneas separadas — hay que **ejecutar la segunda desde adentro del `.then` de la primera**, para asegurarse de que ya haya terminado (y haya sido exitosa) antes de arrancar.
+
+```javascript
+function validarStock(producto) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (producto === "lapicera") {
+        resolve("Hay stock del producto lapicera");
+      } else {
+        reject(`Error: no hay stock del producto ${producto}`);
+      }
+    }, 2000);
+  });
+}
+
+function ejecutarVenta(stockValidado) {
+  return new Promise((resolve, reject) => {
+    console.log("Ejecutando la venta...");
+    setTimeout(() => {
+      resolve(`Venta ejecutada: ${stockValidado}`);
+    }, 2000);
+  });
+}
+
+validarStock("lapicera")
+  .then((respuesta) => {
+    return ejecutarVenta(respuesta);   // encadena la segunda promesa
+  })
+  .then((respuesta) => {
+    console.log("Después de ejecutar venta:", respuesta);
+  })
+  .catch((error) => {
+    console.log(error);   // atiende el error de CUALQUIERA de las dos promesas encadenadas
+  });
+```
+
+#### 35.2 La regla más importante: `return` dentro del `.then`
+
+Dentro del `.then` que encadena la segunda promesa, hace falta **retornar su ejecución** (`return ejecutarVenta(respuesta)`), no simplemente invocarla. Si falta ese `return`, el segundo `.then` de la cadena **nunca llega a capturar** el resultado de la segunda promesa — queda "atrapado" dentro del primer `.then`, y la ejecución sigue de largo sin esperarlo.
+
+```javascript
+// ❌ sin return: el segundo .then no espera a ejecutarVenta
+.then((respuesta) => {
+  ejecutarVenta(respuesta);   // se invoca, pero su resultado se pierde
+})
+.then((respuesta) => {
+  console.log(respuesta);   // undefined: nunca llegó nada acá
+})
+```
+
+#### 35.3 Un único `.catch` para toda la cadena
+
+Un solo `.catch`, al final de la cadena, es suficiente para capturar el error de **cualquiera** de las promesas encadenadas — no hace falta (ni es la forma habitual) un `.catch` por cada `.then`. Si la primera promesa se rechaza, la ejecución salta directamente a ese `.catch`, sin pasar por ninguno de los `.then` que siguen; si la primera se resuelve pero la segunda se rechaza, pasa exactamente lo mismo.
+
+---
+
+## Ejemplo práctico — Promesas encadenadas: validar stock antes de vender
+
+Código trabajado en clase, extendiendo el ejemplo anterior con una tercera promesa (`imprimirFactura`) encadenada después de `ejecutarVenta`:
+
+```javascript
+function validarStock(producto) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (producto === "lapicera") {
+        resolve("Hay stock del producto lapicera");
+      } else {
+        reject(`Error: no hay stock del producto ${producto}`);
+      }
+    }, 2000);
+  });
+}
+
+function ejecutarVenta(stockValidado) {
+  return new Promise((resolve) => {
+    console.log("Ejecutando la venta...");
+    setTimeout(() => {
+      resolve(true);   // simula que la venta se concretó
+    }, 2000);
+  });
+}
+
+function imprimirFactura(ventaExitosa) {
+  return new Promise((resolve, reject) => {
+    console.log("Imprimiendo la factura...");
+    if (ventaExitosa) {
+      resolve("Factura impresa");
+    } else {
+      reject("Error al imprimir la factura");
+    }
+  });
+}
+
+validarStock("lapicera")
+  .then((respuestaStock) => {
+    return ejecutarVenta(respuestaStock);
+  })
+  .then((respuestaVenta) => {
+    return imprimirFactura(respuestaVenta);
+  })
+  .then((respuestaFactura) => {
+    console.log(respuestaFactura);
+  })
+  .catch((error) => {
+    console.log("Entrando al catch de procesarVenta:", error);
+  });
+```
+
+**Puntos clave de este ejemplo:**
+- Cada `.then` de la cadena recibe únicamente el resultado de la promesa que se retornó en el `.then` inmediatamente anterior — no tiene acceso directo al resultado de promesas más atrás en la cadena, salvo que se lo pase explícitamente como parámetro (como pasa acá con `respuestaStock` yendo hacia `ejecutarVenta`).
+- El único `.catch` al final atiende el error sin importar en qué eslabón de la cadena haya fallado — el mensaje de error no indica por sí solo cuál de las tres promesas fue la que rechazó, así que suele hacer falta un `console.log` dentro de cada función para poder rastrear el origen real del problema.
+
+### 36. `async`/`await`: azúcar sintáctico para trabajar con promesas
+
+Introducidas en 2017, las palabras clave `async` y `await` son ***azúcar sintáctico*** (*syntactic sugar*): una forma de escribir código más amigable para quien lo lee, sin cambiar el comportamiento real de lo que hay por debajo. Estas dos palabras no reemplazan a las promesas — se siguen usando promesas por dentro; lo que cambia es la sintaxis para consumirlas, más parecida a como se escribe código sincrónico. Este mismo concepto de "azúcar sintáctico" no es exclusivo de JavaScript: aparece con otros nombres en varios lenguajes de programación.
+
+#### 36.1 Sintaxis básica
+
+- `async` se escribe antes de la palabra `function` (o antes de una función flecha) para declarar que esa función es asincrónica.
+- `await` se usa **solo dentro de una función `async`**, delante de una llamada que retorna una promesa: pausa la ejecución de esa función puntual hasta que la promesa se resuelva (ya sea con éxito o con error), y una vez resuelta, continúa con la línea siguiente.
+
+```javascript
+async function realizarPedido() {
+  const respuesta = await pedirProducto();
+  const respuestaProcesada = await procesarPedido(respuesta);
+  console.log(respuestaProcesada);
+}
+```
+
+Es el equivalente de la cadena de `.then` de la sección 35, escrito de forma más lineal: `await pedirProducto()` frena la ejecución hasta tener el resultado, lo guarda en `respuesta`, y recién ahí sigue con la línea de `procesarPedido`.
+
+#### 36.2 `await` no bloquea todo el programa, solo esa función
+
+Un malentendido frecuente es pensar que `await` bloquea la aplicación entera — no es así: lo único que pausa es la ejecución de **esa función puntual**, mientras el resto del programa sigue funcionando con normalidad. Dicho esto, sí implica un cambio de modelo dentro de esa función: mientras que las promesas encadenadas mantienen el modelo no bloqueante de Node (sección 25), usar `await` significa frenar deliberadamente esa función hasta tener el resultado — un modelo bloqueante, pero acotado a esa función.
+
+#### 36.3 Manejo de errores: `try`/`catch` en vez de `.catch`
+
+Como con `await` no hay ningún `.then` ni `.catch` explícito, el manejo de errores se hace envolviendo el código en un bloque `try`/`catch` (ya visto conceptualmente en materias previas de programación, si las hubiera):
+
+```javascript
+async function realizarPedido() {
+  try {
+    const respuesta = await pedirProducto();
+    const respuestaProcesada = await procesarPedido(respuesta);
+    console.log(respuestaProcesada);
+  } catch (error) {
+    console.log("Hubo un error:", error);
+  }
+}
+```
+
+Si cualquiera de las promesas dentro del `try` se rechaza, la ejecución salta directamente al bloque `catch` — el mismo comportamiento del `.catch` compartido de una cadena de promesas (sección 35.3), pero con la sintaxis de `try`/`catch`.
+
+**Una función `async` con `try`/`catch` siempre termina "resuelta" desde afuera, salvo que el `catch` vuelva a lanzar el error.** Si algo fallá dentro del `try` y el `catch` simplemente lo atiende (por ejemplo, con un `console.log`) sin volver a lanzarlo (`throw`) ni retornarlo, quien invoque a esa función `async` nunca se entera de que hubo un error — para esa función, todo se resolvió sin problemas. Esto puede ser justo lo que se busca (contener el error ahí mismo), pero si hace falta que el error se propague hacia quien llamó a la función, hay que relanzarlo explícitamente dentro del `catch`.
+
+#### 36.4 Tres errores comunes con `async`/`await`
+
+1. **Usar `await` dentro de una función que no fue declarada `async`.** Sin la palabra `async` delante de la función, el entorno de desarrollo marca un error de sintaxis apenas se intenta usar `await` — no llega a ejecutarse mal, directamente no compila.
+2. **No envolver el código en `try`/`catch`.** Sin ese bloque, un error dentro de una de las promesas puede pasar completamente desapercibido, en vez de detenerse y avisar como corresponde.
+3. **Encadenar varios `await` de forma innecesariamente secuencial cuando las operaciones no dependen entre sí.** Esperar una tras otra, con un `await` detrás de otro, frena la ejecución de la función más de lo necesario — perdiendo buena parte del beneficio de la programación asincrónica. Si dos operaciones no dependen la una de la otra, conviene dispararlas en simultáneo en vez de esperarlas en fila (mecanismo que se desarrolla en profundidad más adelante).
+
+### 37. Eventos: introducción (*preview* — se retoma con código en una próxima clase)
+
+> Esta sección queda a nivel introductorio: se dio solo en teoría, sin ejemplo de código en vivo, y el propio profesor aclaró que no es contenido de examen por ahora. Se amplía cuando se retome con práctica.
+
+Un **evento** es un suceso que altera el flujo normal de ejecución del programa para ser atendido — una acción que dispara un proceso, ya sea generada por quien usa la aplicación (un clic, una tecla presionada) o generada internamente por el propio sistema. A diferencia de la programación secuencial (donde el propio código, línea por línea, determina el orden de ejecución), en la **programación basada en eventos** el flujo del programa queda determinado por los eventos que van ocurriendo: el programa sigue ejecutándose con normalidad hasta que ocurre un evento, en cuyo momento se desvía a atenderlo, para después continuar. Esto se relaciona directamente con el *event loop* ya visto (sección 31): es, en el fondo, el mecanismo que se encarga de gestionar estos eventos.
+
+Un evento puede a su vez disparar otro evento, y un método también puede disparar un evento. En Node, el módulo incorporado (sección 26.1) para trabajar con esto es `events`, a través de su clase `EventEmitter` — el mismo concepto que se usa también del lado del Frontend (por ejemplo, en Angular, con el mismo nombre). Los dos métodos centrales son:
+
+- **`.on(nombreDelEvento, callback)`**: registra una callback que se va a ejecutar cada vez que ocurra el evento indicado — es el método de "escucha".
+- **`.emit(nombreDelEvento)`**: dispara (emite) ese evento — es lo que hace que las callbacks registradas con `.on` para ese evento se ejecuten.
+
+Dos objetos distintos pueden tener eventos con el mismo nombre sin interferir entre sí, porque cada evento queda asociado al objeto puntual que lo emite — el `.on` de un objeto solo escucha los `.emit` de ese mismo objeto, no los de otro.
