@@ -67,6 +67,9 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [20.6 Objetos incorporados en JavaScript](#206-objetos-incorporados-en-javascript)
       - [20.7 JSON: `JSON.stringify` y `JSON.parse`](#207-json-jsonstringify-y-jsonparse)
       - [20.8 Reglas prácticas de JSON](#208-reglas-prácticas-de-json)
+      - [20.9 Estructuras compuestas: objetos con arrays de objetos](#209-estructuras-compuestas-objetos-con-arrays-de-objetos)
+        - [Acceso progresivo a una estructura anidada](#acceso-progresivo-a-una-estructura-anidada)
+        - [Por qué esta estructura se vuelve útil al construir una API](#por-qué-esta-estructura-se-vuelve-útil-al-construir-una-api)
     - [21. Funciones](#21-funciones)
       - [21.1 Formas de definir una función](#211-formas-de-definir-una-función)
       - [21.2 Parámetro vs. argumento](#212-parámetro-vs-argumento)
@@ -121,7 +124,12 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [28.1 Importar solo lo necesario, con el nombre que se quiera](#281-importar-solo-lo-necesario-con-el-nombre-que-se-quiera)
       - [28.2 Alias al exportar: nombre interno vs. nombre expuesto](#282-alias-al-exportar-nombre-interno-vs-nombre-expuesto)
       - [28.3 Por qué conviene modularizar: un cambio, un solo lugar](#283-por-qué-conviene-modularizar-un-cambio-un-solo-lugar)
-      - [28.4 Errores comunes al exportar: `exports` sin `module.`, y ejecuciones sueltas dentro del módulo](#284-errores-comunes-al-exportar-exports-sin-module-y-ejecuciones-sueltas-dentro-del-módulo)
+      - [28.4 Errores comunes al exportar y efectos al cargar un módulo](#284-errores-comunes-al-exportar-y-efectos-al-cargar-un-módulo)
+        - [Código con efectos secundarios dentro de un módulo](#código-con-efectos-secundarios-dentro-de-un-módulo)
+      - [28.5 `module.exports`, `exports` y el valor que recibe `require`](#285-moduleexports-exports-y-el-valor-que-recibe-require)
+      - [28.6 Diagnóstico de importaciones y exportaciones](#286-diagnóstico-de-importaciones-y-exportaciones)
+        - [La extensión `.js`](#la-extensión-js)
+        - [Una comprobación simple antes de buscar errores más profundos](#una-comprobación-simple-antes-de-buscar-errores-más-profundos)
     - [29. Pila (*Stack*) y Cola (*Queue*): dos estructuras de datos](#29-pila-stack-y-cola-queue-dos-estructuras-de-datos)
     - [30. Programación sincrónica y el *Call Stack*](#30-programación-sincrónica-y-el-call-stack)
     - [31. Programación asincrónica: *Callback Queue* y *Event Loop*](#31-programación-asincrónica-callback-queue-y-event-loop)
@@ -158,11 +166,23 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
     - [43. Express.js](#43-expressjs)
       - [43.1 Routing](#431-routing)
       - [43.2 Objetos `req` y `res`](#432-objetos-req-y-res)
+      - [43.3 Respuestas JSON con Express](#433-respuestas-json-con-express)
+      - [43.4 Rutas parametrizadas y filtrado de datos](#434-rutas-parametrizadas-y-filtrado-de-datos)
+      - [43.5 Cerrar siempre el ciclo request/response](#435-cerrar-siempre-el-ciclo-requestresponse)
+      - [43.6 Diagnóstico básico de rutas y errores](#436-diagnóstico-básico-de-rutas-y-errores)
+        - [Asignar sin declarar no crea un `let`](#asignar-sin-declarar-no-crea-un-let)
+      - [43.7 Rutas de colección y rutas de recurso](#437-rutas-de-colección-y-rutas-de-recurso)
+        - [Path parameter y criterio de búsqueda no son lo mismo](#path-parameter-y-criterio-de-búsqueda-no-son-lo-mismo)
+      - [43.8 La respuesta HTTP como contrato](#438-la-respuesta-http-como-contrato)
+        - [El navegador como cliente de prueba](#el-navegador-como-cliente-de-prueba)
     - [44. Reinicio automático durante el desarrollo: Nodemon y `node --watch`](#44-reinicio-automático-durante-el-desarrollo-nodemon-y-node---watch)
       - [44.1 Nodemon](#441-nodemon)
       - [44.2 `node --watch`](#442-node---watch)
     - [45. Servir archivos HTML desde Node/Express](#45-servir-archivos-html-desde-nodeexpress)
     - [46. Ejemplo integrado — Primer servidor Express](#46-ejemplo-integrado--primer-servidor-express)
+      - [46.1 De una ruta fija a una API consultable](#461-de-una-ruta-fija-a-una-api-consultable)
+      - [46.2 Estructura mínima del ejemplo de API de lenguajes](#462-estructura-mínima-del-ejemplo-de-api-de-lenguajes)
+      - [46.3 Recorrido completo de una petición](#463-recorrido-completo-de-una-petición)
 
 ---
 
@@ -1433,7 +1453,7 @@ El patrón para reconocerlos es siempre el mismo, sin importar si el objeto lo c
 
 **JSON no es un tipo de dato: es una notación** — una convención sobre cómo representar información como texto plano, para que cualquier sistema o lenguaje de programación (más allá de si trabaja con objetos como JavaScript o no) pueda leerla e interpretarla de la misma manera. El nombre es un acrónimo de *JavaScript Object Notation*, aunque hoy se usa como estándar de intercambio de datos entre sistemas mucho más allá de JavaScript — es, por ejemplo, el formato en el que suele viajar la información entre un cliente y un servidor a través de una API.
 
-**`JSON.stringify(objeto)`** convierte un objeto de JavaScript a un `string` con formato JSON: recorre todas sus propiedades y arma una cadena de texto que reproduce esa misma estructura de clave-valor, entre comillas y con la sintaxis específica de JSON.
+**`JSON.stringify(valor)`** convierte un valor compatible de JavaScript a un `string` con formato JSON. Puede serializar objetos, arrays y valores primitivos compatibles; en un objeto recorre sus propiedades y construye una representación textual con la sintaxis propia de JSON.
 
 ```javascript
 let persona = { nombre: "Ada", edad: 30 };
@@ -1476,6 +1496,137 @@ Un documento JSON puede representar objetos, arrays, strings, números, booleano
 ```
 
 JSON tampoco posee valores propios para `undefined`, funciones, `Symbol` o `BigInt`. Por eso no todo valor de JavaScript puede serializarse de manera directa o conservar exactamente el mismo significado al pasar por JSON.
+
+
+#### 20.9 Estructuras compuestas: objetos con arrays de objetos
+
+Los objetos y los arrays no se utilizan únicamente de forma aislada. Una aplicación real suele construir **estructuras compuestas**, donde una propiedad de un objeto contiene un array y cada elemento de ese array vuelve a ser un objeto.
+
+```javascript
+const infoLenguajes = {
+  frontend: [
+    {
+      id: 1,
+      nombre: "JavaScript",
+      turno: "noche",
+      comision: "B",
+      cantidadAlumnos: 55,
+    },
+    {
+      id: 2,
+      nombre: "HTML",
+      turno: "noche",
+      comision: "A",
+      cantidadAlumnos: 25,
+    },
+    {
+      id: 3,
+      nombre: "CSS",
+      turno: "mañana",
+      comision: "A",
+      cantidadAlumnos: 30,
+    },
+  ],
+
+  backend: [
+    {
+      id: 1,
+      nombre: "JavaScript",
+      turno: "noche",
+      comision: "B",
+      cantidadAlumnos: 40,
+    },
+    {
+      id: 2,
+      nombre: "PHP",
+      turno: "mañana",
+      comision: "A",
+      cantidadAlumnos: 25,
+    },
+    {
+      id: 3,
+      nombre: "Python",
+      turno: "noche",
+      comision: "B",
+      cantidadAlumnos: 35,
+    },
+  ],
+};
+```
+
+La lectura correcta se hace por niveles:
+
+```text
+infoLenguajes
+└── objeto
+    ├── frontend
+    │   └── array
+    │       ├── objeto
+    │       ├── objeto
+    │       └── objeto
+    └── backend
+        └── array
+            ├── objeto
+            ├── objeto
+            └── objeto
+```
+
+Por lo tanto:
+
+```javascript
+typeof infoLenguajes;                    // "object"
+Array.isArray(infoLenguajes.frontend);   // true
+typeof infoLenguajes.frontend[0];        // "object"
+infoLenguajes.frontend[0].nombre;        // "JavaScript"
+```
+
+Este modelo permite agrupar información relacionada sin perder estructura. El objeto externo representa el conjunto completo de datos; `frontend` y `backend` representan categorías; cada array representa una colección; y cada objeto interno representa un elemento individual de esa colección.
+
+##### Acceso progresivo a una estructura anidada
+
+Cada operador de acceso reduce un nivel:
+
+```javascript
+infoLenguajes
+infoLenguajes.frontend
+infoLenguajes.frontend[0]
+infoLenguajes.frontend[0].nombre
+```
+
+Puede leerse como:
+
+1. obtener el objeto `infoLenguajes`;
+2. entrar en su propiedad `frontend`;
+3. tomar el elemento de índice `0` del array;
+4. leer la propiedad `nombre` de ese objeto.
+
+Este modo de lectura resulta especialmente importante en backend porque los datos que llegan desde una base de datos, un archivo o una API suelen tener varios niveles de anidamiento.
+
+##### Por qué esta estructura se vuelve útil al construir una API
+
+Hasta este punto, objetos y arrays podían parecer temas independientes de JavaScript. Al comenzar a exponer datos mediante HTTP aparece su conexión práctica:
+
+```mermaid
+flowchart LR
+    O[Objeto infoLenguajes] --> A[Propiedad frontend]
+    A --> AR[Array de objetos]
+    AR --> E1[Elemento 1]
+    AR --> E2[Elemento 2]
+    AR --> E3[Elemento 3]
+    AR --> API[Endpoint Express]
+    API --> C[Cliente]
+```
+
+El backend necesita:
+
+- almacenar u obtener una estructura de datos;
+- seleccionar una parte de ella;
+- eventualmente filtrarla;
+- convertir el resultado en una representación transportable;
+- enviarlo al cliente.
+
+Por eso los métodos de arrays vistos anteriormente (`filter`, `find`, `map`) dejan de ser ejercicios aislados y pasan a formar parte de la lógica de una API.
+
 
 ### 21. Funciones
 
@@ -2747,33 +2898,268 @@ Quien importe este módulo va a acceder a la función como `modulo.separador(...
 
 El beneficio concreto de mover una función a un módulo en vez de repetirla en cada archivo que la necesita: si más adelante hay que modificar esa función (cambiar el símbolo que usa un separador, por ejemplo), el cambio se hace **una sola vez**, en el módulo — y se refleja automáticamente en todos los archivos que lo importan. La alternativa (tener la misma función copiada en varios archivos) obliga a encontrar y corregir cada copia una por una, con el riesgo de olvidarse alguna.
 
-#### 28.4 Errores comunes al exportar: `exports` sin `module.`, y ejecuciones sueltas dentro del módulo
+#### 28.4 Errores comunes al exportar y efectos al cargar un módulo
 
-**Escribir `exports.algo = ...` sin anteponer `module.` no tira ningún error — pero tampoco exporta nada.** JavaScript, al no encontrar la propiedad `exports` sobre el objeto que se le indicó (por ejemplo, escribiendo `objeto.pepe = valor` en vez de `module.exports = valor`), simplemente **crea una propiedad nueva con ese nombre** en vez de fallar (el mismo comportamiento flexible ya visto en la sección 20.2 para propiedades inexistentes). El módulo importador, que sí busca específicamente en `module.exports`, no va a encontrar ahí lo que se quiso exportar, y va a fallar con un error del tipo `no es una función` al intentar invocar algo que en realidad nunca se exportó.
-
-```javascript
-// archivo de módulo — ERROR común
-module.pepe = { separador };   // crea una propiedad "pepe" en vez de exportar nada
-
-// archivo que lo importa
-const modulo = require("./modulo-consola");
-modulo.separador();   // TypeError: modulo.separador is not a function → exports sigue vacío
-```
-
-La recomendación es simple: siempre `module.exports`, con la **s** al final — nunca `module.export` (sin s) ni una propiedad inventada.
-
-**Un módulo no debería tener código que se ejecute por sí solo** (como un `console.log` suelto fuera de cualquier función) — solo declaraciones de funciones para exportar. La razón: `require(...)` **lee el archivo completo como texto, línea por línea**, y ejecuta cualquier instrucción que encuentre en el camino, no solo la parte que se termina exportando.
+En CommonJS conviene distinguir tres expresiones que se parecen pero **no significan lo mismo**:
 
 ```javascript
-// archivo de módulo — mala práctica
-console.log("cargando el módulo...");   // esto se ejecuta CADA VEZ que alguien haga require() de este archivo
-
-function separador() { /* ... */ }
-
-module.exports = { separador };
+module.exports.algo = valor; // ✅ agrega una propiedad al objeto exportado
+exports.algo = valor;        // ✅ también funciona mientras exports siga enlazado
+module.export.algo = valor;  // ❌ "export" no es la propiedad que usa CommonJS
 ```
 
-Esto es, en los hechos, uno de los mecanismos por los que un paquete externo comprometido (sección 26.3) puede ejecutar código malicioso: si en vez de un `console.log` inocente hay una instrucción que envía información a un servidor externo, esa instrucción se ejecuta automáticamente apenas alguien importa el paquete — sin que haga falta invocar ninguna función en particular.
+Al comenzar a ejecutarse un módulo, Node establece conceptualmente una relación equivalente a:
+
+```javascript
+exports = module.exports;
+```
+
+Por eso estas dos formas pueden agregar propiedades al mismo objeto:
+
+```javascript
+module.exports.saludar = saludar;
+exports.despedir = despedir;
+```
+
+El problema aparece al **reasignar** `exports`:
+
+```javascript
+exports = {
+  saludar,
+};
+```
+
+Esa asignación cambia únicamente la variable local `exports`; no reemplaza `module.exports`. Quien haga `require(...)` seguirá recibiendo el valor de `module.exports`.
+
+Si se quiere reemplazar completamente lo exportado, debe hacerse:
+
+```javascript
+module.exports = {
+  saludar,
+};
+```
+
+Otro error frecuente es escribir `module.export` en singular:
+
+```javascript
+module.export = { saludar };
+```
+
+JavaScript puede crear esa propiedad nueva en el objeto `module`, pero CommonJS no la utiliza como interfaz pública. El valor que devuelve `require(...)` sigue viniendo de **`module.exports`**.
+
+> 📌 **Para el examen:** el profesor remarcó especialmente la importación/exportación y el error de olvidar la `s` de `module.exports`.
+
+##### Código con efectos secundarios dentro de un módulo
+
+Un archivo CommonJS se **ejecuta cuando Node lo carga por primera vez**. Por eso una instrucción situada en el nivel superior del archivo produce un efecto durante esa carga:
+
+```javascript
+console.log("Inicializando módulo");
+
+function saludar() {
+  return "Hola";
+}
+
+module.exports = { saludar };
+```
+
+Al hacer el primer:
+
+```javascript
+const modulo = require("./modulo");
+```
+
+se ejecuta el `console.log`.
+
+Sin embargo, los módulos CommonJS normalmente quedan **cacheados después de la primera carga**. Si el mismo archivo se vuelve a resolver mediante `require(...)`, Node reutiliza el valor almacenado y no vuelve a ejecutar automáticamente todo el módulo.
+
+Esto no significa que todo efecto secundario sea incorrecto: muchos paquetes necesitan inicialización. El criterio es que esos efectos deben ser **intencionales y previsibles**, porque ocurren por el hecho de cargar el módulo, no por invocar explícitamente una función exportada.
+
+
+#### 28.5 `module.exports`, `exports` y el valor que recibe `require`
+
+En CommonJS, cada archivo tiene un objeto `module`. La propiedad **`module.exports`** determina qué valor queda disponible para quien haga `require(...)` sobre ese archivo.
+
+El puente conceptual es importante: **modularizar** resuelve el problema de separar responsabilidades; `module.exports` define la interfaz pública del módulo; `require(...)` recupera exactamente ese valor para poder utilizarlo desde otro archivo.
+
+```javascript
+// src/lenguajes.js
+const infoLenguajes = {
+  frontend: [
+    { id: 1, nombre: "JavaScript" },
+    { id: 2, nombre: "HTML" },
+    { id: 3, nombre: "CSS" },
+  ],
+  backend: [
+    { id: 1, nombre: "JavaScript" },
+    { id: 2, nombre: "PHP" },
+    { id: 3, nombre: "Python" },
+  ],
+};
+
+module.exports.infoLenguajes = infoLenguajes;
+```
+
+Al importar:
+
+```javascript
+const lenguajes = require("./src/lenguajes");
+
+console.log(lenguajes.infoLenguajes.frontend);
+```
+
+`require(...)` no "lee una variable por nombre" dentro del otro archivo: recibe el valor expuesto mediante `module.exports`.
+
+También se puede exportar el objeto completo directamente:
+
+```javascript
+module.exports = infoLenguajes;
+```
+
+En ese caso cambia la forma de importar y usar el resultado:
+
+```javascript
+const infoLenguajes = require("./src/lenguajes");
+
+console.log(infoLenguajes.frontend);
+```
+
+Esta diferencia evita una confusión frecuente:
+
+```javascript
+module.exports.infoLenguajes = infoLenguajes;
+// require(...) -> { infoLenguajes: { ... } }
+```
+
+no es equivalente estructuralmente a:
+
+```javascript
+module.exports = infoLenguajes;
+// require(...) -> { frontend: [...], backend: [...] }
+```
+
+`exports` existe como un atajo que inicialmente referencia al mismo objeto que `module.exports`:
+
+```javascript
+exports.infoLenguajes = infoLenguajes;
+```
+
+Eso funciona para **agregar propiedades**. En cambio, reasignar `exports` rompe ese vínculo local y no reemplaza el valor exportado:
+
+```javascript
+exports = { infoLenguajes }; // no reemplaza module.exports
+```
+
+Para reemplazar por completo lo exportado, debe usarse:
+
+```javascript
+module.exports = { infoLenguajes };
+```
+
+> ⚠️ Escribir por error una propiedad inexistente como `module.export` (sin `s`) no produce el efecto esperado. JavaScript puede crear una propiedad nueva llamada `export`, pero `require(...)` consulta `module.exports`, por lo que ese valor no será el exportado.
+
+Una forma simple de depurar este tipo de problemas es inspeccionar el valor:
+
+```javascript
+console.log(module.exports);
+```
+
+y, del lado que importa, comprobar la forma real del objeto recibido antes de seguir usando sus propiedades.
+
+
+#### 28.6 Diagnóstico de importaciones y exportaciones
+
+Los errores de módulos suelen aparecer lejos de la línea donde se originaron. Si un archivo exporta mal un valor, el problema puede manifestarse recién cuando otro archivo intenta acceder a una propiedad inexistente.
+
+Una estrategia de diagnóstico útil es inspeccionar **la forma del valor en cada extremo**.
+
+Archivo exportador:
+
+```javascript
+// src/lenguajes.js
+console.log(module.exports);
+```
+
+Archivo importador:
+
+```javascript
+const lenguajes = require("./src/lenguajes");
+
+console.log(lenguajes);
+console.log(Object.keys(lenguajes));
+```
+
+Si se esperaba:
+
+```javascript
+lenguajes.infoLenguajes
+```
+
+pero `Object.keys(lenguajes)` no contiene `"infoLenguajes"`, el problema está en la forma de exportación o en el módulo que se está resolviendo.
+
+También es importante distinguir entre:
+
+```javascript
+const lenguajes = require("./src/lenguajes");
+```
+
+y:
+
+```javascript
+const { infoLenguajes } = require("./src/lenguajes");
+```
+
+La segunda forma usa **destructuring**. Solo funciona si el valor exportado posee una propiedad llamada exactamente `infoLenguajes`.
+
+```javascript
+module.exports = {
+  infoLenguajes,
+};
+```
+
+En cambio, si el módulo hace:
+
+```javascript
+module.exports = infoLenguajes;
+```
+
+entonces el objeto importado ya es `infoLenguajes`, y la forma correcta sería:
+
+```javascript
+const infoLenguajes = require("./src/lenguajes");
+```
+
+##### La extensión `.js`
+
+En un `require` relativo de CommonJS, Node puede resolver un archivo JavaScript aunque se omita la extensión cuando existe una resolución válida:
+
+```javascript
+require("./src/lenguajes");
+```
+
+y:
+
+```javascript
+require("./src/lenguajes.js");
+```
+
+pueden resolver al mismo archivo. Omitir la extensión es habitual, pero no debe confundirse con que `require` "adivina cualquier archivo": Node aplica reglas concretas de resolución de módulos.
+
+##### Una comprobación simple antes de buscar errores más profundos
+
+Cuando un módulo no parece funcionar:
+
+```text
+1. ¿La ruta del require es correcta?
+2. ¿El archivo que espero es el que realmente se está resolviendo?
+3. ¿Estoy usando module.exports y no module.export?
+4. ¿Estoy exportando un objeto completo o una propiedad dentro de él?
+5. ¿La forma de importación coincide con esa estructura?
+6. ¿La propiedad que intento usar existe realmente?
+```
+
+Esta secuencia suele ser más eficiente que modificar código al azar.
+
 
 ### 29. Pila (*Stack*) y Cola (*Queue*): dos estructuras de datos
 
@@ -3634,6 +4020,483 @@ La forma moderna para establecer estado y enviar contenido es:
 res.status(200).send("OK");
 ```
 
+
+#### 43.3 Respuestas JSON con Express
+
+A medida que el backend deja de devolver páginas HTML y empieza a exponer **datos**, aparece un nuevo problema: el cliente necesita saber no solo *qué bytes recibió*, sino **cómo interpretarlos**.
+
+Con una respuesta manual puede hacerse explícitamente:
+
+```javascript
+const datos = {
+  frontend: [{ id: 1, nombre: "JavaScript" }],
+};
+
+const cuerpo = JSON.stringify(datos);
+
+app.get("/api/lenguajes", (req, res) => {
+  res.set("Content-Type", "application/json; charset=utf-8");
+  res.status(200).send(cuerpo);
+});
+```
+
+Aquí intervienen tres conceptos distintos:
+
+1. `JSON.stringify(...)` serializa el valor de JavaScript;
+2. `Content-Type: application/json` informa al cliente el formato de la representación;
+3. `200` comunica que la operación resultó exitosa.
+
+Express encapsula ese trabajo frecuente con `res.json(...)`:
+
+```javascript
+app.get("/api/lenguajes", (req, res) => {
+  res.status(200).json(datos);
+});
+```
+
+`res.json(...)` serializa el valor y envía una respuesta JSON con el tipo de contenido adecuado. Por eso suele preferirse cuando el endpoint devuelve datos estructurados.
+
+La diferencia práctica con `res.send(...)` no es que uno "pueda enviar datos" y el otro no: ambos envían una respuesta. La diferencia es la **intención semántica** y el tratamiento que hace Express.
+
+```javascript
+res.send("Hola");                // texto
+res.send("<h1>Hola</h1>");       // texto/HTML según el contenido y encabezados
+res.json({ mensaje: "Hola" });   // respuesta JSON explícita
+```
+
+Cuando la API devuelve un objeto o un array que representa datos, `res.json(...)` hace explícito el contrato y evita tener que combinar manualmente `JSON.stringify(...)` con el encabezado correspondiente.
+
+Además, `res.status(...)` no finaliza por sí mismo la respuesta:
+
+```javascript
+res.status(404);
+```
+
+solo configura el código. Para completar la respuesta todavía debe enviarse un cuerpo o cerrarse la respuesta:
+
+```javascript
+return res.status(404).json({
+  error: "Recurso no encontrado",
+});
+```
+
+
+```mermaid
+flowchart LR
+    O[Objeto / array de JavaScript] --> J[res.json]
+    J --> S[Serialización JSON]
+    S --> H[Content-Type: application/json]
+    H --> C[Cliente]
+```
+
+> **Puente conceptual:** `JSON.stringify` permite entender qué ocurre con la serialización; `res.json` aparece después como una abstracción de Express que evita repetir esa mecánica en cada ruta.
+
+El **código de estado y el contenido deben ser coherentes**. Una respuesta que entrega correctamente los datos pero usa `404`, o una que informa `200` mientras ocurrió un error, transmite información contradictoria al cliente.
+
+Forma habitual:
+
+```javascript
+res.status(200).json(resultado);
+```
+
+#### 43.4 Rutas parametrizadas y filtrado de datos
+
+Una ruta fija como:
+
+```text
+GET /api/lenguajes/frontend
+```
+
+puede devolver una colección completa. Pero cuando el cliente necesita pedir **un subconjunto concreto**, conviene incorporar información variable en la solicitud.
+
+Por ejemplo:
+
+```javascript
+app.get("/api/lenguajes/frontend/:lenguaje", (req, res) => {
+  const lenguajeParam = req.params.lenguaje;
+
+  // ...
+});
+```
+
+El segmento `:lenguaje` declara un **parámetro de ruta**. Si el cliente solicita:
+
+```text
+GET /api/lenguajes/frontend/css
+```
+
+Express construye:
+
+```javascript
+req.params.lenguaje === "css";
+```
+
+Esto conecta routing con los métodos de array vistos previamente: la URL aporta el criterio y el backend usa ese criterio para buscar en los datos.
+
+Supongamos:
+
+```javascript
+const frontend = [
+  { id: 1, nombre: "JavaScript" },
+  { id: 2, nombre: "CSS" },
+  { id: 3, nombre: "HTML" },
+  { id: 4, nombre: "CSS" },
+];
+```
+
+Con `filter`:
+
+```javascript
+app.get("/api/lenguajes/frontend/:lenguaje", (req, res) => {
+  const lenguajeParam = req.params.lenguaje;
+
+  const filtrados = frontend.filter(
+    item =>
+      item.nombre.toLocaleLowerCase() ===
+      lenguajeParam.toLocaleLowerCase()
+  );
+
+  if (filtrados.length === 0) {
+    return res
+      .status(404)
+      .send(`No se encontró el lenguaje ${lenguajeParam}`);
+  }
+
+  return res.status(200).json(filtrados);
+});
+```
+
+`filter` devuelve **todas** las coincidencias en un array. Si ninguna coincide, devuelve `[]`, por lo que `filtrados.length === 0` permite detectar el caso "sin resultados".
+
+Si la lógica del recurso garantiza que solo interesa la primera coincidencia, `find` expresa mejor la intención:
+
+```javascript
+const encontrado = frontend.find(
+  item =>
+    item.nombre.toLocaleLowerCase() ===
+    lenguajeParam.toLocaleLowerCase()
+);
+
+if (!encontrado) {
+  return res.status(404).json({
+    error: `No se encontró el lenguaje ${lenguajeParam}`,
+  });
+}
+
+return res.status(200).json(encontrado);
+```
+
+La diferencia conceptual es:
+
+| Método | Resultado | Caso típico |
+|---|---|---|
+| `filter` | array con todas las coincidencias | puede haber múltiples resultados |
+| `find` | primer elemento coincidente o `undefined` | se busca un único resultado |
+
+Normalizar ambos textos antes de comparar permite que diferencias de mayúsculas/minúsculas no produzcan un falso "no encontrado":
+
+```javascript
+item.nombre.toLocaleLowerCase() === lenguajeParam.toLocaleLowerCase()
+```
+
+Esto no modifica el dato original; solo normaliza temporalmente ambos valores para la comparación.
+
+```mermaid
+flowchart TD
+    U[GET /api/lenguajes/frontend/CsS] --> P[req.params.lenguaje]
+    P --> N[Normalizar a minúsculas]
+    D[Array frontend] --> F[filter / find]
+    N --> F
+    F --> Q{¿Hay coincidencia?}
+    Q -- Sí --> OK[200 + JSON]
+    Q -- No --> NF[404]
+```
+
+#### 43.5 Cerrar siempre el ciclo request/response
+
+Registrar una ruta no alcanza. Cada solicitud que entra debe terminar en una respuesta o en una transferencia explícita del control hacia otra capa de Express.
+
+Este handler recibe la solicitud pero **no responde**:
+
+```javascript
+app.get("/api/prueba", (req, res) => {
+  console.log("Solicitud recibida");
+});
+```
+
+Desde el punto de vista del cliente, la operación queda pendiente porque el servidor no cerró el ciclo.
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant E as Express
+
+    C->>E: GET /api/prueba
+    E->>E: ejecuta handler
+    Note over E: no llama res.send/res.json/res.end...
+    Note over C: la solicitud continúa pendiente
+```
+
+Los métodos de respuesta de Express como `res.send`, `res.json`, `res.end`, `res.redirect` o `res.sendFile` envían/finalizan la respuesta. Si ninguno se ejecuta y tampoco se llama `next(...)` para continuar el procesamiento, el cliente queda esperando hasta que alguna capa externa cierre o venza la conexión.
+
+Por eso es útil pensar cada handler como una función que debe cubrir **todos sus caminos posibles**:
+
+```javascript
+app.get("/recurso/:id", (req, res) => {
+  const recurso = buscar(req.params.id);
+
+  if (!recurso) {
+    return res.status(404).json({ error: "No encontrado" });
+  }
+
+  return res.status(200).json(recurso);
+});
+```
+
+El `return` no es obligatorio para que Express envíe la respuesta, pero resulta útil para impedir que el código continúe ejecutándose después de haber respondido.
+
+#### 43.6 Diagnóstico básico de rutas y errores
+
+Cuando una petición falla, conviene diagnosticar de lo más general a lo más específico:
+
+1. **¿El proceso está ejecutándose?** Revisar la terminal y el mensaje de inicio.
+2. **¿Host y puerto son correctos?** Una petición al puerto equivocado nunca llegará a esa instancia.
+3. **¿Express responde?** Si una ruta inexistente devuelve el `404` de Express, al menos hay comunicación con el servidor.
+4. **¿Coinciden método y path?** `GET /api/lenguajes` no es lo mismo que `GET /api/lenguaje`.
+5. **¿El handler lanza una excepción?** Un fallo interno suele terminar en `500`.
+6. **¿Se envió una respuesta?** Si queda en estado pendiente, revisar los caminos del handler.
+
+Separar estos niveles evita investigar la lógica de filtrado cuando el problema real era, por ejemplo, un puerto incorrecto o una ruta mal escrita.
+
+También debe diferenciarse entre **registrar un error internamente** y **exponerlo al cliente**. Express posee un manejador de errores predeterminado, pero una aplicación real debe controlar qué información revela. Una traza (*stack trace*), rutas del sistema de archivos u otros detalles internos pueden ayudar durante el desarrollo, pero no deberían formar parte de una respuesta pública de producción.
+
+Una respuesta controlada puede limitarse a:
+
+```javascript
+res.status(500).json({
+  error: "Error interno del servidor",
+});
+```
+
+mientras el detalle técnico se registra del lado del servidor.
+
+> ⚠️ No conviene asumir un tiempo de espera universal del cliente. El *timeout* depende del cliente, servidor, proxy y configuración utilizados. El punto importante es que un handler que no finaliza la respuesta deja la solicitud abierta hasta que alguna de esas capas la termine.
+
+##### Asignar sin declarar no crea un `let`
+
+Durante una prueba puede parecer que JavaScript "infiere" automáticamente una variable si se escribe:
+
+```javascript
+resultado = obtenerDatos();
+```
+
+pero no equivale a:
+
+```javascript
+let resultado = obtenerDatos();
+```
+
+En código no estricto, una asignación a un identificador no declarado puede terminar creando una propiedad en el objeto global. En modo estricto produce un `ReferenceError`. Es un comportamiento propenso a errores y debe evitarse.
+
+La forma correcta es declarar explícitamente la intención:
+
+```javascript
+const resultado = obtenerDatos();
+```
+
+o, si el valor debe reasignarse:
+
+```javascript
+let resultado = obtenerDatos();
+```
+
+
+#### 43.7 Rutas de colección y rutas de recurso
+
+Al diseñar endpoints conviene reconocer dos necesidades distintas:
+
+- pedir **una colección**;
+- pedir **un recurso o subconjunto concreto**.
+
+Ejemplo de colección:
+
+```http
+GET /api/lenguajes/frontend
+```
+
+Respuesta conceptual:
+
+```json
+[
+  { "id": 1, "nombre": "JavaScript" },
+  { "id": 2, "nombre": "HTML" },
+  { "id": 3, "nombre": "CSS" }
+]
+```
+
+Ejemplo parametrizado:
+
+```http
+GET /api/lenguajes/frontend/css
+```
+
+La ruta puede declararse:
+
+```javascript
+app.get("/api/lenguajes/frontend/:lenguaje", handler);
+```
+
+y el valor variable aparece en:
+
+```javascript
+req.params.lenguaje;
+```
+
+La ruta parametrizada evita crear manualmente una ruta nueva para cada lenguaje:
+
+```javascript
+// Escala mal:
+app.get("/api/lenguajes/frontend/css", ...);
+app.get("/api/lenguajes/frontend/html", ...);
+app.get("/api/lenguajes/frontend/javascript", ...);
+```
+
+En cambio:
+
+```javascript
+app.get("/api/lenguajes/frontend/:lenguaje", ...);
+```
+
+define una sola regla capaz de procesar muchos valores.
+
+```mermaid
+flowchart TD
+    C[Cliente] --> A{Qué necesita}
+    A -->|Colección completa| R1[GET /api/lenguajes/frontend]
+    A -->|Un valor particular| R2[GET /api/lenguajes/frontend/:lenguaje]
+    R1 --> ARR[Array completo]
+    R2 --> PARAM[req.params.lenguaje]
+    PARAM --> SEARCH[find / filter]
+```
+
+##### Path parameter y criterio de búsqueda no son lo mismo
+
+`req.params.lenguaje` contiene **entrada del cliente**:
+
+```javascript
+const lenguajeParam = req.params.lenguaje;
+```
+
+Luego el programa decide qué hacer con ella:
+
+```javascript
+const resultado = frontend.filter(
+  item =>
+    item.nombre.toLocaleLowerCase() ===
+    lenguajeParam.toLocaleLowerCase()
+);
+```
+
+Express se encarga de capturar el segmento de URL; `filter` se encarga de aplicar la lógica de búsqueda. Son responsabilidades diferentes conectadas dentro del mismo handler.
+
+Este puente evita una confusión común: una ruta parametrizada **no filtra datos automáticamente**. Solo extrae el valor variable de la URL.
+
+#### 43.8 La respuesta HTTP como contrato
+
+Una respuesta HTTP no está formada únicamente por "los datos". Para que cliente y servidor se entiendan, varias piezas deben ser coherentes entre sí:
+
+```text
+HTTP response
+├── status code
+├── headers
+└── body
+```
+
+Ejemplo exitoso:
+
+```javascript
+return res.status(200).json({
+  id: 3,
+  nombre: "CSS",
+});
+```
+
+Conceptualmente:
+
+```text
+status: 200 OK
+Content-Type: application/json
+body: {"id":3,"nombre":"CSS"}
+```
+
+Ejemplo de recurso inexistente:
+
+```javascript
+return res.status(404).json({
+  error: "Lenguaje no encontrado",
+});
+```
+
+La importancia no está solo en que el navegador "muestre algo". El consumidor puede tomar decisiones programáticas según el contrato:
+
+```javascript
+if (response.status === 404) {
+  // mostrar "no encontrado"
+}
+```
+
+Por eso estas respuestas son incoherentes:
+
+```javascript
+// ❌ El body informa un error, pero el status informa éxito.
+res.status(200).json({
+  error: "No encontrado",
+});
+```
+
+```javascript
+// ❌ El recurso existe y se devuelve correctamente,
+// pero el status informa que no fue encontrado.
+res.status(404).json({
+  id: 3,
+  nombre: "CSS",
+});
+```
+
+La coherencia debe existir entre:
+
+| Parte | Pregunta que responde |
+|---|---|
+| Método de la request | ¿Qué operación solicita el cliente? |
+| Ruta | ¿Sobre qué recurso? |
+| Status code | ¿Cuál fue el resultado de procesarla? |
+| `Content-Type` | ¿Cómo debe interpretarse el body? |
+| Body | ¿Qué información concreta se devuelve? |
+
+##### El navegador como cliente de prueba
+
+Durante estas primeras prácticas se utiliza el navegador porque permite enviar fácilmente requests `GET` y observar las respuestas. Las DevTools ayudan a separar:
+
+- lo que se muestra en la página;
+- la consola del navegador;
+- la pestaña **Network**;
+- los headers HTTP;
+- el status code;
+- el body de la respuesta.
+
+No debe confundirse la consola donde se ejecuta Node con la consola del navegador:
+
+```text
+Terminal / Node
+→ pertenece al servidor
+
+DevTools / navegador
+→ pertenece al cliente
+```
+
+Un `console.log(...)` ejecutado dentro del handler aparece en la terminal del servidor, no en la consola JavaScript del cliente.
+
+
 ### 44. Reinicio automático durante el desarrollo: Nodemon y `node --watch`
 
 Al ejecutar un servidor con `node index.js`, Node carga el programa y mantiene el proceso activo escuchando solicitudes. Si el código fuente cambia, ese proceso no vuelve a cargar automáticamente el archivo: debe reiniciarse o ejecutarse en modo de vigilancia.
@@ -3766,5 +4629,199 @@ flowchart TD
     S3 --> B
 ```
 
-**Fuentes oficiales de actualización técnica:** documentación de Node.js (`node:http`, `node:fs`, modo `--watch`) y documentación de Express 5.x (API, routing y `app.listen`). Las explicaciones de clase se conservaron como eje temático; los detalles actuales se normalizaron contra esas referencias.
+
+#### 46.1 De una ruta fija a una API consultable
+
+El paso siguiente al primer servidor es convertir datos internos en recursos accesibles mediante rutas. El flujo completo reúne temas que antes estaban separados:
+
+```mermaid
+flowchart LR
+    M[Módulo local<br/>src/lenguajes.js] -->|module.exports| R[require]
+    R --> A[Objeto JavaScript]
+    C[Cliente] -->|GET /api/lenguajes/frontend/css| E[Express]
+    E --> P[req.params]
+    A --> F[filter / find]
+    P --> F
+    F -->|resultado| J[res.status(...).json(...)]
+    J -->|HTTP response| C
+```
+
+El módulo resuelve **dónde viven los datos**; la ruta define **cómo se solicitan**; `req.params` captura **qué pidió el cliente**; los métodos de array resuelven **cómo buscarlo**; y `res.status(...).json(...)` define **cómo se comunica el resultado**.
+
+Esa conexión es la base de una API, incluso antes de incorporar una base de datos. Más adelante, el origen de los datos puede cambiar de un array en memoria a una consulta persistente sin modificar la idea central del ciclo request/response.
+
+
+#### 46.2 Estructura mínima del ejemplo de API de lenguajes
+
+Una organización sencilla para separar el servidor de los datos puede ser:
+
+```text
+proyecto/
+├── index.js
+├── package.json
+└── src/
+    └── lenguajes.js
+```
+
+`src/lenguajes.js`:
+
+```javascript
+const infoLenguajes = {
+  frontend: [
+    { id: 1, nombre: "JavaScript", turno: "noche" },
+    { id: 2, nombre: "HTML", turno: "noche" },
+    { id: 3, nombre: "CSS", turno: "mañana" },
+  ],
+  backend: [
+    { id: 1, nombre: "JavaScript", turno: "noche" },
+    { id: 2, nombre: "PHP", turno: "mañana" },
+    { id: 3, nombre: "Python", turno: "noche" },
+  ],
+};
+
+module.exports = { infoLenguajes };
+```
+
+`index.js`:
+
+```javascript
+const express = require("express");
+const { infoLenguajes } = require("./src/lenguajes");
+
+const app = express();
+const HOSTNAME = "127.0.0.1";
+const PORT = 3000;
+
+app.get("/api/lenguajes", (req, res) => {
+  return res.status(200).json(infoLenguajes);
+});
+
+app.get("/api/lenguajes/frontend", (req, res) => {
+  return res.status(200).json(infoLenguajes.frontend);
+});
+
+app.get("/api/lenguajes/backend", (req, res) => {
+  return res.status(200).json(infoLenguajes.backend);
+});
+
+app.get("/api/lenguajes/frontend/:lenguaje", (req, res) => {
+  const lenguajeSolicitado = req.params.lenguaje.toLocaleLowerCase();
+
+  const coincidencias = infoLenguajes.frontend.filter(
+    item => item.nombre.toLocaleLowerCase() === lenguajeSolicitado
+  );
+
+  if (coincidencias.length === 0) {
+    return res.status(404).json({
+      error: `No se encontró el lenguaje ${req.params.lenguaje}`,
+    });
+  }
+
+  return res.status(200).json(coincidencias);
+});
+
+app.listen(PORT, HOSTNAME, error => {
+  if (error) {
+    console.error("No se pudo iniciar el servidor:", error);
+    return;
+  }
+
+  console.log(`Servidor en http://${HOSTNAME}:${PORT}`);
+});
+```
+
+Este ejemplo permite estudiar cada responsabilidad por separado:
+
+```text
+src/lenguajes.js
+→ define y exporta los datos
+
+require(...)
+→ incorpora esos datos al servidor
+
+app.get(...)
+→ define cuándo se ejecuta una lógica
+
+req.params
+→ recibe la parte variable de la solicitud
+
+filter(...)
+→ consulta la colección en memoria
+
+res.status(...)
+→ comunica el resultado HTTP
+
+res.json(...)
+→ serializa y envía la representación JSON
+```
+
+#### 46.3 Recorrido completo de una petición
+
+Para:
+
+```http
+GET /api/lenguajes/frontend/CSS
+```
+
+el flujo puede descomponerse así:
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant E as Express
+    participant H as Handler
+    participant D as Datos en memoria
+
+    C->>E: GET /api/lenguajes/frontend/CSS
+    E->>H: coincide /api/lenguajes/frontend/:lenguaje
+    H->>H: req.params.lenguaje = "CSS"
+    H->>D: filter(nombre normalizado === "css")
+    D-->>H: [{ id: 3, nombre: "CSS", ... }]
+    H-->>C: 200 + application/json + resultado
+```
+
+Para:
+
+```http
+GET /api/lenguajes/frontend/COBOL
+```
+
+el comienzo es igual, pero la búsqueda produce un array vacío:
+
+```text
+[]
+```
+
+La lógica detecta:
+
+```javascript
+coincidencias.length === 0;
+```
+
+y responde:
+
+```text
+404 Not Found
+```
+
+Este ejemplo une temas vistos en momentos diferentes de la materia:
+
+```mermaid
+flowchart LR
+    O[Objetos] --> DATA[Estructura de datos]
+    A[Arrays] --> DATA
+    MOD[Módulos] --> DATA
+    DATA --> API[Express]
+    CALLBACK[Callbacks] --> API
+    HTTP[HTTP] --> API
+    API --> PARAM[req.params]
+    PARAM --> FIL[filter / find]
+    FIL --> JSON[JSON]
+    JSON --> RESP[Status + headers + body]
+```
+
+La utilidad pedagógica de este recorrido es mostrar que Express no reemplaza los conceptos anteriores: **los coordina**. El handler de una ruta sigue siendo una callback; los datos siguen siendo objetos y arrays; la búsqueda sigue usando métodos de array; JSON sigue siendo la representación de intercambio; HTTP sigue definiendo la request y la response.
+
+
+**Fuentes oficiales de actualización técnica:** documentación de Node.js (`node:http`, `node:fs`, modo `--watch`, CommonJS) y documentación de Express 5.x (API, routing, respuestas y manejo de errores). Las explicaciones de clase se conservaron como eje temático; los detalles actuales se normalizaron contra esas referencias.
 
