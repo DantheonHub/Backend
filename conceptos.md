@@ -66,6 +66,7 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [20.5 Mutabilidad, inmutabilidad y *race conditions*](#205-mutabilidad-inmutabilidad-y-race-conditions)
       - [20.6 Objetos incorporados en JavaScript](#206-objetos-incorporados-en-javascript)
       - [20.7 JSON: `JSON.stringify` y `JSON.parse`](#207-json-jsonstringify-y-jsonparse)
+      - [20.8 Reglas prácticas de JSON](#208-reglas-prácticas-de-json)
     - [21. Funciones](#21-funciones)
       - [21.1 Formas de definir una función](#211-formas-de-definir-una-función)
       - [21.2 Parámetro vs. argumento](#212-parámetro-vs-argumento)
@@ -98,6 +99,7 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [23.14 `concat`: unir arrays](#2314-concat-unir-arrays)
       - [23.15 `sort`: ordenar el array](#2315-sort-ordenar-el-array)
       - [23.16 Los arrays no son "listas": una aclaración de vocabulario](#2316-los-arrays-no-son-listas-una-aclaración-de-vocabulario)
+      - [23.17 Desestructuración (*destructuring*) de arrays y objetos](#2317-desestructuración-destructuring-de-arrays-y-objetos)
   - [Ejemplo práctico — Tipos de funciones en JavaScript](#ejemplo-práctico--tipos-de-funciones-en-javascript)
   - [Ejemplo práctico — Paso por referencia en objetos](#ejemplo-práctico--paso-por-referencia-en-objetos)
   - [Ejemplo práctico — Función con múltiples callbacks condicionales](#ejemplo-práctico--función-con-múltiples-callbacks-condicionales)
@@ -144,7 +146,23 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [36.3 Manejo de errores: `try`/`catch` en vez de `.catch`](#363-manejo-de-errores-trycatch-en-vez-de-catch)
       - [36.4 Tres errores comunes con `async`/`await`](#364-tres-errores-comunes-con-asyncawait)
     - [37. Eventos: introducción (*preview* — se retoma con código en una próxima clase)](#37-eventos-introducción-preview--se-retoma-con-código-en-una-próxima-clase)
-
+    - [38. Arquitectura cliente-servidor](#38-arquitectura-cliente-servidor)
+      - [38.1 Request/response](#381-requestresponse)
+    - [39. HTTP y HTTPS](#39-http-y-https)
+      - [39.1 Códigos de estado básicos](#391-códigos-de-estado-básicos)
+    - [40. Dirección de un servicio: host, IP y puerto](#40-dirección-de-un-servicio-host-ip-y-puerto)
+    - [41. URL, DNS, rutas y parámetros](#41-url-dns-rutas-y-parámetros)
+      - [41.1 Parámetros de ruta (*path params*)](#411-parámetros-de-ruta-path-params)
+      - [41.2 Parámetros de consulta (*query params*)](#412-parámetros-de-consulta-query-params)
+    - [42. Servidor HTTP básico con Node.js](#42-servidor-http-básico-con-nodejs)
+    - [43. Express.js](#43-expressjs)
+      - [43.1 Routing](#431-routing)
+      - [43.2 Objetos `req` y `res`](#432-objetos-req-y-res)
+    - [44. Reinicio automático durante el desarrollo: Nodemon y `node --watch`](#44-reinicio-automático-durante-el-desarrollo-nodemon-y-node---watch)
+      - [44.1 Nodemon](#441-nodemon)
+      - [44.2 `node --watch`](#442-node---watch)
+    - [45. Servir archivos HTML desde Node/Express](#45-servir-archivos-html-desde-nodeexpress)
+    - [46. Ejemplo integrado — Primer servidor Express](#46-ejemplo-integrado--primer-servidor-express)
 
 ---
 
@@ -1437,7 +1455,27 @@ console.log(personaRecuperada);         // { nombre: "Ada", edad: 30 }
 console.log(typeof personaRecuperada);  // "object"
 ```
 
-Este par de métodos es central para el trabajo con APIs: la información que viaja entre un cliente y un servidor no puede viajar como un objeto de JavaScript tal cual (no todos los sistemas del otro lado hablan JavaScript, ni los objetos son un formato adecuado para transmitir por red) — viaja como texto plano con formato JSON, y cada lado la convierte a su propia estructura de datos según la necesite. `JSON.stringify` prepara la información para el envío; `JSON.parse` reconstruye el objeto a partir de la información recibida.
+Este par de métodos es central para el trabajo con APIs: JSON define una representación textual interoperable de datos estructurados. En JavaScript, `JSON.stringify` serializa valores compatibles a texto JSON y `JSON.parse` transforma texto JSON válido en valores de JavaScript. En una API HTTP, el transporte efectivo son bytes; el encabezado `Content-Type: application/json` informa cómo interpretar esos bytes. Frameworks como Express suelen encargarse de buena parte de esta serialización y del encabezado cuando se usa `res.json(...)`.
+
+> ⚠️ **JSON no cifra ni protege información.** Es solo un formato de representación. La confidencialidad del tránsito se obtiene mediante mecanismos como HTTPS/TLS; además, los datos sensibles requieren controles de autenticación, autorización y almacenamiento adecuados.
+
+#### 20.8 Reglas prácticas de JSON
+
+Un documento JSON puede representar objetos, arrays, strings, números, booleanos y `null`. En los objetos, los nombres de las propiedades deben ir entre comillas dobles; los pares clave-valor se separan con comas y **no se admite una coma final** después del último elemento.
+
+```json
+{
+  "id": 15,
+  "nombre": "Ada",
+  "activo": true,
+  "roles": ["admin", "editor"],
+  "perfil": {
+    "idioma": "es"
+  }
+}
+```
+
+JSON tampoco posee valores propios para `undefined`, funciones, `Symbol` o `BigInt`. Por eso no todo valor de JavaScript puede serializarse de manera directa o conservar exactamente el mismo significado al pasar por JSON.
 
 ### 21. Funciones
 
@@ -2194,6 +2232,72 @@ console.log(Array.isArray(miArray));    // true
 console.log(Array.isArray(miObjeto));   // false
 ```
 
+#### 23.17 Desestructuración (*destructuring*) de arrays y objetos
+
+La **desestructuración** es una sintaxis de JavaScript que permite extraer valores de arrays o propiedades de objetos y asignarlos a variables de forma compacta. No modifica por sí misma la estructura original: crea o asigna variables a partir de los valores encontrados.
+
+**Arrays: la correspondencia se realiza por posición.**
+
+```javascript
+const colores = ["rojo", "amarillo", "verde"];
+const [primero, segundo, tercero] = colores;
+
+console.log(primero); // "rojo"
+console.log(segundo); // "amarillo"
+console.log(tercero); // "verde"
+```
+
+Si se intenta extraer una posición inexistente, la variable recibe `undefined`:
+
+```javascript
+const [a, b, c] = [10, 20];
+console.log(c); // undefined
+```
+
+También puede utilizarse para intercambiar dos variables sin una variable auxiliar:
+
+```javascript
+let a = 5;
+let b = 10;
+
+[a, b] = [b, a];
+
+console.log(a); // 10
+console.log(b); // 5
+```
+
+> ⚠️ Cuando una asignación que empieza con `[` aparece inmediatamente después de otra expresión y se omiten puntos y coma, el mecanismo de inserción automática de punto y coma (*ASI*) puede interpretar ambas líneas como una sola expresión. Por eso en casos como el intercambio anterior conviene mantener una separación sintáctica inequívoca.
+
+**Objetos: la correspondencia se realiza por nombre de propiedad, no por posición.**
+
+```javascript
+const usuario = {
+  id: 42,
+  nombre: "Ada",
+  verificado: true,
+};
+
+const { id, verificado } = usuario;
+
+console.log(id);         // 42
+console.log(verificado); // true
+```
+
+Si la propiedad no existe, la variable recibe `undefined`. También se puede renombrar la variable durante la extracción:
+
+```javascript
+const { nombre: nombreUsuario } = usuario;
+console.log(nombreUsuario); // "Ada"
+```
+
+Esta sintaxis aparece con frecuencia al importar únicamente partes concretas de un módulo CommonJS:
+
+```javascript
+const { createServer } = require("node:http");
+```
+
+`require("node:http")` devuelve el objeto exportado por el módulo y `{ createServer }` extrae solo la propiedad `createServer` en una constante del mismo nombre.
+
 ---
 
 ## Ejemplo práctico — Tipos de funciones en JavaScript
@@ -2801,22 +2905,60 @@ const intervalId = setInterval(() => {
 
 ### 33. Módulo `fs` (*File System*): trabajar con archivos y carpetas
 
-`fs` es un módulo incorporado para crear, leer, modificar, copiar y eliminar archivos y carpetas. **Todos sus métodos son asincrónicos por defecto** — si se necesita la versión sincrónica de alguno, se le agrega el sufijo `Sync` al nombre (`fs.renameSync`, `fs.statSync`, etc.).
+`fs` es un módulo incorporado de Node.js para interactuar con el sistema de archivos: permite leer, crear, modificar, copiar, renombrar y eliminar archivos y directorios, además de consultar metadatos.
+
+Node expone **distintas variantes de API** para muchas operaciones:
+
+- APIs asincrónicas basadas en callbacks, como `fs.readFile(...)`;
+- APIs asincrónicas basadas en promesas, disponibles en `node:fs/promises`;
+- variantes sincrónicas con sufijo `Sync`, como `fs.readFileSync(...)`.
+
+Por lo tanto, no es correcto pensar que todos los métodos de `fs` sean asincrónicos “por defecto”: el módulo ofrece explícitamente familias asincrónicas y sincrónicas. En servidores, las variantes sincrónicas deben usarse con cuidado porque **bloquean el hilo de JavaScript** hasta terminar la operación de E/S.
 
 ```javascript
 const fs = require("node:fs");
 
-// Asincrónico (por defecto): recibe una callback con la convención "error primero"
+// Asincrónico con callback y convención "error primero"
 fs.readFile("archivo.txt", "utf8", (error, contenido) => {
   if (error) {
-    console.log("Hubo un error:", error);
+    console.error("Hubo un error:", error);
     return;
   }
+
   console.log(contenido);
 });
 ```
 
-La callback de `fs.readFile` recibe siempre dos parámetros, en este orden: primero un posible **error** (`null` si no hubo ninguno), y después el **contenido** leído. Esta convención — el error como primer parámetro de la callback — es un patrón muy usado en Node para funciones asincrónicas basadas en callbacks, más allá de este módulo puntual.
+La callback de `fs.readFile` recibe primero un posible **error** (`null` cuando no ocurrió uno) y luego el **contenido** leído. Esta convención de callback *error-first* fue muy utilizada en las APIs tradicionales de Node.
+
+La alternativa moderna basada en promesas se integra naturalmente con `async`/`await`:
+
+```javascript
+const fs = require("node:fs/promises");
+
+async function leerArchivo() {
+  try {
+    const contenido = await fs.readFile("archivo.txt", "utf8");
+    console.log(contenido);
+  } catch (error) {
+    console.error(error);
+  }
+}
+```
+
+**Consultar metadatos con `stat`:**
+
+```javascript
+const fs = require("node:fs");
+const stats = fs.statSync("./archivo.txt");
+
+console.log(stats.isFile());         // true si es un archivo
+console.log(stats.isDirectory());    // true si es un directorio
+console.log(stats.isSymbolicLink()); // true si es un enlace simbólico
+console.log(stats.size);             // tamaño en bytes
+```
+
+El prefijo `node:` hace explícito que se está importando un módulo incorporado de Node y evita confundirlo con un paquete externo del mismo nombre.
 
 ### 34. Promesas (*Promises*)
 
@@ -3236,3 +3378,393 @@ Un evento puede a su vez disparar otro evento, y un método también puede dispa
 - **`.emit(nombreDelEvento)`**: dispara (emite) ese evento — es lo que hace que las callbacks registradas con `.on` para ese evento se ejecuten.
 
 Dos objetos distintos pueden tener eventos con el mismo nombre sin interferir entre sí, porque cada evento queda asociado al objeto puntual que lo emite — el `.on` de un objeto solo escucha los `.emit` de ese mismo objeto, no los de otro.
+
+### 38. Arquitectura cliente-servidor
+
+La **arquitectura cliente-servidor** es un modelo en el que las responsabilidades se distribuyen entre componentes que solicitan recursos o servicios (**clientes**) y componentes que los proporcionan (**servidores**). El cliente inicia la interacción; el servidor permanece disponible para recibir solicitudes, procesarlas y generar una respuesta.
+
+Un cliente no tiene que ser necesariamente un navegador: puede ser una aplicación móvil, una aplicación de escritorio, otro servidor, un dispositivo IoT o cualquier programa capaz de comunicarse mediante el protocolo acordado. Del mismo modo, un servidor no es únicamente una computadora física: también se denomina servidor al software que escucha solicitudes y presta un servicio sobre determinado hardware.
+
+```mermaid
+flowchart LR
+    U[Usuario] --> C[Cliente<br/>navegador / app]
+    C -- Request --> API[Servidor / API]
+    API --> L[Lógica de negocio]
+    L --> D[(Datos / servicios)]
+    D --> L
+    L --> API
+    API -- Response --> C
+    C --> U
+```
+
+En un backend con Node.js, el programa JavaScript corre dentro del runtime de Node y puede actuar como servidor HTTP. A su vez, durante el procesamiento de una solicitud ese backend puede convertirse en **cliente de otro servicio**: por ejemplo, al consultar una API externa. Los roles cliente y servidor dependen de cada interacción, no de una identidad permanente de la máquina.
+
+#### 38.1 Request/response
+
+En HTTP la interacción básica se modela como un ciclo de **solicitud y respuesta** (*request/response*):
+
+1. el cliente construye y envía una solicitud HTTP;
+2. el servidor recibe la solicitud y determina qué operación corresponde;
+3. el servidor procesa la operación, posiblemente consultando archivos, bases de datos u otros servicios;
+4. genera una respuesta HTTP;
+5. el cliente interpreta esa respuesta.
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor HTTP
+    participant R as Recurso / Datos
+
+    C->>S: HTTP request
+    S->>R: Consulta / procesamiento
+    R-->>S: Resultado
+    S-->>C: HTTP response
+```
+
+El hecho de que el servidor “intente” responder no implica que toda solicitud termine exitosamente: puede haber errores de red, recursos inexistentes, errores internos, problemas de validación o fallos en servicios dependientes. HTTP dispone de códigos de estado para comunicar el resultado de la operación.
+
+### 39. HTTP y HTTPS
+
+**HTTP** (*Hypertext Transfer Protocol*) es un protocolo de la capa de aplicación utilizado para intercambiar representaciones de recursos en la Web. Define cómo se estructuran las solicitudes y respuestas, incluyendo método, destino, encabezados, cuerpo y código de estado.
+
+Una solicitud y su respuesta pueden pensarse, de forma simplificada, así:
+
+```text
+Cliente                                             Servidor
+  |                                                    |
+  |  GET /api/productos HTTP/...                      |
+  |  Host: ejemplo.com                                |
+  |--------------------------------------------------->|
+  |                                                    |
+  |  HTTP/... 200 OK                                  |
+  |  Content-Type: application/json                   |
+  |  [{"id":1,"nombre":"..."}]                    |
+  |<---------------------------------------------------|
+```
+
+**HTTPS** no es un protocolo de aplicación distinto en su semántica: es HTTP transportado sobre una conexión protegida con **TLS**. TLS aporta confidencialidad e integridad del tráfico y autentica al servidor mediante certificados. Por eso, que una carga útil sea JSON no la vuelve privada; la protección durante el tránsito depende de HTTPS/TLS.
+
+#### 39.1 Códigos de estado básicos
+
+Los códigos de estado forman parte de la respuesta HTTP e indican el resultado general de la solicitud. Algunos especialmente relevantes para los primeros servidores son:
+
+| Código | Nombre | Uso típico |
+|---:|---|---|
+| `200` | OK | Solicitud exitosa; por ejemplo, un `GET` que devuelve el recurso pedido |
+| `201` | Created | La solicitud creó exitosamente un recurso; suele aparecer tras un `POST` de creación |
+| `304` | Not Modified | Respuesta a una solicitud condicional que indica que la representación almacenada por el cliente sigue siendo válida; no equivale simplemente a “el navegador devolvió la caché” |
+| `404` | Not Found | No existe un recurso/ruta que coincida con lo solicitado |
+| `500` | Internal Server Error | Fallo inesperado del lado del servidor |
+
+> ⚠️ El código de estado debe describir el resultado real. Enviar contenido válido y simultáneamente responder `404` produce una respuesta semánticamente contradictoria, aunque técnicamente sea posible.
+
+### 40. Dirección de un servicio: host, IP y puerto
+
+Para establecer una conexión de red hay que identificar dónde escucha el servicio. En el desarrollo local aparecen tres conceptos fundamentales:
+
+- **host**: nombre o dirección de la máquina/interfaz;
+- **IP**: dirección numérica utilizada para el enrutamiento;
+- **puerto**: identificador lógico que permite distinguir múltiples servicios dentro de un mismo host.
+
+`127.0.0.1` pertenece al rango de **loopback** IPv4: apunta a la propia máquina. El nombre `localhost` suele resolver a una dirección de loopback (`127.0.0.1` en IPv4 o `::1` en IPv6).
+
+Una URL local típica puede ser:
+
+```text
+http://127.0.0.1:3000/api
+└─┬─┘ └─────┬─────┘ └┬─┘ └┬─┘
+ protocolo    host    puerto ruta
+```
+
+El puerto `3000` es una convención frecuente en desarrollo, no una exigencia de Node ni de HTTP.
+
+### 41. URL, DNS, rutas y parámetros
+
+Una **URL** (*Uniform Resource Locator*) identifica la ubicación de un recurso y el mecanismo para acceder a él. Una URL HTTP puede contener, entre otras partes, esquema/protocolo, host, puerto, ruta, query string y fragmento.
+
+```text
+https://api.ejemplo.com:443/usuarios/42?expand=perfil&idioma=es#datos
+\____/  \_____________/ \_/ \_________/ \____________________/ \___/
+ esquema       host      port    path             query          fragment
+```
+
+El **DNS** (*Domain Name System*) permite resolver nombres de dominio a direcciones utilizadas por la red. Por eso las personas pueden trabajar con nombres como `ejemplo.com` en vez de memorizar direcciones IP. La resolución DNS no “convierte una URL completa en una IP”: resuelve el nombre de host; la ruta, la query y el resto se interpretan en etapas posteriores.
+
+#### 41.1 Parámetros de ruta (*path params*)
+
+Un parámetro de ruta forma parte del patrón de la ruta y representa un segmento variable:
+
+```javascript
+app.get("/usuarios/:id", (req, res) => {
+  console.log(req.params.id);
+});
+```
+
+Una solicitud a `/usuarios/42` produce `req.params.id === "42"`.
+
+#### 41.2 Parámetros de consulta (*query params*)
+
+La **query string** aparece después de `?`. Cada par tiene la forma `clave=valor` y varios parámetros se separan con `&`:
+
+```text
+/buscar?q=node&pagina=2
+```
+
+En Express, esos valores se consultan a través de `req.query`:
+
+```javascript
+app.get("/buscar", (req, res) => {
+  const { q, pagina } = req.query;
+  res.json({ q, pagina });
+});
+```
+
+**Ruta y query cumplen funciones diferentes.** La query string no forma parte del patrón de ruta que Express utiliza para decidir qué handler ejecutar. Es frecuente usar los parámetros de ruta para identificar un recurso (`/usuarios/42`) y la query para filtros, búsqueda, paginación u opciones (`/usuarios?activo=true&page=2`).
+
+> ⚠️ No existe una regla universal según la cual “path param = obligatorio” y “query param = opcional”. La obligatoriedad real depende del contrato de la aplicación. Un patrón puede contener segmentos opcionales y un endpoint puede exigir determinados query params mediante validación.
+
+### 42. Servidor HTTP básico con Node.js
+
+Express simplifica el trabajo, pero **Node.js puede crear un servidor HTTP sin instalar paquetes externos** mediante el módulo incorporado `node:http`.
+
+```javascript
+const { createServer } = require("node:http");
+
+const HOSTNAME = "127.0.0.1";
+const PORT = 3000;
+
+const server = createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.end("<h1>Hola mundo</h1>");
+});
+
+server.listen(PORT, HOSTNAME, () => {
+  console.log(`Servidor en http://${HOSTNAME}:${PORT}/`);
+});
+```
+
+`createServer(...)` recibe una callback y retorna un objeto `http.Server`. Cada vez que llega una solicitud, Node invoca la callback y le proporciona dos objetos:
+
+- `req`: la solicitud entrante (*request*);
+- `res`: la respuesta que se está construyendo (*response*).
+
+`server.listen(...)` pone el servidor a escuchar conexiones. En la firma utilizada en clase, los argumentos siguen el orden **puerto, host, callback**. El `host` y la callback pueden omitirse; el puerto puede incluso ser `0` para que el sistema operativo elija uno disponible.
+
+Este ejemplo permite conectar temas anteriores: callbacks, objetos, métodos, módulos incorporados, destructuring y asincronía aparecen juntos en una operación real de backend.
+
+### 43. Express.js
+
+**Express** es un framework web para Node.js que agrega una capa de abstracción sobre las primitivas HTTP de Node y facilita routing, middleware, manejo de solicitudes y construcción de respuestas. La aplicación se crea invocando la función exportada por el paquete:
+
+```javascript
+const express = require("express");
+const app = express();
+```
+
+`express` referencia la función exportada por el módulo; `express()` la invoca y devuelve el objeto aplicación. Sobre `app` se registran rutas y finalmente se inicia la escucha.
+
+```javascript
+const express = require("express");
+
+const app = express();
+const HOSTNAME = "127.0.0.1";
+const PORT = 3000;
+
+app.get("/", (req, res) => {
+  res.status(200).send("<h1>Servidor Express</h1>");
+});
+
+app.listen(PORT, HOSTNAME, (error) => {
+  if (error) {
+    console.error("No se pudo iniciar el servidor:", error);
+    return;
+  }
+
+  console.log(`Servidor en http://${HOSTNAME}:${PORT}/`);
+});
+```
+
+En Express 5, la callback de `app.listen` puede recibir un error de inicio, por ejemplo si el puerto ya está ocupado. Express 5 requiere Node.js 18 o superior.
+
+#### 43.1 Routing
+
+El **routing** define qué código se ejecuta cuando una solicitud coincide con un método HTTP y una ruta. La forma general es:
+
+```javascript
+app.METHOD(path, handler);
+```
+
+Por ejemplo:
+
+```javascript
+app.get("/api", (req, res) => {
+  console.log("Entrando en /api");
+  res.status(200).send("Esta es la ruta /api");
+});
+```
+
+- `app.get` registra un handler para solicitudes HTTP `GET`;
+- `"/api"` es el patrón de ruta;
+- `(req, res) => { ... }` es el handler/callback;
+- Express invoca el handler cuando método y ruta coinciden.
+
+Si ninguna ruta coincide, Express termina respondiendo con un `404` mediante su comportamiento por defecto, salvo que la aplicación configure un manejo distinto.
+
+#### 43.2 Objetos `req` y `res`
+
+Los parámetros `req` y `res` son los objetos de solicitud y respuesta de Node enriquecidos por Express. La separación conceptual es importante:
+
+- **`req`** se usa para leer lo enviado por el cliente: parámetros, query, encabezados, cuerpo, método, etc.;
+- **`res`** se usa para construir y enviar la respuesta.
+
+Métodos frecuentes de `res`:
+
+| Método | Propósito |
+|---|---|
+| `res.status(codigo)` | Configura el código de estado y devuelve `res`, por lo que puede encadenarse |
+| `res.send(valor)` | Envía una respuesta de varios tipos y finaliza el ciclo |
+| `res.json(valor)` | Serializa el valor como JSON y envía una respuesta JSON |
+| `res.sendFile(ruta)` | Envía un archivo |
+| `res.set(...)` | Configura encabezados |
+
+La forma moderna para establecer estado y enviar contenido es:
+
+```javascript
+res.status(200).send("OK");
+```
+
+### 44. Reinicio automático durante el desarrollo: Nodemon y `node --watch`
+
+Al ejecutar un servidor con `node index.js`, Node carga el programa y mantiene el proceso activo escuchando solicitudes. Si el código fuente cambia, ese proceso no vuelve a cargar automáticamente el archivo: debe reiniciarse o ejecutarse en modo de vigilancia.
+
+#### 44.1 Nodemon
+
+**Nodemon** es una herramienta de desarrollo que observa cambios y reinicia el proceso de Node. Como no es necesaria para ejecutar la aplicación en producción, suele instalarse como `devDependency`:
+
+```bash
+npm install --save-dev nodemon
+```
+
+Ejecución local directa:
+
+```bash
+npx nodemon ./index.js
+```
+
+En un proyecto real es habitual esconder este comando detrás de un script de `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  }
+}
+```
+
+```bash
+npm run dev
+```
+
+#### 44.2 `node --watch`
+
+Node incorpora un modo de vigilancia nativo:
+
+```bash
+node --watch index.js
+```
+
+El modo `--watch` apareció de forma experimental en Node 18.11.0 y fue marcado como **estable desde Node 20.13.0**. Para proyectos modernos puede cubrir el caso básico sin instalar Nodemon. Nodemon sigue siendo útil cuando se necesitan sus opciones y configuración específicas.
+
+### 45. Servir archivos HTML desde Node/Express
+
+La práctica de clase combinó Express con `fs` para leer un archivo HTML y enviarlo al navegador. Conceptualmente, el servidor debe informar al cliente qué representación está enviando mediante el encabezado `Content-Type`.
+
+Una versión equivalente al ejercicio, usando lectura sincrónica para mostrar la mecánica, sería:
+
+```javascript
+const fs = require("node:fs");
+
+const home = fs.readFileSync("./vistas/home.html");
+
+app.get("/", (req, res) => {
+  res.set("Content-Type", "text/html; charset=utf-8");
+  res.status(200).send(home);
+});
+```
+
+Esto explica por qué enviar bytes de un HTML sin un tipo adecuado puede producir una interpretación distinta por parte del cliente.
+
+Sin embargo, en un servidor real conviene evitar operaciones sincrónicas de E/S dentro del procesamiento de solicitudes: bloquean el hilo de JavaScript. Express dispone de alternativas específicas para servir archivos:
+
+```javascript
+const path = require("node:path");
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "vistas", "home.html"));
+});
+```
+
+Para un directorio completo de recursos estáticos (HTML, CSS, JavaScript, imágenes), Express también ofrece el middleware `express.static(...)`, que se profundiza junto con middleware y estructura de aplicaciones.
+
+### 46. Ejemplo integrado — Primer servidor Express
+
+El siguiente ejemplo reúne el flujo central de esta etapa: crear el proyecto, instalar dependencias, levantar Express, registrar rutas y devolver HTML o JSON.
+
+```bash
+npm init -y
+npm install express
+npm install --save-dev nodemon
+```
+
+```javascript
+const express = require("express");
+
+const app = express();
+const HOSTNAME = "127.0.0.1";
+const PORT = 3000;
+
+app.get("/", (req, res) => {
+  res.status(200).send("<h1>Home</h1>");
+});
+
+app.get("/api", (req, res) => {
+  res.status(200).json({
+    mensaje: "Esta es la ruta /api",
+    estado: "ok",
+  });
+});
+
+app.get("/usuarios/:id", (req, res) => {
+  const { id } = req.params;
+  const { detalle } = req.query;
+
+  res.status(200).json({ id, detalle });
+});
+
+app.listen(PORT, HOSTNAME, (error) => {
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  console.log(`Servidor en http://${HOSTNAME}:${PORT}/`);
+});
+```
+
+```mermaid
+flowchart TD
+    B[Navegador / cliente] -->|GET /| R1[Handler raíz]
+    B -->|GET /api| R2[Handler /api]
+    B -->|GET /usuarios/42?detalle=full| R3[Handler /usuarios/:id]
+    R1 --> S1[HTML]
+    R2 --> S2[JSON]
+    R3 --> S3[req.params + req.query]
+    S1 --> B
+    S2 --> B
+    S3 --> B
+```
+
+**Fuentes oficiales de actualización técnica:** documentación de Node.js (`node:http`, `node:fs`, modo `--watch`) y documentación de Express 5.x (API, routing y `app.listen`). Las explicaciones de clase se conservaron como eje temático; los detalles actuales se normalizaron contra esas referencias.
+
