@@ -31,13 +31,18 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [3.8 git merge, squash y rebase](#38-git-merge-squash-y-rebase)
       - [3.9 Resolución de conflictos de merge](#39-resolución-de-conflictos-de-merge)
     - [4. Flujo de trabajo completo (Git Workflow)](#4-flujo-de-trabajo-completo-git-workflow)
+      - [4.1 Working Directory](#41-working-directory)
+      - [4.2 Staging Area o Index](#42-staging-area-o-index)
+      - [4.3 Repositorio local](#43-repositorio-local)
+      - [4.4 Repositorio remoto](#44-repositorio-remoto)
+      - [4.5 Flujo mental completo](#45-flujo-mental-completo)
     - [5. .gitignore](#5-gitignore)
     - [6. GitFlow](#6-gitflow)
     - [7. Repositorios remotos y SSH](#7-repositorios-remotos-y-ssh)
-      - [7.1 ¿Por qué SSH y no usuario/contraseña?](#71-por-qué-ssh-y-no-usuariocontraseña)
+      - [7.1 ¿Por qué usar SSH para Git?](#71-por-qué-usar-ssh-para-git)
       - [7.2 Generar una clave SSH](#72-generar-una-clave-ssh)
       - [7.3 Cargar la clave pública en GitHub](#73-cargar-la-clave-pública-en-github)
-      - [7.4 Clonar un repositorio con SSH y el error más común](#74-clonar-un-repositorio-con-ssh-y-el-error-más-común)
+      - [7.4 Clonar un repositorio con SSH y diagnosticar autenticación](#74-clonar-un-repositorio-con-ssh-y-diagnosticar-autenticación)
       - [7.5 Crear un repositorio remoto en GitHub](#75-crear-un-repositorio-remoto-en-github)
       - [7.6 Colaboradores](#76-colaboradores)
     - [8. Seguridad y reglas de protección de ramas (GitHub)](#8-seguridad-y-reglas-de-protección-de-ramas-github)
@@ -46,24 +51,44 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [8.3 Eliminación automática de ramas al mergear](#83-eliminación-automática-de-ramas-al-mergear)
     - [9. Herramientas complementarias](#9-herramientas-complementarias)
       - [9.1 Git Graph (extensión de VS Code)](#91-git-graph-extensión-de-vs-code)
-    - [10. Programas utilizados en la materia](#10-programas-utilizados-en-la-materia)
-  - [Ejemplo práctico — Sesión de consola: SSH, ramas y stash](#ejemplo-práctico--sesión-de-consola-ssh-ramas-y-stash)
+    - [10. Entorno mínimo de desarrollo](#10-entorno-mínimo-de-desarrollo)
+    - [Ejemplo práctico — Sesión de consola: SSH, ramas y stash](#ejemplo-práctico--sesión-de-consola-ssh-ramas-y-stash)
   - [Unidad 2 — JavaScript](#unidad-2--javascript)
-    - [11. Tipos de lenguajes de programación](#11-tipos-de-lenguajes-de-programación)
+    - [11. Compilación, interpretación y ejecución de un lenguaje](#11-compilación-interpretación-y-ejecución-de-un-lenguaje)
+      - [11.1 Compilación](#111-compilación)
+      - [11.2 Interpretación](#112-interpretación)
+      - [11.3 JIT: compilar durante la ejecución](#113-jit-compilar-durante-la-ejecución)
     - [12. Scripts y lenguajes de scripting](#12-scripts-y-lenguajes-de-scripting)
-    - [13. EcmaScript y motores de JavaScript](#13-ecmascript-y-motores-de-javascript)
-    - [14. ¿Y TypeScript?](#14-y-typescript)
+    - [13. ECMAScript, motor y entorno host](#13-ecmascript-motor-y-entorno-host)
+      - [13.1 ECMAScript](#131-ecmascript)
+      - [13.2 Motor JavaScript](#132-motor-javascript)
+      - [13.3 Entorno host](#133-entorno-host)
+    - [14. TypeScript: tipado estático sobre JavaScript](#14-typescript-tipado-estático-sobre-javascript)
+      - [14.1 JavaScript sigue siendo el runtime conceptual](#141-javascript-sigue-siendo-el-runtime-conceptual)
+      - [14.2 Qué agrega TypeScript y qué no](#142-qué-agrega-typescript-y-qué-no)
+      - [14.3 El beneficio aparece al crecer el sistema](#143-el-beneficio-aparece-al-crecer-el-sistema)
     - [15. Sintaxis básica de uso frecuente](#15-sintaxis-básica-de-uso-frecuente)
     - [16. Variables en JavaScript](#16-variables-en-javascript)
-    - [17. Tipos de datos](#17-tipos-de-datos)
-    - [18. Operadores de comparación (`==` vs `===`) y `null` vs `undefined`](#18-operadores-de-comparación--vs--y-null-vs-undefined)
+    - [17. Tipos de datos y modelo de valores](#17-tipos-de-datos-y-modelo-de-valores)
+      - [17.1 Tipos primitivos](#171-tipos-primitivos)
+      - [17.2 Objetos](#172-objetos)
+      - [17.3 `typeof` no refleja perfectamente la taxonomía del lenguaje](#173-typeof-no-refleja-perfectamente-la-taxonomía-del-lenguaje)
+      - [17.4 Por qué importa distinguir primitivos y objetos](#174-por-qué-importa-distinguir-primitivos-y-objetos)
+    - [18. Igualdad, coerción, `null` y `undefined`](#18-igualdad-coerción-null-y-undefined)
+      - [18.1 Igualdad estricta `===`](#181-igualdad-estricta-)
+      - [18.2 Igualdad débil `==`](#182-igualdad-débil-)
+      - [18.3 `undefined`](#183-undefined)
+      - [18.4 `null`](#184-null)
+      - [18.5 `typeof null`](#185-typeof-null)
+      - [18.6 Relación especial entre `null` y `undefined`](#186-relación-especial-entre-null-y-undefined)
     - [19. Condicionales](#19-condicionales)
     - [20. Objetos](#20-objetos)
       - [20.1 Sintaxis: creación e inicialización](#201-sintaxis-creación-e-inicialización)
       - [20.2 Propiedades: lectura y asignación](#202-propiedades-lectura-y-asignación)
       - [20.3 Objetos declarados con `const`: qué se puede modificar y qué no](#203-objetos-declarados-con-const-qué-se-puede-modificar-y-qué-no)
-      - [20.4 Paso por referencia vs. paso por valor](#204-paso-por-referencia-vs-paso-por-valor)
-      - [20.5 Mutabilidad, inmutabilidad y *race conditions*](#205-mutabilidad-inmutabilidad-y-race-conditions)
+      - [20.4 Paso por valor, identidad y referencias a objetos](#204-paso-por-valor-identidad-y-referencias-a-objetos)
+      - [20.5 Mutabilidad, aliasing y condiciones de carrera](#205-mutabilidad-aliasing-y-condiciones-de-carrera)
+      - [Cuándo aparece una condición de carrera](#cuándo-aparece-una-condición-de-carrera)
       - [20.6 Objetos incorporados en JavaScript](#206-objetos-incorporados-en-javascript)
       - [20.7 JSON: `JSON.stringify` y `JSON.parse`](#207-json-jsonstringify-y-jsonparse)
       - [20.8 Reglas prácticas de JSON](#208-reglas-prácticas-de-json)
@@ -76,18 +101,20 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [21.3 Funciones como objetos y callbacks (introducción)](#213-funciones-como-objetos-y-callbacks-introducción)
       - [21.4 Ejemplo: callback en una función calculadora](#214-ejemplo-callback-en-una-función-calculadora)
       - [21.5 Firma de una función (*function signature*)](#215-firma-de-una-función-function-signature)
-      - [21.6 *Hoisting*: por qué gana la última definición](#216-hoisting-por-qué-gana-la-última-definición)
+      - [21.6 *Hoisting* y disponibilidad de declaraciones](#216-hoisting-y-disponibilidad-de-declaraciones)
+      - [Expresiones de función y Temporal Dead Zone](#expresiones-de-función-y-temporal-dead-zone)
+      - [Declaraciones duplicadas](#declaraciones-duplicadas)
       - [21.7 Alcance (*scope*) de una variable declarada dentro de una función](#217-alcance-scope-de-una-variable-declarada-dentro-de-una-función)
     - [22. Profundización de funciones callback](#22-profundización-de-funciones-callback)
       - [22.1 Función de orden superior (*higher-order function*)](#221-función-de-orden-superior-higher-order-function)
-      - [22.2 Toda callback recibida como parámetro se tiene que invocar internamente](#222-toda-callback-recibida-como-parámetro-se-tiene-que-invocar-internamente)
+      - [22.2 Recibir una callback no implica ejecutarla automáticamente](#222-recibir-una-callback-no-implica-ejecutarla-automáticamente)
       - [22.3 Pasar la función, no su ejecución](#223-pasar-la-función-no-su-ejecución)
-      - [22.4 Buena práctica: la callback como último parámetro](#224-buena-práctica-la-callback-como-último-parámetro)
+      - [22.4 Posición de callbacks: convención según la API](#224-posición-de-callbacks-convención-según-la-api)
       - [22.5 Múltiples callbacks](#225-múltiples-callbacks)
       - [22.6 Orden de ejecución: una función no termina hasta que termina lo que invoca](#226-orden-de-ejecución-una-función-no-termina-hasta-que-termina-lo-que-invoca)
     - [23. Arrays](#23-arrays)
       - [23.1 Elementos e índices](#231-elementos-e-índices)
-      - [23.2 Arrays fuertemente tipados vs. arrays en JavaScript](#232-arrays-fuertemente-tipados-vs-arrays-en-javascript)
+      - [23.2 Heterogeneidad de valores en arrays JavaScript](#232-heterogeneidad-de-valores-en-arrays-javascript)
       - [23.3 Formas de crear un array](#233-formas-de-crear-un-array)
       - [23.4 Los arrays son objetos: acceso a sus métodos](#234-los-arrays-son-objetos-acceso-a-sus-métodos)
       - [23.5 Métodos que modifican el array original](#235-métodos-que-modifican-el-array-original)
@@ -103,19 +130,27 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [23.15 `sort`: ordenar el array](#2315-sort-ordenar-el-array)
       - [23.16 Los arrays no son "listas": una aclaración de vocabulario](#2316-los-arrays-no-son-listas-una-aclaración-de-vocabulario)
       - [23.17 Desestructuración (*destructuring*) de arrays y objetos](#2317-desestructuración-destructuring-de-arrays-y-objetos)
-  - [Ejemplo práctico — Tipos de funciones en JavaScript](#ejemplo-práctico--tipos-de-funciones-en-javascript)
-  - [Ejemplo práctico — Paso por referencia en objetos](#ejemplo-práctico--paso-por-referencia-en-objetos)
-  - [Ejemplo práctico — Función con múltiples callbacks condicionales](#ejemplo-práctico--función-con-múltiples-callbacks-condicionales)
-  - [Ejemplo práctico — Arrays: creación, mutación e iteración](#ejemplo-práctico--arrays-creación-mutación-e-iteración)
-  - [Ejemplo práctico — Objeto con métodos, validación y scope](#ejemplo-práctico--objeto-con-métodos-validación-y-scope)
+    - [Ejemplo práctico — Tipos de funciones en JavaScript](#ejemplo-práctico--tipos-de-funciones-en-javascript)
+    - [Ejemplo práctico — Identidad y referencias compartidas entre objetos](#ejemplo-práctico--identidad-y-referencias-compartidas-entre-objetos)
+    - [Ejemplo práctico — Función con múltiples callbacks condicionales](#ejemplo-práctico--función-con-múltiples-callbacks-condicionales)
+    - [Ejemplo práctico — Arrays: creación, mutación e iteración](#ejemplo-práctico--arrays-creación-mutación-e-iteración)
+    - [Ejemplo práctico — Objeto con métodos, validación y scope](#ejemplo-práctico--objeto-con-métodos-validación-y-scope)
   - [Unidad 3 — Node.js](#unidad-3--nodejs)
-    - [24. Node.js: qué es y por qué existe](#24-nodejs-qué-es-y-por-qué-existe)
-    - [25. Características de Node.js](#25-características-de-nodejs)
+    - [24. Node.js: runtime de JavaScript fuera del navegador](#24-nodejs-runtime-de-javascript-fuera-del-navegador)
+      - [24.1 El problema que resuelve Node](#241-el-problema-que-resuelve-node)
+      - [24.2 Runtime, motor y framework no son sinónimos](#242-runtime-motor-y-framework-no-son-sinónimos)
+    - [25. Concurrencia, Event Loop y modelo de ejecución en Node.js](#25-concurrencia-event-loop-y-modelo-de-ejecución-en-nodejs)
+      - [25.1 ¿Cómo puede atender muchas operaciones si JavaScript ejecuta una a la vez?](#251-cómo-puede-atender-muchas-operaciones-si-javascript-ejecuta-una-a-la-vez)
+      - [25.2 No bloqueante no significa “imposible de bloquear”](#252-no-bloqueante-no-significa-imposible-de-bloquear)
+      - [25.3 I/O-bound vs. CPU-bound](#253-io-bound-vs-cpu-bound)
+      - [25.4 Arquitectura orientada a eventos](#254-arquitectura-orientada-a-eventos)
     - [26. Módulos, paquetes y dependencias](#26-módulos-paquetes-y-dependencias)
       - [26.1 Tipos de módulos](#261-tipos-de-módulos)
       - [26.2 Tipos de dependencias](#262-tipos-de-dependencias)
       - [26.3 Caso real: el incidente de *left-pad*](#263-caso-real-el-incidente-de-left-pad)
       - [26.4 Sistemas de módulos: CommonJS vs. ES Modules](#264-sistemas-de-módulos-commonjs-vs-es-modules)
+      - [Cómo decide Node el formato](#cómo-decide-node-el-formato)
+      - [Interoperabilidad](#interoperabilidad)
     - [27. NPM (*Node Package Manager*)](#27-npm-node-package-manager)
       - [27.1 Comandos más usados](#271-comandos-más-usados)
         - [Verificar el estado del proyecto desde `package.json`](#verificar-el-estado-del-proyecto-desde-packagejson)
@@ -131,10 +166,18 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [28.6 Diagnóstico de importaciones y exportaciones](#286-diagnóstico-de-importaciones-y-exportaciones)
         - [La extensión `.js`](#la-extensión-js)
         - [Una comprobación simple antes de buscar errores más profundos](#una-comprobación-simple-antes-de-buscar-errores-más-profundos)
-    - [29. Pila (*Stack*) y Cola (*Queue*): dos estructuras de datos](#29-pila-stack-y-cola-queue-dos-estructuras-de-datos)
-    - [30. Programación sincrónica y el *Call Stack*](#30-programación-sincrónica-y-el-call-stack)
-    - [31. Programación asincrónica: *Callback Queue* y *Event Loop*](#31-programación-asincrónica-callback-queue-y-event-loop)
-    - [32. Módulo `timers`: `setTimeout`, `setInterval` y `setImmediate`](#32-módulo-timers-settimeout-setinterval-y-setimmediate)
+    - [29. Pila (*Stack*) y Cola (*Queue*): estructuras para razonar sobre ejecución](#29-pila-stack-y-cola-queue-estructuras-para-razonar-sobre-ejecución)
+      - [Stack — LIFO](#stack--lifo)
+      - [Queue — FIFO](#queue--fifo)
+    - [30. Programación sincrónica y Call Stack](#30-programación-sincrónica-y-call-stack)
+    - [31. Programación asincrónica y Event Loop](#31-programación-asincrónica-y-event-loop)
+      - [31.1 Motor y host cooperan](#311-motor-y-host-cooperan)
+      - [31.2 Una callback pendiente no interrumpe el código actual](#312-una-callback-pendiente-no-interrumpe-el-código-actual)
+      - [31.3 Promesas agregan otra cola de trabajo](#313-promesas-agregan-otra-cola-de-trabajo)
+    - [32. Timers en Node.js](#32-timers-en-nodejs)
+      - [32.1 El tiempo no es una garantía exacta](#321-el-tiempo-no-es-una-garantía-exacta)
+      - [32.2 `setTimeout(..., 0)` y `setImmediate(...)`](#322-settimeout-0-y-setimmediate)
+      - [32.3 `setInterval` y acumulación de trabajo](#323-setinterval-y-acumulación-de-trabajo)
     - [33. Módulo `fs` (*File System*): trabajar con archivos y carpetas](#33-módulo-fs-file-system-trabajar-con-archivos-y-carpetas)
     - [34. Promesas (*Promises*)](#34-promesas-promises)
       - [34.1 Los tres estados de una promesa](#341-los-tres-estados-de-una-promesa)
@@ -142,20 +185,23 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [34.3 Consumir una promesa: `.then()`, `.catch()` y `.finally()`](#343-consumir-una-promesa-then-catch-y-finally)
       - [34.4 Las promesas también son asincrónicas](#344-las-promesas-también-son-asincrónicas)
       - [34.5 `resolve` y `reject` solo trabajan con un único valor](#345-resolve-y-reject-solo-trabajan-con-un-único-valor)
-  - [Ejemplo práctico — Promesa completa: comprar la crema](#ejemplo-práctico--promesa-completa-comprar-la-crema)
-  - [Ejemplo práctico — Promesa con dos valores, depurada paso a paso](#ejemplo-práctico--promesa-con-dos-valores-depurada-paso-a-paso)
+    - [Ejemplo práctico — Promesa completa: comprar la crema](#ejemplo-práctico--promesa-completa-comprar-la-crema)
+    - [Ejemplo práctico — Promesa con dos valores, depurada paso a paso](#ejemplo-práctico--promesa-con-dos-valores-depurada-paso-a-paso)
     - [35. Promesas encadenadas (anidadas)](#35-promesas-encadenadas-anidadas)
       - [35.1 Por qué hace falta encadenar](#351-por-qué-hace-falta-encadenar)
       - [35.2 La regla más importante: `return` dentro del `.then`](#352-la-regla-más-importante-return-dentro-del-then)
       - [35.3 Un único `.catch` para toda la cadena](#353-un-único-catch-para-toda-la-cadena)
       - [35.4 Separar operaciones asincrónicas de la función que las coordina](#354-separar-operaciones-asincrónicas-de-la-función-que-las-coordina)
-  - [Ejemplo práctico — Promesas encadenadas: validar stock antes de vender](#ejemplo-práctico--promesas-encadenadas-validar-stock-antes-de-vender)
+    - [Ejemplo práctico — Promesas encadenadas: validar stock antes de vender](#ejemplo-práctico--promesas-encadenadas-validar-stock-antes-de-vender)
     - [36. `async`/`await`: azúcar sintáctico para trabajar con promesas](#36-asyncawait-azúcar-sintáctico-para-trabajar-con-promesas)
       - [36.1 Sintaxis básica](#361-sintaxis-básica)
-      - [36.2 `await` no bloquea todo el programa, solo esa función](#362-await-no-bloquea-todo-el-programa-solo-esa-función)
+      - [36.2 `await` suspende la función async; no bloquea el Event Loop](#362-await-suspende-la-función-async-no-bloquea-el-event-loop)
       - [36.3 Manejo de errores: `try`/`catch` en vez de `.catch`](#363-manejo-de-errores-trycatch-en-vez-de-catch)
       - [36.4 Tres errores comunes con `async`/`await`](#364-tres-errores-comunes-con-asyncawait)
-    - [37. Eventos: introducción (*preview* — se retoma con código en una próxima clase)](#37-eventos-introducción-preview--se-retoma-con-código-en-una-próxima-clase)
+    - [37. Eventos y `EventEmitter`](#37-eventos-y-eventemitter)
+      - [37.1 `.on()` registra; `.emit()` dispara](#371-on-registra-emit-dispara)
+      - [37.2 EventEmitter y Event Loop están relacionados, pero no son lo mismo](#372-eventemitter-y-event-loop-están-relacionados-pero-no-son-lo-mismo)
+      - [37.3 Desacoplar productor y consumidores](#373-desacoplar-productor-y-consumidores)
     - [38. Arquitectura cliente-servidor](#38-arquitectura-cliente-servidor)
       - [38.1 Request/response](#381-requestresponse)
     - [39. HTTP y HTTPS](#39-http-y-https)
@@ -165,13 +211,20 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [39.4 Métodos HTTP y la operación que representan](#394-métodos-http-y-la-operación-que-representan)
         - [Identificar el recurso y enviar datos son problemas distintos](#identificar-el-recurso-y-enviar-datos-son-problemas-distintos)
     - [40. Dirección de un servicio: host, IP y puerto](#40-dirección-de-un-servicio-host-ip-y-puerto)
+      - [40.1 IP](#401-ip)
+      - [40.2 Hostname](#402-hostname)
+      - [40.3 Puerto](#403-puerto)
+      - [40.4 Escuchar no equivale a tener una ruta](#404-escuchar-no-equivale-a-tener-una-ruta)
     - [41. URL, DNS, rutas y parámetros](#41-url-dns-rutas-y-parámetros)
       - [41.1 Parámetros de ruta (*path params*)](#411-parámetros-de-ruta-path-params)
       - [41.2 Parámetros de consulta (*query params*)](#412-parámetros-de-consulta-query-params)
         - [Query params como modificadores de una consulta](#query-params-como-modificadores-de-una-consulta)
         - [`req.query` es entrada no confiable](#reqquery-es-entrada-no-confiable)
         - [Ordenar el resultado sin mezclar responsabilidades](#ordenar-el-resultado-sin-mezclar-responsabilidades)
-    - [42. Servidor HTTP básico con Node.js](#42-servidor-http-básico-con-nodejs)
+    - [42. Servidor HTTP básico con `node:http`](#42-servidor-http-básico-con-nodehttp)
+      - [42.1 Qué problema resuelve cada parte](#421-qué-problema-resuelve-cada-parte)
+      - [42.2 `req` y `res` son objetos del protocolo](#422-req-y-res-son-objetos-del-protocolo)
+      - [42.3 ¿Por qué aparece Express si Node ya puede hacer esto?](#423-por-qué-aparece-express-si-node-ya-puede-hacer-esto)
     - [43. Express.js](#43-expressjs)
       - [43.1 Routing](#431-routing)
       - [43.2 Objetos `req` y `res`](#432-objetos-req-y-res)
@@ -215,11 +268,23 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [49.1 Patrón de diseño vs. patrón de arquitectura](#491-patrón-de-diseño-vs-patrón-de-arquitectura)
       - [49.2 MVC: Model — View — Controller](#492-mvc-model--view--controller)
       - [49.3 Arquitectura utilizada en el backend: Router → Controller → Service → Repository](#493-arquitectura-utilizada-en-el-backend-router--controller--service--repository)
+        - [Router: decidir qué operación recibe la request](#router-decidir-qué-operación-recibe-la-request)
+        - [Controller: traducir HTTP hacia la aplicación y viceversa](#controller-traducir-http-hacia-la-aplicación-y-viceversa)
+        - [Service: aplicar las reglas que hacen que el sistema sea ese sistema](#service-aplicar-las-reglas-que-hacen-que-el-sistema-sea-ese-sistema)
+        - [Repository: aislar el mecanismo de acceso a datos](#repository-aislar-el-mecanismo-de-acceso-a-datos)
+        - [Las carpetas son una consecuencia, no el objetivo](#las-carpetas-son-una-consecuencia-no-el-objetivo)
+        - [El flujo de ida no es el mismo que el flujo de dependencias](#el-flujo-de-ida-no-es-el-mismo-que-el-flujo-de-dependencias)
       - [49.4 La regla de dependencias: no saltear capas](#494-la-regla-de-dependencias-no-saltear-capas)
       - [49.5 Por qué separar el Repository de la lógica de negocio](#495-por-qué-separar-el-repository-de-la-lógica-de-negocio)
       - [49.6 Lógica de negocio, validación de entrada y frontera HTTP](#496-lógica-de-negocio-validación-de-entrada-y-frontera-http)
       - [49.7 La request no tiene que viajar completa por todas las capas](#497-la-request-no-tiene-que-viajar-completa-por-todas-las-capas)
       - [49.8 Dependencia entre capas y conocimiento mínimo](#498-dependencia-entre-capas-y-conocimiento-mínimo)
+      - [49.9 ¿Por qué no hacer directamente el `push()` cuando llega la request?](#499-por-qué-no-hacer-directamente-el-push-cuando-llega-la-request)
+        - [Ejemplo de cambio: array → SQL](#ejemplo-de-cambio-array--sql)
+        - [Ejemplo de cambio: aparece una regla de negocio](#ejemplo-de-cambio-aparece-una-regla-de-negocio)
+        - [Ejemplo de cambio: aparece otro cliente](#ejemplo-de-cambio-aparece-otro-cliente)
+      - [49.10 Cuándo una arquitectura por capas puede ser excesiva](#4910-cuándo-una-arquitectura-por-capas-puede-ser-excesiva)
+      - [49.11 Cortes horizontales y funcionalidades verticales](#4911-cortes-horizontales-y-funcionalidades-verticales)
     - [50. Routing modular con `express.Router`](#50-routing-modular-con-expressrouter)
       - [50.1 Un `Router` es un componente de routing montable](#501-un-router-es-un-componente-de-routing-montable)
       - [50.2 `app.use(prefijo, router)`: montar un router](#502-appuseprefijo-router-montar-un-router)
@@ -249,6 +314,12 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [53.4 Router: método + path → controller](#534-router-método--path--controller)
       - [53.5 `exports.nombre = función`: módulos con varias operaciones](#535-exportsnombre--función-módulos-con-varias-operaciones)
       - [53.6 El beneficio aparece cuando cambian requisitos](#536-el-beneficio-aparece-cuando-cambian-requisitos)
+      - [53.7 Cómo decidir en qué capa colocar una línea de código](#537-cómo-decidir-en-qué-capa-colocar-una-línea-de-código)
+      - [53.8 El Controller no es “el lugar de todos los `if`”](#538-el-controller-no-es-el-lugar-de-todos-los-if)
+      - [53.9 El Service no es “una carpeta para funciones”](#539-el-service-no-es-una-carpeta-para-funciones)
+      - [53.10 El Repository no es la base de datos](#5310-el-repository-no-es-la-base-de-datos)
+      - [53.11 Los nombres de las funciones forman contratos entre capas](#5311-los-nombres-de-las-funciones-forman-contratos-entre-capas)
+      - [53.12 Una capa pasamanos puede ser válida, pero debe tener una razón](#5312-una-capa-pasamanos-puede-ser-válida-pero-debe-tener-una-razón)
     - [54. Crear recursos con `POST`: del body al Repository](#54-crear-recursos-con-post-del-body-al-repository)
       - [54.1 Una misma URI puede atender métodos distintos](#541-una-misma-uri-puede-atender-métodos-distintos)
       - [54.2 El Controller extrae el body](#542-el-controller-extrae-el-body)
@@ -262,6 +333,41 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [55.3 Error de routing vs. request sin respuesta](#553-error-de-routing-vs-request-sin-respuesta)
       - [55.4 Los archivos `.http` convierten requests en casos reproducibles](#554-los-archivos-http-convierten-requests-en-casos-reproducibles)
       - [55.5 Código comentado no es control de versiones](#555-código-comentado-no-es-control-de-versiones)
+    - [56. Completar CRUD: `DELETE` y `PUT`](#56-completar-crud-delete-y-put)
+      - [56.1 Identificar un recurso para eliminarlo](#561-identificar-un-recurso-para-eliminarlo)
+      - [56.2 Los parámetros de ruta llegan como strings](#562-los-parámetros-de-ruta-llegan-como-strings)
+      - [56.3 Encontrar la posición: `findIndex()`](#563-encontrar-la-posición-findindex)
+      - [56.4 Eliminar con `splice()`](#564-eliminar-con-splice)
+      - [56.5 Repository de eliminación: operar sobre la fuente, no decidir HTTP](#565-repository-de-eliminación-operar-sobre-la-fuente-no-decidir-http)
+      - [56.6 `DELETE` exitoso: el body de respuesta es una decisión de contrato](#566-delete-exitoso-el-body-de-respuesta-es-una-decisión-de-contrato)
+    - [57. Actualización de recursos: reemplazo, modificación parcial y estado](#57-actualización-de-recursos-reemplazo-modificación-parcial-y-estado)
+      - [57.1 `PUT`: reemplazar la representación del recurso](#571-put-reemplazar-la-representación-del-recurso)
+      - [57.2 `PATCH`: aplicar una modificación parcial](#572-patch-aplicar-una-modificación-parcial)
+      - [57.3 `PUT` es idempotente](#573-put-es-idempotente)
+      - [57.4 Update por capas](#574-update-por-capas)
+    - [58. Handlers de Express como callbacks](#58-handlers-de-express-como-callbacks)
+      - [58.1 No se invoca la función al registrarla](#581-no-se-invoca-la-función-al-registrarla)
+      - [58.2 Express proporciona `req`, `res` y `next`](#582-express-proporciona-req-res-y-next)
+      - [58.3 Cuándo el wrapper sí puede tener sentido](#583-cuándo-el-wrapper-sí-puede-tener-sentido)
+    - [59. Seguridad del transporte: HTTP, HTTPS y ubicación de datos sensibles](#59-seguridad-del-transporte-http-https-y-ubicación-de-datos-sensibles)
+      - [59.1 HTTP sin TLS no ofrece confidencialidad](#591-http-sin-tls-no-ofrece-confidencialidad)
+      - [59.2 Con HTTPS, headers y body se protegen en tránsito](#592-con-https-headers-y-body-se-protegen-en-tránsito)
+      - [59.3 Evitar secretos en la URL](#593-evitar-secretos-en-la-url)
+      - [59.4 JWT: firmado no significa cifrado](#594-jwt-firmado-no-significa-cifrado)
+    - [60. `localStorage`, persistencia del navegador y datos sensibles](#60-localstorage-persistencia-del-navegador-y-datos-sensibles)
+      - [60.1 El riesgo de secretos en Web Storage](#601-el-riesgo-de-secretos-en-web-storage)
+    - [61. Archivos `.http`: reproducibilidad de pruebas y manejo de secretos](#61-archivos-http-reproducibilidad-de-pruebas-y-manejo-de-secretos)
+      - [61.1 La línea en blanco separa headers y body](#611-la-línea-en-blanco-separa-headers-y-body)
+      - [61.2 El archivo no es secreto por contener rutas](#612-el-archivo-no-es-secreto-por-contener-rutas)
+    - [62. Código de diagnóstico y logging](#62-código-de-diagnóstico-y-logging)
+      - [62.1 No imprimir indiscriminadamente objetos completos](#621-no-imprimir-indiscriminadamente-objetos-completos)
+      - [62.2 Logging estructurado](#622-logging-estructurado)
+    - [63. CRUD completo sobre memoria: qué se aprendió y qué falta](#63-crud-completo-sobre-memoria-qué-se-aprendió-y-qué-falta)
+  - [Referencias técnicas](#referencias-técnicas)
+    - [Git y GitHub](#git-y-github)
+    - [JavaScript y TypeScript](#javascript-y-typescript)
+    - [Node.js y módulos](#nodejs-y-módulos)
+    - [HTTP, Express y seguridad](#http-express-y-seguridad)
 
 ---
 
@@ -551,7 +657,7 @@ Es el comando que reemplaza casos de uso que antes se resolvían (de forma menos
 
 `git stash` sirve para **guardar temporalmente cambios que todavía no están listos para comitear**, sin perderlos, para poder cambiar de rama (u otra tarea) con el working directory limpio. Es como una "estantería" o pila (stack) de cambios pendientes, a la que se puede volver más tarde.
 
-Caso de uso típico: estás trabajando en la rama `develop`, tenés cambios sin commitear, y necesitás moverte a otra rama (`uat`, por ejemplo) para revisar algo. Si esos cambios no están commiteados, Git puede arrastrarlos al cambiar de rama y "ensuciar" el working directory de la otra rama. `git stash` evita eso.
+Caso de uso típico: existen cambios sin commitear en la rama `develop` y hace falta cambiar temporalmente a otra rama (`uat`, por ejemplo) para revisar algo. Si esos cambios no están commiteados, Git puede arrastrarlos al cambiar de rama y "ensuciar" el working directory de la otra rama. `git stash` evita eso.
 
 ```bash
 git stash               # Guarda los cambios actuales del working directory en la "estantería"
@@ -574,7 +680,7 @@ Working Directory                    Stash (pila de cambios)
 Puntos importantes:
 - El stash es **del repositorio**, no de una rama en particular: se puede guardar un cambio parado en `develop` y recuperarlo estando parado en otra rama.
 - `stash@{0}` siempre es el más reciente; cada nuevo `stash` corre a los anteriores un número más abajo en la pila.
-- Si el archivo todavía está en estado *untracked* (nunca se le hizo `git add`), `git stash` puede no detectarlo — primero hay que agregarlo al staging con `git add` para que el stash lo tome.
+- Por defecto, `git stash` no incluye todos los archivos *untracked*. Si se necesita guardarlos también, puede usarse `git stash -u` / `git stash --include-untracked`. Agregarlos primero al index también cambia cómo Git los considera, pero no es la única forma de preservarlos en un stash.
 
 **Diferencia entre `pop`, `apply`, `drop` y `clear`:**
 
@@ -638,7 +744,7 @@ feature:      C1─C2─C3          se combinan en S)                     nuevos
 
 Un **conflicto** ocurre cuando dos ramas modificaron **la misma línea del mismo archivo** de forma distinta, y Git no puede decidir por sí solo cuál versión priorizar al fusionarlas. Si dos ramas tocan archivos distintos, o líneas distintas del mismo archivo, Git generalmente resuelve el merge automáticamente sin pedir intervención.
 
-**Paso previo obligatorio:** antes de poder hacer un merge, el working directory tiene que estar limpio (sin cambios pendientes sin commitear). Si hay cambios pendientes, Git rechaza el merge directamente con un error — no llega siquiera a evaluar si hay conflicto o no. Hay que resolver eso primero (con un `commit` o un `git stash`) antes de reintentar el merge.
+**Estado del working tree antes de mergear.** Conviene integrar con un working tree limpio porque reduce ambigüedad y facilita recuperar el estado anterior. Git puede permitir un merge aun con determinados cambios locales si no interfieren con los archivos que necesita actualizar; si existe riesgo de sobrescribir cambios locales, aborta la operación. Por eso `commit` o `stash` son prácticas seguras antes de una integración importante, pero no una precondición sintáctica universal de `git merge`.
 
 **Cuando sí hay conflicto real:**
 
@@ -651,7 +757,7 @@ feature:             C8 (modificó la misma línea X de archivo.js)
 1. Al intentar `git merge feature`, Git detiene el proceso y marca el/los archivo(s) en conflicto.
 2. En VS Code, el archivo aparece con un ícono de advertencia (⚠️), y **dentro** del archivo Git inserta marcadores especiales delimitando ambas versiones en conflicto (la propia y la entrante).
 3. VS Code ofrece botones visuales sobre cada bloque en conflicto:
-   - **Aceptar cambios actuales** (*current*): mantiene la versión que ya tenías vos.
+   - **Aceptar cambios actuales** (*current*): mantiene la versión que ya existía en la rama actual.
    - **Aceptar cambios entrantes** (*incoming*): toma la versión que viene de la otra rama.
    - **Aceptar ambos cambios**: combina las dos versiones, una después de la otra.
    - **Comparar cambios**: muestra ambas versiones lado a lado para decidir con más detalle.
@@ -669,32 +775,179 @@ git merge --abort
 **Recomendaciones para reducir conflictos en equipo:**
 - Cada persona debería trabajar sobre **su propia rama** (una rama por feature/ficha), evitando que dos personas trabajen a la vez sobre la misma rama.
 - Si dos personas sí trabajan sobre el mismo archivo en ramas distintas, la probabilidad de conflicto al fusionar aumenta — es esperable y no significa que algo esté mal, simplemente hay que resolverlo a mano.
-- Ningún error de Git es irreversible: si un merge sale mal o genera conflictos inesperados, siempre hay una forma de deshacerlo o cancelarlo (`git merge --abort`, `git reset`, etc.) — no hace falta borrar y volver a clonar todo el repositorio salvo en casos extremos.
+- Muchos errores de trabajo local pueden recuperarse (`git merge --abort`, `git restore`, `git reflog`, etc.), por lo que borrar y volver a clonar el repositorio rara vez debería ser la primera reacción. Sin embargo, no todo cambio es universalmente reversible: reescribir historial, eliminar referencias y perder objetos ya no recuperables puede destruir información. Antes de usar operaciones destructivas conviene comprender qué referencia se está modificando.
 
 ---
 
 ### 4. Flujo de trabajo completo (Git Workflow)
 
-Uniendo working directory, staging, repositorio local y remoto en una sola secuencia:
+Git separa deliberadamente el trabajo en varias áreas. Esa separación no existe para obligar a ejecutar más comandos, sino para permitir **decidir qué cambios forman parte de cada snapshot** antes de incorporarlos al historial.
 
-```
-Working Directory   Staging Area    Local Repository    Remote Repository
-      │                  │                  │                    │
-      │─ git add ───────►│                  │                    │
-      │                  │─ git commit ────►│                    │
-      │                  │                  │─ git push ────────►│
-      │                  │                  │◄─── git pull ──────│
-      │◄────────────── git checkout / switch ──────────────────  │
+```mermaid
+flowchart LR
+    WD[Working Directory<br/>archivos editables] -->|git add| SA[Staging Area<br/>selección del próximo commit]
+    SA -->|git commit| LR[Repositorio local<br/>historial de commits]
+    LR -->|git push| RR[Repositorio remoto<br/>historial compartido]
+    RR -->|git fetch| LR
 ```
 
-Secuencia típica de un commit completo, con los comandos exactos:
+La idea importante es que **editar un archivo no equivale a versionarlo**.
+
+Un mismo directorio de trabajo puede contener cambios de naturalezas diferentes:
+
+```text
+archivo A
+→ corrección de un bug
+
+archivo B
+→ nueva funcionalidad
+
+archivo C
+→ cambio experimental que todavía no debería entrar
+```
+
+La *staging area* permite seleccionar únicamente:
+
+```text
+A + B
+```
+
+para formar un commit coherente, dejando `C` afuera aunque exista físicamente en el proyecto.
+
+Por eso el flujo no debe memorizarse solamente como:
+
+```text
+add → commit → push
+```
+
+sino como:
+
+```text
+modificar
+→ seleccionar qué integra el próximo snapshot
+→ crear un punto del historial local
+→ compartir ese historial
+```
+
+#### 4.1 Working Directory
+
+Es la versión editable de los archivos sobre la que se trabaja normalmente.
+
+Cambiar una línea modifica el **working tree**, pero todavía no modifica ningún commit anterior.
+
+Esto permite experimentar sin que cada pulsación de teclado se vuelva parte del historial.
+
+#### 4.2 Staging Area o Index
+
+Es la preparación del **próximo commit**.
 
 ```bash
-git add <archivos>              # working directory  → staging area
-git commit -m "mensaje"         # staging area        → local repository
-git push origin <rama>          # local repository    → remote repository
-git pull                        # remote repository   → local + working directory
+git add archivo.js
 ```
+
+no significa:
+
+> “subir `archivo.js`”.
+
+Significa:
+
+> “tomar el estado actual de este archivo y prepararlo para que forme parte del próximo snapshot”.
+
+Si el archivo vuelve a modificarse después del `git add`, pueden coexistir:
+
+```text
+versión staged
++
+cambios posteriores todavía no staged
+```
+
+Esta diferencia explica por qué `git status` es tan importante: muestra qué contenido está preparado y qué contenido todavía permanece solamente en el working tree.
+
+#### 4.3 Repositorio local
+
+```bash
+git commit -m "..."
+```
+
+crea un nuevo objeto en el historial local utilizando lo que estaba preparado en staging.
+
+Un commit no es simplemente “guardar archivos”: representa un **snapshot identificable del proyecto**, acompañado por metadatos e historial de parentesco.
+
+Por eso un commit debería representar una unidad lógica comprensible:
+
+```text
+Agregar validación de usuario
+```
+
+es preferible a:
+
+```text
+cosas
+```
+
+o a mezclar múltiples cambios inconexos en el mismo snapshot.
+
+#### 4.4 Repositorio remoto
+
+El remoto permite compartir historial entre distintas copias del repositorio.
+
+```bash
+git push origin feature/login
+```
+
+publica commits locales que todavía no estaban en ese remoto.
+
+En sentido inverso:
+
+```bash
+git fetch
+```
+
+actualiza las referencias remotas conocidas por la copia local **sin integrar automáticamente esos cambios en la rama actual**.
+
+`git pull` agrega un paso:
+
+```text
+fetch
++
+integración de los cambios recibidos
+```
+
+La forma concreta de integración depende de la configuración y del comando utilizado —por ejemplo, merge o rebase—, por lo que conviene no reducir `pull` a “descargar archivos”.
+
+#### 4.5 Flujo mental completo
+
+```text
+Working Directory
+¿Qué cambié?
+
+        ↓ git add
+
+Staging Area
+¿Qué quiero que forme parte del próximo commit?
+
+        ↓ git commit
+
+Repositorio local
+¿Qué snapshots forman mi historial?
+
+        ↓ git push
+
+Repositorio remoto
+¿Qué parte de ese historial comparto con el equipo?
+```
+
+Secuencia típica:
+
+```bash
+git status
+git add src/usuario.js
+git status
+git commit -m "Validar correo del usuario"
+git push origin feature/validacion-usuario
+```
+
+El segundo `git status` no es redundante: permite comprobar que el commit va a contener exactamente lo esperado antes de crearlo.
 
 ---
 
@@ -732,6 +985,29 @@ Casos de uso típicos: dependencias descargadas (`node_modules`), archivos de co
 
 GitHub ofrece plantillas de `.gitignore` preconfiguradas según el tipo de proyecto (Node, Android, etc.) al momento de crear un repositorio nuevo, con las exclusiones típicas ya cargadas.
 
+
+Un punto importante es que `.gitignore` está pensado principalmente para archivos **no trackeados**. Si un archivo ya fue incorporado al historial, agregar después su nombre al `.gitignore` no hace que Git deje automáticamente de seguirlo.
+
+Por ejemplo:
+
+```bash
+git rm --cached .env
+```
+
+puede quitar un archivo del índice manteniéndolo en el disco local; a partir de ahí, una regla apropiada de `.gitignore` evita que vuelva a agregarse por accidente.
+
+Esto explica por qué conviene crear las reglas de exclusión **antes del primer commit importante**, especialmente para:
+
+```text
+.env
+node_modules/
+archivos de build
+logs
+credenciales locales
+```
+
+> ⚠️ Agregar una credencial a `.gitignore` después de haberla commiteado **no elimina el secreto del historial anterior**. Si una clave real fue publicada, debe considerarse comprometida y rotarse/revocarse; borrar solamente el archivo del commit siguiente no vuelve secreto el valor anterior.
+
 ---
 
 ### 6. GitFlow
@@ -761,18 +1037,43 @@ Flujo de trabajo recomendado: cada persona crea su propia feature branch a parti
 
 ### 7. Repositorios remotos y SSH
 
-#### 7.1 ¿Por qué SSH y no usuario/contraseña?
+#### 7.1 ¿Por qué usar SSH para Git?
 
-Desde hace algunos años, GitHub no permite conectarse directamente a un repositorio remoto usando usuario y contraseña. En su lugar, requiere autenticación mediante una **clave SSH**.
+GitHub dejó de aceptar la contraseña de la cuenta como mecanismo de autenticación para operaciones Git por HTTPS. Eso no significa que SSH sea la única alternativa: una conexión remota puede utilizar, entre otras opciones, **HTTPS con mecanismos de autenticación admitidos por la plataforma** o **SSH**.
 
-Una clave SSH es una credencial de acceso al protocolo SSH (*Secure Shell*): un protocolo de red seguro, autenticado y cifrado, pensado para la comunicación remota entre máquinas en una red abierta (no segura por defecto). Se usa para transferencia remota de archivos, gestión de red y acceso remoto a sistemas operativos — Git lo aprovecha específicamente para autenticar la conexión con el repositorio remoto.
+SSH resulta especialmente cómodo porque permite autenticar la máquina mediante criptografía de clave pública sin escribir una credencial reutilizable en cada `push`.
 
-El mecanismo se basa en un **par de claves** (pública + privada) para establecer una conexión cifrada entre ambas partes. La forma más clara de pensarlo es con la analogía del candado y la llave: la clave **pública** funciona como un candado que le das a la otra parte (GitHub) para que pueda cifrar los datos que te envía; la clave **privada** es la llave que abre ese candado, y **se queda únicamente con vos**, en un lugar seguro.
+Un par SSH contiene:
 
-- **Clave pública** (`archivo.pub`): es la que se comparte con GitHub. No representa un riesgo si se conoce.
-- **Clave privada** (sin extensión `.pub`): se queda únicamente en la computadora local. **Nunca se comparte con nadie**. Se puede proteger además con una contraseña (passphrase) opcional al momento de generarla.
+```text
+clave privada
+→ permanece en el equipo y demuestra la identidad
 
-Cada persona del equipo genera su propia clave y la registra en su propia cuenta de GitHub — no se comparte una clave entre compañeros.
+clave pública
+→ puede registrarse en GitHub
+```
+
+Durante la autenticación, el servidor puede comprobar que el cliente posee la clave privada correspondiente **sin que esa clave privada se transmita**.
+
+La clave pública no funciona simplemente como “un candado con el que GitHub cifra todos los datos para que la privada los descifre”. SSH utiliza criptografía asimétrica como parte de un protocolo más amplio que negocia una conexión autenticada y cifrada.
+
+```mermaid
+sequenceDiagram
+    participant PC as Equipo local
+    participant GH as GitHub
+
+    PC->>GH: Solicita conexión SSH
+    GH-->>PC: Desafío / negociación criptográfica
+    PC->>GH: Demuestra posesión de la clave privada
+    GH-->>PC: Valida contra la clave pública registrada
+    GH-->>PC: Sesión SSH autenticada
+```
+
+- **Clave pública** (`.pub`): se registra en GitHub y puede compartirse.
+- **Clave privada**: permanece en el equipo y no debe compartirse.
+- **Passphrase:** puede proteger la clave privada almacenada en disco si alguien obtiene acceso al archivo.
+
+Cada integrante debería utilizar sus propias credenciales. Compartir una misma clave privada entre varias personas elimina trazabilidad y aumenta el impacto de una filtración.
 
 #### 7.2 Generar una clave SSH
 
@@ -809,7 +1110,7 @@ En el paso 6, reemplazar `"tu_email@ejemplo.com"` por el mail asociado a la cuen
 | `-t ed25519` | Opción **t**ype (tipo/algoritmo) | Indica **qué algoritmo criptográfico** usar para generar el par de claves. `ed25519` es el nombre de ese algoritmo — una curva elíptica (*Edwards-curve Digital Signature Algorithm*) moderna, rápida y considerada muy segura. Es la que recomienda GitHub hoy en día por sobre alternativas más viejas como `rsa`. |
 | `-C "tu_email@ejemplo.com"` | Opción **C**omment (comentario) | Agrega una **etiqueta descriptiva** a la clave pública generada, para poder identificar a simple vista de quién es o para qué cuenta se creó. Es solo informativo — **no participa del cifrado**, es como un nombre de archivo pegado al final de la clave. Por convención se usa el mail de la cuenta de GitHub, pero podría ser cualquier texto (por ejemplo, el nombre de la compu). |
 
-En criollo: *"Generame un par de claves usando el algoritmo ed25519, y etiquetalas con este mail para que después sepa de quién son."*
+En términos simples: el comando solicita generar un par de claves Ed25519 y asociarle una etiqueta descriptiva.
 
 El comando pide dos cosas, en este orden:
 1. Un **nombre identificativo** para el archivo de la clave (por ejemplo, `gz_notebook`). Ese nombre solo sirve para identificar el archivo dentro de la carpeta `.ssh` — conviene recordarlo porque se vuelve a usar más adelante.
@@ -843,36 +1144,58 @@ Si el contenido pegado está incompleto o corrupto, GitHub va a rechazarlo con u
 
 Se puede tener más de una clave SSH cargada en la misma cuenta (por ejemplo, una por cada computadora que se use), y también se pueden usar claves distintas para cuentas de GitHub distintas.
 
-#### 7.4 Clonar un repositorio con SSH y el error más común
+#### 7.4 Clonar un repositorio con SSH y diagnosticar autenticación
 
-**Aclaración importante:** clonar con SSH solo funciona para un repositorio **propio**, o uno al que te hayan agregado como colaborador (es decir, donde tengas permiso para subir información). Si el repositorio es público pero no es tuyo ni sos colaborador — por ejemplo, uno que te compartieron o que encontraste en internet — hay que clonarlo con la opción **HTTPS**, no con SSH.
-
-Para clonar con SSH: en el repositorio, botón **Code** → pestaña **SSH** → copiar la URL que empieza con `git@github.com:...`.
+Un repositorio puede clonarse mediante una URL SSH:
 
 ```bash
 git clone git@github.com:usuario/repositorio.git
 ```
 
-**Error típico al primer intento:**
+Para utilizar este mecanismo, la conexión SSH debe poder autenticarse contra GitHub. En un repositorio privado también hace falta que la cuenta autenticada posea permisos sobre ese repositorio.
 
+Un repositorio público puede clonarse sin permisos de escritura; la diferencia entre **leer** y **hacer push** depende de los permisos de la cuenta, no de que la URL sea SSH o HTTPS.
+
+Un error habitual es:
+
+```text
+Permission denied (publickey).
 ```
-git@github.com: Permission denied (publickey).
-fatal: Could not read from remote repository.
-```
 
-Este error aparece aunque la clave pública ya esté cargada en GitHub, porque falta un paso: la clave todavía no fue agregada al **ssh-agent** local, que es el proceso encargado de gestionar la conexión con la clave SSH en tu computadora.
-
-La solución es iniciar el agente y agregarle la clave privada:
+Ese mensaje indica un problema de autenticación SSH. Algunas comprobaciones útiles son:
 
 ```bash
-# Inicia el agente SSH (devuelve un número de proceso, ej. "Agent pid 1352")
-eval "$(ssh-agent -s)"
-
-# Agrega la clave privada al agente (reemplazar por el nombre real de la clave)
-ssh-add ~/.ssh/gz_notebook
+ssh -T git@github.com
 ```
 
-Si la clave se generó con passphrase, `ssh-add` la va a pedir en este paso. Si aparece el mensaje `Identity added: ...`, la clave quedó agregada correctamente al agente. A partir de ahí, `git clone` con la URL SSH ya debería funcionar sin problemas.
+y:
+
+```bash
+ssh-add -l
+```
+
+cuando se utiliza `ssh-agent`.
+
+El `ssh-agent` es un proceso que puede mantener claves privadas desbloqueadas en memoria y ofrecerlas al cliente SSH. Es muy útil cuando la clave tiene passphrase, pero no es correcto pensar que **toda** conexión SSH necesita obligatoriamente que la clave haya sido agregada manualmente al agente: el cliente también puede encontrar claves por ubicaciones/configuración conocidas.
+
+Una configuración explícita en `~/.ssh/config` puede asociar host y archivo:
+
+```sshconfig
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519
+```
+
+La idea diagnóstica es separar tres problemas distintos:
+
+```text
+¿SSH encuentra una identidad?
+¿GitHub reconoce esa identidad?
+¿esa cuenta tiene permiso para la operación sobre ese repositorio?
+```
+
+Un fallo en cualquiera de esos niveles puede producir síntomas parecidos, pero no se resuelve necesariamente con la misma acción.
 
 #### 7.5 Crear un repositorio remoto en GitHub
 
@@ -915,6 +1238,39 @@ Un **Pull Request** (PR) — también llamado **Merge Request** (MR) en otras pl
 
 Una vez creado, el PR queda en estado **abierto**, mostrando qué archivos modifica, quién lo abrió, la etiqueta asignada y a quién está asignado. A partir de ahí, el equipo puede seguir comentando o subiendo más commits a esa misma rama (que se van a reflejar automáticamente en el PR) hasta que se apruebe y se mergee.
 
+
+El valor de un PR/MR no es únicamente “pedir permiso para mergear”. También crea un **espacio explícito de revisión de código**.
+
+En una revisión, otra persona puede analizar:
+
+```text
+qué comportamiento se agregó
+qué se eliminó
+si el cambio cumple el requerimiento
+si introduce errores
+si rompe contratos existentes
+si hay duplicación
+si una responsabilidad quedó en la capa equivocada
+si los nombres explican la intención
+si faltan pruebas
+```
+
+Por eso las aprobaciones no garantizan que no existan conflictos de merge. Son un control distinto:
+
+```text
+merge conflict
+→ problema de compatibilidad entre cambios
+
+code review
+→ evaluación humana/técnica de calidad, diseño y corrección
+```
+
+Las plataformas pueden exigir una o más aprobaciones antes de habilitar la integración.
+
+En equipos reales también puede requerirse la aprobación de responsables concretos, por ejemplo un *Tech Lead* o propietario de un área del código.
+
+La revisión tiene además valor pedagógico: leer código escrito por otra persona obliga a reconstruir su intención y detectar decisiones que al autor pueden haberle parecido obvias.
+
 #### 8.2 Branch protection rules
 
 Desde **Settings → Branches → Add rule** en GitHub, se pueden configurar reglas de protección sobre ramas específicas (por ejemplo, `main`). Algunas de las más relevantes:
@@ -946,7 +1302,7 @@ Permite filtrar la visualización — por ejemplo, ver solo los commits de una r
 
 > Recomendación de seguridad general al instalar cualquier extensión de VS Code: revisar la cantidad de descargas, las reseñas/calificaciones y la fecha de la última actualización antes de instalarla, ya que una extensión tiene acceso a los archivos del proyecto y del sistema.
 
-> Recomendación pedagógica del profesor: aprender primero a manejar Git por consola (Git Bash) antes de apoyarse en interfaces gráficas, porque la consola devuelve mensajes y sugerencias explícitas sobre qué comando conviene usar en cada situación — leerlos ayuda a entender qué está pasando en vez de memorizar botones.
+> Para aprender Git conviene comprender primero los estados, referencias y comandos fundamentales antes de depender exclusivamente de una interfaz gráfica. La consola hace visibles los comandos ejecutados y los mensajes de diagnóstico, lo que facilita construir el modelo mental del sistema en lugar de memorizar botones.
 
 Atajos útiles de consola mencionados:
 - **Tab:** autocompleta comandos y nombres de archivo/rama.
@@ -955,15 +1311,34 @@ Atajos útiles de consola mencionados:
 
 ---
 
-### 10. Programas utilizados en la materia
+### 10. Entorno mínimo de desarrollo
 
-- **[Visual Studio Code](https://code.visualstudio.com/Download)** — editor de código.
-- **[Node.js](https://nodejs.org/en/download/)** — entorno de ejecución de JavaScript del lado del servidor.
-- **[Git](https://git-scm.com/download)** — sistema de control de versiones.
+Un entorno de backend básico necesita herramientas con responsabilidades diferentes:
+
+| Herramienta | Responsabilidad |
+|---|---|
+| **Editor/IDE** (por ejemplo, Visual Studio Code) | Escribir, navegar, refactorizar y depurar el código fuente |
+| **Node.js** | Ejecutar JavaScript fuera del navegador y proporcionar APIs del runtime |
+| **Git** | Versionar el proyecto y gestionar su historial |
+
+No son sustitutos entre sí. El editor modifica archivos; Node ejecuta el programa; Git registra la evolución del conjunto de archivos.
+
+Una terminal completa el flujo operativo porque permite ejecutar:
+
+```text
+node
+npm
+git
+comandos del sistema
+```
+
+sin depender de una interfaz gráfica específica.
+
+El objetivo conceptual no es aprender una lista de programas, sino reconocer qué responsabilidad cubre cada herramienta dentro del ciclo de desarrollo.
 
 ---
 
-## Ejemplo práctico — Sesión de consola: SSH, ramas y stash
+### Ejemplo práctico — Sesión de consola: SSH, ramas y stash
 
 Secuencia de comandos demostrada en clase, desde la generación de la clave SSH hasta el flujo completo de trabajo con ramas y `stash`. Sirve como referencia rápida del orden real en que se encadenan los comandos vistos arriba.
 
@@ -1020,75 +1395,335 @@ git stash pop                # recupero los cambios guardados
 
 ## Unidad 2 — JavaScript
 
-### 11. Tipos de lenguajes de programación
+### 11. Compilación, interpretación y ejecución de un lenguaje
 
-Los lenguajes de programación se clasifican, según cómo se ejecuta su código, en tres grandes tipos:
+Clasificar lenguajes completos como si fueran intrínsecamente “compilados” o “interpretados” resulta útil como primera aproximación, pero es una simplificación.
 
-```
-                    TIPOS DE LENGUAJES
-                           │
-        ┌──────────────────┼──────────────────┐
-        ▼                  ▼                   ▼
-   COMPILADO          INTERMEDIO           INTERPRETADO
-        │                  │                   │
-El código se        Se compila el         Requiere un
-compila (traduce)   código fuente a       intérprete: un
-a código máquina,   un lenguaje           programa que lee
-generando binarios  intermedio, que       las instrucciones
-que lee directa-    se ejecuta sobre      en tiempo real y
-mente el sistema    una máquina           las va ejecutando,
-operativo.          virtual.              línea por línea.
+La distinción más precisa se aplica a **cómo una implementación ejecuta un programa**.
+
+```text
+Código fuente
+     ↓
+análisis / parsing
+     ↓
+posibles transformaciones
+     ↓
+ejecución
 ```
 
-- **Compilados:** C, C++, Rust, Go. El código se traduce por completo a lenguaje máquina antes de ejecutarse.
-- **Intermedios:** Java, Kotlin, C#. Se compilan a un lenguaje intermedio (bytecode) que corre sobre una máquina virtual (por ejemplo, la JVM para Java).
-- **Interpretados:** Ruby, Perl, PHP, Bash, Python, JavaScript, R. No se compilan de antemano — un intérprete traduce y ejecuta las instrucciones directamente desde el código fuente, en el momento.
+Entre esas transformaciones pueden aparecer:
 
-Para que la máquina entienda un lenguaje interpretado, el código igual tiene que pasar por algún proceso de traducción — solo que ese proceso ocurre en tiempo de ejecución (interpretación) en vez de antes (compilación). Un término relacionado es **transpilar**: traducir de un lenguaje de alto nivel a **otro lenguaje de alto nivel** (a diferencia de compilar, que traduce de alto nivel a bajo nivel). El ejemplo típico es TypeScript, que se transpila a JavaScript.
+```text
+compilación a código máquina
+compilación a bytecode
+interpretación
+compilación Just-In-Time (JIT)
+combinaciones de varias estrategias
+```
+
+Por ejemplo, JavaScript moderno no debería imaginarse simplemente como un intérprete que “lee una línea y la ejecuta”. Motores como V8 analizan el código y utilizan técnicas de compilación/JIT y optimización durante la ejecución.
+
+Del mismo modo, un lenguaje como Python suele ejecutarse mediante implementaciones que generan una representación intermedia antes de que una máquina virtual la procese.
+
+Por eso conviene separar:
+
+```text
+lenguaje
+→ reglas y semántica definidas por una especificación
+
+implementación/runtime
+→ programa concreto que analiza y ejecuta ese lenguaje
+```
+
+Esta separación prepara un concepto que será central con JavaScript:
+
+```text
+ECMAScript
+→ especificación del lenguaje
+
+V8
+→ motor que implementa esa especificación
+
+Node.js / navegador
+→ entorno host que incorpora un motor y agrega APIs propias
+```
+
+#### 11.1 Compilación
+
+En términos generales, compilar significa transformar un programa desde una representación a otra antes o durante su ejecución.
+
+Un compilador puede producir:
+
+```text
+código máquina
+bytecode
+otro lenguaje
+representaciones intermedias
+```
+
+Por eso “compilar” no significa necesariamente “convertir todo una sola vez a un `.exe`”.
+
+#### 11.2 Interpretación
+
+Un intérprete ejecuta o evalúa una representación del programa sin requerir que exista previamente un binario nativo completo generado como producto final.
+
+Los runtimes modernos pueden mezclar interpretación y compilación dinámica.
+
+#### 11.3 JIT: compilar durante la ejecución
+
+La compilación *Just-In-Time* permite generar código optimizado mientras el programa está ejecutándose.
+
+La motivación es combinar ventajas:
+
+```text
+inicio flexible / información disponible en runtime
++
+código nativo optimizado para partes frecuentes
+```
+
+Por eso el modelo mental:
+
+```text
+JavaScript = interpretado línea por línea
+```
+
+es insuficiente para describir motores actuales.
 
 ### 12. Scripts y lenguajes de scripting
 
-**¿Qué es un script?** Un conjunto de instrucciones que se ejecutan en un ambiente de tiempo de ejecución — como una receta que indica paso a paso, y secuencialmente, lo que hay que hacer. Normalmente los scripts son interpretados: las instrucciones se leen y ejecutan una por una, en tiempo real, línea por línea.
+Un **script** es un programa que normalmente automatiza o coordina tareas dentro de un entorno existente.
 
-**Lenguaje de scripting:** es un lenguaje interpretado que se traduce a lenguaje de máquina recién cuando se ejecuta, a través de un programa llamado **intérprete**. Los comandos se interpretan directamente desde el código fuente, por lo tanto no hace falta compilación previa. *Los lenguajes de scripting son lenguajes de programación* — no son una categoría aparte, sino un subtipo de los interpretados.
+Ejemplos:
 
-**Características de los lenguajes de scripting:**
-- **Declaración de variables:** usan tipado dinámico — se pueden declarar variables de forma más flexible, sin especificar el tipo de antemano.
-- **Lado servidor vs. lado cliente:** un mismo script puede ejecutarse tanto en un servidor web como en el navegador del usuario.
-- **Memoria:** la gestión de memoria la maneja automáticamente el intérprete (no hay que reservarla/liberarla manualmente).
-- **Multiplataforma:** se integran bien con distintos sistemas, siempre que el sistema tenga disponible el intérprete correspondiente.
+```text
+automatizar archivos
+ejecutar tareas de build
+procesar datos
+responder una request
+administrar un sistema
+manipular una página web
+```
 
-| Ventajas | Desventajas |
+La palabra *script* describe sobre todo **el uso y el contexto**, no una propiedad rígida de ejecución.
+
+Un lenguaje llamado “de scripting” no tiene por qué cumplir universalmente:
+
+```text
+tipado dinámico
+interpretación pura
+código pequeño
+ausencia de compilación
+```
+
+Esas características aparecen con frecuencia en lenguajes históricamente asociados a scripting, pero no constituyen una definición técnica suficiente.
+
+JavaScript comenzó estrechamente vinculado al scripting en navegadores, pero hoy también se utiliza para:
+
+```text
+backend
+herramientas de desarrollo
+aplicaciones de escritorio
+automatización
+servicios
+CLI
+```
+
+La aparición de Node.js es justamente importante porque separa JavaScript del único host que originalmente resultaba familiar: el navegador.
+
+### 13. ECMAScript, motor y entorno host
+
+Para entender JavaScript resulta útil separar tres capas.
+
+```mermaid
+flowchart TB
+    SPEC[ECMAScript<br/>especificación del lenguaje]
+    ENGINE[Motor JavaScript<br/>V8 / SpiderMonkey / JavaScriptCore]
+    HOST[Entorno host<br/>Browser / Node.js]
+
+    SPEC --> ENGINE
+    ENGINE --> HOST
+```
+
+#### 13.1 ECMAScript
+
+**ECMAScript** es la especificación estandarizada por Ecma International que define el lenguaje sobre el que se basa JavaScript.
+
+Entre otras cosas define:
+
+```text
+sintaxis
+tipos
+operadores
+objetos estándar
+semántica de funciones
+promesas
+módulos
+```
+
+No define por sí sola todas las APIs que aparecen al programar en un navegador o en Node.
+
+Por ejemplo:
+
+```javascript
+Array
+Promise
+Map
+```
+
+pertenecen al lenguaje/ecosistema ECMAScript.
+
+En cambio:
+
+```javascript
+document
+fetch
+```
+
+dependen del host donde se ejecuta el código —aunque algunas APIs puedan existir hoy en más de un host.
+
+#### 13.2 Motor JavaScript
+
+Un motor implementa la semántica de ECMAScript.
+
+Ejemplos conocidos:
+
+| Motor | Entornos asociados |
 |---|---|
-| Más flexibles | Ejecución más lenta comparado con un programa compilado |
-| Variables dinámicas | El código fuente queda visible (no se compila a binario) |
-| Tamaño de código fuente más chico | Necesita un intérprete disponible para correr |
-| Portable/multiplataforma (si hay intérprete) | Los errores se detectan recién en tiempo de ejecución |
-
-### 13. EcmaScript y motores de JavaScript
-
-**Ecma International** es una organización que crea estándares para tecnologías. **ECMA-262** es la especificación que define un lenguaje de scripting de propósito general — "262" es simplemente el número de referencia asignado a ese estándar. ECMAScript establece las reglas, detalles y directrices que un lenguaje de scripting debe seguir para considerarse conforme a ese estándar.
-
-**JavaScript** es un lenguaje de programación multiparadigma y dinámico (soporta programación orientada a objetos, imperativa y declarativa/funcional) que además es un lenguaje de scripting de propósito general que se ajusta a la especificación ECMAScript.
-
-**Motor de JavaScript** (*JavaScript engine*): es el programa/intérprete que entiende y ejecuta código JavaScript. Cada navegador (y Node.js) trae el suyo:
-
-| Motor | Dónde se usa |
-|---|---|
-| **V8** | Chrome y Node.js |
+| **V8** | Chrome, Node.js y otros runtimes |
 | **SpiderMonkey** | Firefox |
-| **Chakra** | Edge (versiones históricas) |
 | **JavaScriptCore** | Safari |
 
-Cuando ECMAScript agrega especificaciones nuevas al estándar, cada motor tiene que actualizarse para poder interpretarlas — por eso hay mantenimiento constante de estos motores por parte de cada navegador.
+Un motor moderno realiza tareas como:
 
-Dentro de un motor de JavaScript hay, como mínimo, dos piezas fundamentales: un **intérprete** (que ejecuta el código) y un **parser** (que analiza y traduce la sintaxis antes de ejecutarla), además de otros componentes internos (como el recolector de basura o *garbage collector*, que libera memoria automáticamente).
+```text
+tokenizar/parsear código
+crear representaciones internas
+ejecutar código
+optimizar partes frecuentes
+gestionar memoria y garbage collection
+```
 
-### 14. ¿Y TypeScript?
+Reducirlo simplemente a “un intérprete” oculta una parte importante del modelo real.
 
-**TypeScript** es un superconjunto de JavaScript con tipado, que se **transpila** a JavaScript simple (no se ejecuta directamente — primero se traduce). Ofrece clases, módulos e interfaces adicionales para ayudar a construir componentes más robustos, y permite detectar errores de tipos antes de ejecutar el código (algo que JavaScript puro, al ser de tipado dinámico, no hace).
+#### 13.3 Entorno host
 
-Visual Studio Code entiende la sintaxis de TypeScript, pero **no incluye el compilador** (`tsc`) por defecto — hay que instalarlo aparte (global o dentro del proyecto) para poder transpilar el código fuente `.ts` a `.js`.
+El host agrega las capacidades para interactuar con el mundo exterior.
+
+Un navegador aporta, por ejemplo:
+
+```text
+DOM
+eventos de interfaz
+almacenamiento web
+red
+timers
+```
+
+Node.js aporta:
+
+```text
+sistema de archivos
+procesos
+red
+módulos del runtime
+servidores
+streams
+```
+
+El mismo lenguaje puede ejecutarse en hosts diferentes porque:
+
+```text
+ECMAScript define el núcleo del lenguaje
++
+cada host agrega sus APIs
+```
+
+Esta distinción explica por qué un código puede ser JavaScript válido y, aun así, fallar por intentar utilizar una API que no existe en ese entorno.
+
+### 14. TypeScript: tipado estático sobre JavaScript
+
+**TypeScript** extiende la sintaxis de JavaScript con un sistema de tipos estáticos y herramientas de análisis.
+
+Su objetivo central no es reemplazar el runtime de JavaScript, sino detectar una clase de errores **antes de ejecutar** el programa.
+
+```typescript
+function sumar(a: number, b: number): number {
+  return a + b;
+}
+
+sumar("5", 2);
+// error de tipos durante el análisis
+```
+
+JavaScript permite realizar esa llamada; TypeScript puede señalar que no satisface el contrato declarado.
+
+#### 14.1 JavaScript sigue siendo el runtime conceptual
+
+Tradicionalmente, el compilador de TypeScript (`tsc`) elimina información de tipos y emite JavaScript:
+
+```text
+archivo .ts
+→ análisis de tipos
+→ transformación/emisión
+→ JavaScript
+```
+
+Las anotaciones como:
+
+```typescript
+: number
+interface Usuario { ... }
+```
+
+no forman parte del JavaScript que ejecuta el navegador.
+
+Actualmente algunos runtimes —incluido Node.js moderno para un subconjunto de sintaxis— pueden ejecutar archivos TypeScript eliminando tipos durante la carga. Esto no convierte a TypeScript en un runtime independiente ni reemplaza necesariamente el chequeo estático completo de `tsc` o de otras herramientas.
+
+#### 14.2 Qué agrega TypeScript y qué no
+
+JavaScript moderno ya posee:
+
+```text
+clases
+módulos
+funciones async
+objetos
+herencia
+```
+
+TypeScript no “agrega clases y módulos” como si JavaScript careciera de ellos.
+
+Lo que aporta principalmente es información y análisis estático:
+
+```text
+anotaciones de tipo
+interfaces
+tipos unión/intersección
+genéricos
+inferencia de tipos
+chequeo de contratos antes de ejecutar
+mejor soporte de tooling
+```
+
+#### 14.3 El beneficio aparece al crecer el sistema
+
+En un ejemplo pequeño:
+
+```javascript
+function buscar(id) { ... }
+```
+
+puede parecer obvio qué recibe y qué retorna.
+
+En un backend grande, un contrato explícito reduce ambigüedad:
+
+```typescript
+function buscar(id: number): Usuario | null
+```
+
+El tipo documenta y permite verificar automáticamente parte del contrato entre módulos.
+
+TypeScript no elimina la necesidad de validar datos externos. Un body HTTP puede afirmar cualquier cosa en runtime; los tipos estáticos describen lo que el programa **espera**, no vuelven confiable automáticamente la entrada del cliente.
 
 ### 15. Sintaxis básica de uso frecuente
 
@@ -1147,9 +1782,18 @@ function miFuncion() {
 }
 ```
 
-Con `var`, la variable queda "visible" para toda la función aunque se haya declarado dentro de un bloque `if` — esto puede generar comportamientos confusos. Con `let`, la variable solo existe dentro del bloque `{ }` donde se declaró (*block scope*), que es un comportamiento más predecible. Por eso la recomendación general es: **usar siempre `let` (o `const`), y reservar `var` solo para casos puntuales donde sea estrictamente necesario ese comportamiento distinto.**
+Con `var`, la variable queda "visible" para toda la función aunque se haya declarado dentro de un bloque `if` — esto puede generar comportamientos confusos. Con `let`, la variable solo existe dentro del bloque `{ }` donde se declaró (*block scope*), que es un comportamiento más predecible. Por eso, en código moderno, suele preferirse **`const` cuando el binding no debe reasignarse y `let` cuando sí debe cambiar**. `var` queda principalmente para código legado o casos donde se desea deliberadamente su semántica de scope/hoisting.
 
-**Tipado dinámico y débil:** JavaScript permite declarar variables sin fijar su tipo de antemano, y ese tipo puede **cambiar a lo largo de la ejecución** del programa (por eso es *dinámico*). Además es *débilmente tipado*: no exige que los tipos coincidan estrictamente en muchas operaciones (por ejemplo, permite sumar un número y un texto sin lanzar error, concatenándolos). Esto le da flexibilidad, a costa de que ciertos errores de tipo solo aparezcan en tiempo de ejecución en vez de detectarse antes (algo que TypeScript busca mitigar).
+**Tipado dinámico:** en JavaScript el tipo pertenece al **valor**, no queda fijado permanentemente en la variable. Una misma variable declarada con `let` puede referenciar valores de tipos distintos en momentos diferentes:
+
+```javascript
+let dato = 10;       // number
+dato = "diez";       // string
+```
+
+JavaScript también realiza **coerciones implícitas** en determinadas operaciones. Por ejemplo, `"5" + 2` produce `"52"` porque el operador `+` participa en reglas de conversión. En lugar de usar “débilmente tipado” como explicación suficiente, conviene estudiar las reglas concretas de coerción: son esas reglas —no una ausencia total de tipos— las que producen comportamientos que pueden sorprender.
+
+TypeScript agrega análisis estático sobre esos contratos, pero la ejecución final sigue teniendo la semántica de valores de JavaScript.
 
 **Declarar sin asignar un valor inicial:** con `let` se puede declarar una variable sin darle un valor todavía — JavaScript la crea y le asigna automáticamente `undefined` mientras tanto.
 
@@ -1182,59 +1826,253 @@ console.log(`Bienvenido ${nombre} ${apellido}`);
 
 En el teclado en español, el backtick generalmente está en la tecla ubicada arriba de "Enter" (la misma tecla física que tiene el cierre de llaves `}` como segundo símbolo) — se escribe con `Alt Gr` (o `Alt` derecho) presionando la tecla dos veces.
 
-### 17. Tipos de datos
+### 17. Tipos de datos y modelo de valores
 
-| Tipo de dato | Descripción | Ejemplo básico |
+JavaScript distingue entre **valores primitivos** y **objetos**.
+
+#### 17.1 Tipos primitivos
+
+Los tipos primitivos definidos por ECMAScript son:
+
+| Tipo | Ejemplo | Idea principal |
 |---|---|---|
-| `Number` | Valor numérico (enteros, decimales, etc.) | `42` |
-| `BigInt` | Valor numérico grande, fuera del rango seguro de `Number` | `1234567890123456789n` |
-| `String` | Cadena de texto | `'hola'` |
-| `Boolean` | Valor booleano (verdadero/falso) | `true` |
-| `undefined` | Variable declarada pero sin valor asignado | `undefined` |
-| `Function` | Una función guardada en una variable | `function() {}` |
-| `Symbol` | Valor único e irrepetible | `Symbol(1)` |
-| `Object` | Estructura de datos más compleja (ver sección 20) | `{}` |
+| `undefined` | `undefined` | ausencia de un valor asignado |
+| `null` | `null` | ausencia intencional representada explícitamente |
+| `boolean` | `true` | valor lógico |
+| `number` | `42`, `3.14`, `NaN`, `Infinity` | números IEEE-754 de doble precisión |
+| `bigint` | `123n` | enteros de precisión arbitraria |
+| `string` | `"hola"` | texto |
+| `symbol` | `Symbol("id")` | valor único, útil como identificador de propiedades |
 
-### 18. Operadores de comparación (`==` vs `===`) y `null` vs `undefined`
-
-JavaScript tiene dos formas de comparar si dos valores son "iguales":
-
-| Operador | Nombre | Qué compara |
-|---|---|---|
-| `==` | Igualdad débil (*loose equality*) | Solo el **contenido/valor** — si los tipos son distintos, JavaScript los convierte por dentro antes de comparar. |
-| `===` | Igualdad estricta (*strict equality*) | El **contenido y el tipo de dato**, sin conversión. Ambos tienen que coincidir para dar `true`. |
+Los primitivos son **inmutables**: una operación no modifica internamente el valor primitivo existente; produce otro valor.
 
 ```javascript
-let miNumero;             // undefined
+let texto = "hola";
+texto.toUpperCase();
 
-console.log(miNumero == undefined);   // true  → mismo contenido (vacío), no le importa el tipo
-console.log(miNumero === undefined);  // true  → mismo contenido Y mismo tipo (los dos son 'undefined')
+console.log(texto); // "hola"
 ```
 
-> ⚠️ Un solo `=` **no es comparación, es asignación** (guarda un valor en la variable). Para comparar siempre hace falta `==` o `===`, nunca uno solo.
-
-**El caso especial de `null`:** `null` representa un valor vacío/nulo, igual que `undefined` — pero con una diferencia clave: **quién lo asigna**.
-
-- `undefined`: lo asigna automáticamente JavaScript cuando una variable existe pero todavía no tiene un valor cargado.
-- `null`: lo asigna **el programador**, a propósito, para decir explícitamente "esta variable está vacía a propósito".
+Para conservar el resultado hay que asignarlo:
 
 ```javascript
-let miOtroNumero = null;
-console.log(typeof miOtroNumero);   // 'object'  → una rareza histórica de JavaScript (ver más abajo)
+texto = texto.toUpperCase();
 ```
 
-Por eso se recomienda **inicializar las variables con `null`** en vez de dejarlas sin asignar: da más control, porque uno mismo decide explícitamente que está vacía, en vez de depender del valor automático que pone el motor.
+#### 17.2 Objetos
 
-**La rareza histórica de `typeof null`:** por un error heredado de las primeras versiones de JavaScript (que en su momento se intentó corregir, pero rompía demasiado código existente y se decidió no tocarlo), `typeof null` devuelve `'object'` en vez de `'null'`. Es la razón por la que la tabla de tipos de datos de la sección 17 no incluye una fila para `null` como tipo propio — a efectos de `typeof`, `null` se comporta como si fuera un objeto.
+Todo valor que no es primitivo pertenece al tipo Object en el modelo del lenguaje.
+
+Dentro de esta familia aparecen:
+
+```text
+objetos comunes
+arrays
+funciones
+fechas
+mapas
+sets
+errores
+promesas
+```
+
+Una función tiene un tratamiento especial en `typeof`:
 
 ```javascript
-console.log(miOtroNumero == undefined);   // true  → mismo contenido vacío, sin importar el tipo
-console.log(miOtroNumero === undefined);  // false → mismo contenido, pero tipos distintos ('object' vs 'undefined')
-console.log(miOtroNumero == null);        // true
-console.log(miOtroNumero === null);       // true → mismo contenido y mismo tipo ('object' los dos)
+typeof function () {}; // "function"
 ```
 
-**Resumen práctico:** `undefined` y `null` representan los dos "estados vacíos" de JavaScript. Son iguales en contenido (`==` da `true` entre ambos) pero no en tipo (`===` da `false` entre ambos, porque `typeof undefined` es `'undefined'` y `typeof null` es `'object'`). Para chequear si una variable fue inicializada explícitamente como vacía, se prefiere comparar contra `null` en vez de contra `undefined`, justamente porque `null` es una decisión del programador y no un valor "por accidente".
+pero sigue siendo un objeto invocable, no un octavo “tipo primitivo Function”.
+
+Un array:
+
+```javascript
+typeof []; // "object"
+```
+
+por lo que para comprobar específicamente arrays se utiliza:
+
+```javascript
+Array.isArray([]);
+```
+
+#### 17.3 `typeof` no refleja perfectamente la taxonomía del lenguaje
+
+`typeof` es un operador útil, pero sus strings de salida no forman una tabla exacta de los tipos de ECMAScript.
+
+El caso clásico:
+
+```javascript
+typeof null; // "object"
+```
+
+es una incompatibilidad histórica mantenida por compatibilidad.
+
+`null` sigue siendo un **valor primitivo**, aunque `typeof null` devuelva `"object"`.
+
+#### 17.4 Por qué importa distinguir primitivos y objetos
+
+La diferencia se vuelve visible al asignar, comparar y mutar valores.
+
+```javascript
+let a = 10;
+let b = a;
+
+b = 20;
+
+console.log(a); // 10
+```
+
+Cada variable contiene su propio valor primitivo.
+
+En cambio:
+
+```javascript
+const usuarioA = { nombre: "Ada" };
+const usuarioB = usuarioA;
+
+usuarioB.nombre = "Grace";
+
+console.log(usuarioA.nombre); // "Grace"
+```
+
+Ambas variables contienen valores de referencia que permiten acceder al mismo objeto.
+
+Esta diferencia prepara los conceptos de identidad, mutabilidad y paso de argumentos desarrollados en la sección 20.4.
+
+### 18. Igualdad, coerción, `null` y `undefined`
+
+JavaScript ofrece varios algoritmos de comparación. Los dos operadores que aparecen con mayor frecuencia son:
+
+```text
+===  Strict Equality
+==   Loose Equality
+```
+
+#### 18.1 Igualdad estricta `===`
+
+`===` compara sin aplicar coerción de tipos entre operandos.
+
+```javascript
+5 === 5;       // true
+5 === "5";     // false
+```
+
+Con objetos compara identidad:
+
+```javascript
+{} === {}; // false
+
+const a = {};
+const b = a;
+
+a === b; // true
+```
+
+Dos objetos con propiedades idénticas no son estrictamente iguales si son objetos diferentes.
+
+#### 18.2 Igualdad débil `==`
+
+`==` aplica un algoritmo de coerción cuando los operandos poseen tipos diferentes.
+
+No debe resumirse como:
+
+> “compara solo el contenido”.
+
+Ejemplos:
+
+```javascript
+5 == "5";           // true
+false == 0;         // true
+null == undefined;  // true
+```
+
+Esos resultados aparecen por reglas específicas de conversión.
+
+Para código general, `===` suele resultar más fácil de razonar porque evita una gran parte de esas conversiones implícitas.
+
+#### 18.3 `undefined`
+
+`undefined` es un valor primitivo que aparece, entre otros casos, cuando:
+
+```javascript
+let dato;
+console.log(dato); // undefined
+```
+
+o al acceder a una propiedad inexistente:
+
+```javascript
+const usuario = {};
+console.log(usuario.nombre); // undefined
+```
+
+El segundo caso no ocurre porque JavaScript sea “interpretado”; es simplemente la semántica definida para el acceso a una propiedad que no existe.
+
+#### 18.4 `null`
+
+`null` es otro valor primitivo y se utiliza habitualmente para expresar de forma explícita la ausencia intencional de un valor.
+
+```javascript
+const usuarioSeleccionado = null;
+```
+
+No existe una regla general que obligue a inicializar todas las variables vacías con `null`. La elección depende del contrato de la aplicación.
+
+Por ejemplo:
+
+```text
+undefined
+→ el valor no fue provisto / no existe la propiedad
+
+null
+→ el sistema representa explícitamente "sin valor"
+```
+
+puede ser una convención útil si se mantiene de manera consistente.
+
+#### 18.5 `typeof null`
+
+```javascript
+typeof null; // "object"
+```
+
+Ese resultado es una anomalía histórica.
+
+No significa que `null` sea un objeto.
+
+Tampoco significa que:
+
+```javascript
+null === null
+```
+
+sea verdadero “porque ambos tienen `typeof "object"`”.
+
+La igualdad estricta utiliza el tipo interno del lenguaje, y `null` es el único valor del tipo Null.
+
+#### 18.6 Relación especial entre `null` y `undefined`
+
+```javascript
+null == undefined;   // true
+null === undefined;  // false
+```
+
+La primera expresión es un caso explícitamente contemplado por el algoritmo de igualdad débil.
+
+La segunda es falsa porque son valores de tipos diferentes y `===` no los convierte.
+
+Esto produce una técnica que a veces se utiliza deliberadamente:
+
+```javascript
+if (valor == null) {
+  // entra tanto para null como para undefined
+}
+```
+
+pero debe emplearse con intención clara. En el resto de los casos, una comparación estricta comunica mejor qué estado se espera.
+
+> ⚠️ Un solo `=` representa asignación. Las comparaciones utilizan operadores como `===`, `!==`, `==`, `!=`, `<`, `>`, etc.
 
 ### 19. Condicionales
 
@@ -1357,13 +2195,31 @@ console.log(miAuto.marca);    // lectura → "DeLorean"
 miAuto.precio = 5000000;       // asignación → crea la propiedad si no existía, o la modifica si ya existía
 ```
 
-**Leer una propiedad que no existe no genera un error: devuelve `undefined`.** Este comportamiento es consistente con el ya visto para variables no inicializadas (sección 18): como JavaScript es un lenguaje interpretado, el motor lee y ejecuta el código en tiempo real, línea a línea — si en ese momento la propiedad no está definida dentro del objeto, directamente devuelve `undefined` en vez de detener la ejecución con un error.
+**Leer una propiedad que no existe devuelve `undefined`.** Es una regla propia del modelo de objetos de JavaScript, no una consecuencia de que el lenguaje sea “interpretado”.
 
 ```javascript
-console.log(miAuto.duracion);   // undefined (la propiedad "duracion" no existe en el objeto)
+console.log(miAuto.duracion);   // undefined
 ```
 
-Este comportamiento flexible ante propiedades inexistentes es propio de los lenguajes interpretados: el error solo aparece si esa línea concreta llega a ejecutarse en tiempo real, en vez de detectarse antes de correr el programa (como sí pasaría en un lenguaje compilado). Puede pasar desapercibido durante el desarrollo y recién manifestarse en producción, cuando finalmente se ejecuta esa línea.
+El objeto sigue siendo válido: simplemente no posee una propiedad con esa clave en su cadena de resolución correspondiente.
+
+Esto es distinto de acceder a una **variable que nunca fue declarada**:
+
+```javascript
+console.log(variableInexistente); // ReferenceError
+```
+
+La diferencia resulta importante para depurar:
+
+```text
+objeto.propiedadInexistente
+→ undefined
+
+identificadorNuncaDeclarado
+→ ReferenceError
+```
+
+Un sistema de tipos estático puede advertir ciertos accesos dudosos antes de ejecutar, pero la semántica runtime de JavaScript para una propiedad ausente sigue siendo `undefined`.
 
 #### 20.3 Objetos declarados con `const`: qué se puede modificar y qué no
 
@@ -1387,7 +2243,7 @@ miPeli = { nombre: "Otra" };       // ❌ TypeError: Assignment to constant vari
 
 La razón se explica en la sección 20.4: lo que la constante fija es la **referencia** a la "caja" de memoria del objeto, no el contenido de esa caja. Modificar o agregar propiedades cambia el contenido de la caja, pero la caja sigue siendo la misma — por eso `const` lo permite. Reasignar el objeto completo intentaría hacer que la constante apunte a otra caja distinta, y eso sí está prohibido.
 
-#### 20.4 Paso por referencia vs. paso por valor
+#### 20.4 Paso por valor, identidad y referencias a objetos
 
 Uno de los conceptos más importantes para entender el comportamiento de los objetos en JavaScript — y una fuente muy común de errores difíciles de detectar cuando no está claro.
 
@@ -1419,7 +2275,7 @@ objeto1.id = 10;
 console.log(objeto2.id);   // 10 → cambió también, porque apunta a la misma caja
 ```
 
-Este comportamiento es exclusivo de los tipos por referencia (objetos, arrays, funciones): cada variable primitiva guarda su propio valor, copiado de forma independiente, así que modificar una nunca afecta a otra. Con objetos, en cambio, dos variables pueden estar apuntando a la misma caja, y modificar el contenido desde una se ve reflejado en la otra.
+Esta diferencia aparece entre **valores primitivos** y **valores objeto**. Al copiar un primitivo, cada variable conserva un valor independiente. Al copiar el valor asociado a un objeto, ambas variables pueden seguir permitiendo acceder al mismo objeto; por eso una mutación realizada a través de una referencia se observa desde la otra.
 
 **Dos objetos con el mismo contenido no son lo mismo que dos referencias al mismo objeto.** Si en vez de asignar una variable existente se crea un objeto **nuevo** con el mismo contenido, ese objeto vive en una caja distinta, aunque los valores sean idénticos:
 
@@ -1473,15 +2329,30 @@ flowchart LR
 
 La idea de "cajas" es una simplificación para entender este comportamiento (referencia vs. valor), no una representación literal de cómo el motor implementa la memoria por dentro. A diferencia de lenguajes como C o C#, en JavaScript el manejo de memoria lo administra el motor y el desarrollador no tiene control directo sobre direcciones de memoria ni punteros.
 
-**¿Es esto una particularidad de JavaScript?** No. Es un concepto general de la mayoría de los lenguajes de programación (Java, Python, C#, etc. distinguen igual entre tipos primitivos/por valor y tipos de referencia/objetos) — no algo propio de que JavaScript sea interpretado, ni una decisión del compilador. Tampoco es uno de los motivos por los que se creó TypeScript: TypeScript se creó principalmente para agregar **tipado estático** a JavaScript (poder declarar y chequear tipos antes de ejecutar, con mejor autocompletado y detección temprana de errores — ver sección 21.5), no para cambiar cómo se comportan los objetos en memoria. De hecho, TypeScript compila a JavaScript y, en tiempo de ejecución, los objetos se siguen comportando exactamente igual: por referencia.
+La idea de **identidad de objetos y aliasing** aparece en muchos lenguajes, aunque cada lenguaje define su propio modelo de valores, referencias y mutabilidad. No conviene trasladar mecánicamente las categorías de JavaScript a Java, Python o C# como si sus sistemas de tipos fueran idénticos.
 
-#### 20.5 Mutabilidad, inmutabilidad y *race conditions*
+TypeScript tampoco cambia esta semántica runtime: su sistema de tipos analiza el programa, pero los objetos que finalmente manipula el código JavaScript mantienen las reglas de identidad y mutación de JavaScript.
 
-Que los objetos se pasen por referencia trae un riesgo: si distintas partes del código leen y modifican el mismo objeto en paralelo (por ejemplo, sin saberlo, apuntando a la misma caja), un cambio hecho en un lugar puede afectar silenciosamente a otro lugar del código que no lo esperaba. A este tipo de error — donde el resultado final depende del orden en que se ejecutan las cosas, y puede variar de una corrida a otra — se lo conoce como ***race condition*** (condición de carrera). Son errores particularmente difíciles de debuggear, porque no son deterministas: ejecutar el mismo código varias veces puede dar resultados distintos según el orden real en que sucede todo.
+#### 20.5 Mutabilidad, aliasing y condiciones de carrera
+
+Cuando dos variables permiten acceder al mismo objeto existe **aliasing**: distintos nombres observan una misma entidad mutable.
+
+```javascript
+const pedidoA = { estado: "pendiente" };
+const pedidoB = pedidoA;
+
+pedidoB.estado = "procesado";
+
+console.log(pedidoA.estado); // "procesado"
+```
+
+El problema aquí no es todavía una *race condition*. Es **estado mutable compartido**: una parte del programa puede modificar algo que otra parte también observa.
+
+Esto crea acoplamiento temporal:
 
 ```javascript
 function procesarPedido(pedido) {
-  pedido.estado = "procesado";   // modifica el objeto original directamente
+  pedido.estado = "procesado";
 }
 
 function facturar(pedido) {
@@ -1490,30 +2361,48 @@ function facturar(pedido) {
   }
 }
 
-let pedidoActual = { id: 1, estado: "pendiente" };
+const pedido = { estado: "pendiente" };
 
-procesarPedido(pedidoActual);
-facturar(pedidoActual);   // nunca entra al if: el estado ya cambió a "procesado" antes de llegar acá,
-                          // aunque facturar() nunca tocó pedidoActual directamente
+procesarPedido(pedido);
+facturar(pedido);
 ```
 
-`procesarPedido` y `facturar` reciben el mismo objeto por referencia. Como `procesarPedido` modifica `pedidoActual` directamente, cuando `facturar` lo lee ya se encuentra con el estado cambiado — sin que nada en `facturar` lo haya provocado. En un sistema real, con muchas funciones tocando el mismo objeto desde distintos lugares del código, este tipo de dependencia oculta es justamente lo que genera *race conditions*.
+El resultado depende del orden explícito de esas llamadas, pero sigue siendo determinista.
 
-Por este motivo, en patrones de arquitectura modernos se busca aplicar **inmutabilidad**: en vez de modificar un objeto original directamente, se genera una **copia** y se modifica esa copia, dejando el original intacto.
+#### Cuándo aparece una condición de carrera
+
+Una **race condition** aparece cuando varias operaciones pueden intercalarse de formas diferentes y el resultado correcto depende de cuál completa primero o de qué estado observó cada una.
+
+Ejemplo conceptual:
+
+```text
+Operación A lee saldo = 100
+Operación B lee saldo = 100
+A descuenta 80 → escribe 20
+B descuenta 50 → escribe 50
+```
+
+Si ambas operaciones deberían haberse coordinado, el estado final puede resultar incorrecto.
+
+En JavaScript/Node no hace falta imaginar dos líneas JavaScript ejecutándose literalmente en paralelo en el mismo Event Loop para sufrir carreras lógicas. Dos operaciones asincrónicas pueden:
+
+```text
+leer estado
+→ esperar I/O
+→ reanudarse en distinto orden
+→ escribir basándose en una lectura ya obsoleta
+```
+
+La inmutabilidad ayuda a reducir algunos efectos laterales porque evita modificar un objeto compartido directamente:
 
 ```javascript
-function procesarPedido(pedido) {
-  return { ...pedido, estado: "procesado" };   // devuelve un objeto NUEVO, no toca el original
-}
-
-let pedidoActual = { id: 1, estado: "pendiente" };
-let pedidoProcesado = procesarPedido(pedidoActual);
-
-console.log(pedidoActual.estado);      // "pendiente"   → el original queda intacto
-console.log(pedidoProcesado.estado);   // "procesado"   → el cambio vive en la copia
+const actualizado = {
+  ...pedido,
+  estado: "procesado",
+};
 ```
 
-La sintaxis `{ ...pedido, estado: "procesado" }` usa el **operador *spread*** (tres puntos, `...`), que genera un objeto nuevo copiando las propiedades de `pedido` y pisando solo la que se indique después. Se retoma con más profundidad más adelante; por ahora alcanza con tener claro el problema que resuelve: lograr una copia independiente en vez de una referencia a la misma caja.
+pero no elimina por sí sola problemas de concurrencia sobre bases de datos, archivos o servicios externos. Para esos casos hacen falta mecanismos apropiados al recurso: transacciones, locks, control optimista, operaciones atómicas, etc.
 
 #### 20.6 Objetos incorporados en JavaScript
 
@@ -1528,7 +2417,13 @@ console.info("mensaje informativo");
 
 `JSON` es otro ejemplo de objeto incorporado, con varios métodos propios — se desarrolla en profundidad en la sección 20.7.
 
-El patrón para reconocerlos es siempre el mismo, sin importar si el objeto lo creó el programador o ya venía incluido en el lenguaje: **nombre, punto, algo** — ese "algo" es una propiedad del objeto que tiene a la izquierda del punto, y si a esa propiedad se la está ejecutando con paréntesis, es una función (un método). No hace falta conocer todos los objetos incorporados de memoria para poder leer código: alcanza con reconocer este patrón para saber que, delante de un punto, siempre hay un objeto.
+Un patrón frecuente es **valor.propiedad**. Si la propiedad obtenida contiene una función y luego se invoca con `()`, suele hablarse de un método en ese contexto.
+
+```javascript
+console.log("hola".toUpperCase());
+```
+
+Incluso los primitivos pueden participar en acceso a propiedades mediante las reglas del lenguaje, por lo que no conviene interpretar literalmente que “antes de cada punto siempre hay un objeto almacenado en una variable”. El modelo útil es: el operador `.` realiza acceso a una propiedad sobre un valor compatible.
 
 #### 20.7 JSON: `JSON.stringify` y `JSON.parse`
 
@@ -1765,7 +2660,15 @@ darBienvenida("Dante");   // ❌ Error de referencia: darBienvenida no existe pa
 bienvenida("Dante");      // ✅ Funciona: la función se guardó en la constante "bienvenida"
 ```
 
-Como ese nombre interno (`darBienvenida`) nunca se puede usar para invocar la función, ponerlo o no ponerlo es exactamente lo mismo en la práctica — **por eso se usa la función anónima (lambda)**: si el nombre no se puede aprovechar, se omite directamente para evitar que alguien lea el código y trate de invocarla por ese nombre (que fallaría). La única razón para mantener un nombre en una función por expresión sería fines de depuración (algunos entornos lo muestran en los mensajes de error de la pila de llamadas).
+En una **named function expression**, el nombre interno no queda disponible en el scope exterior mediante ese identificador, pero sí puede ser útil dentro del propio cuerpo —por ejemplo para recursión— y también mejora determinados stack traces.
+
+```javascript
+const factorial = function calcular(n) {
+  return n <= 1 ? 1 : n * calcular(n - 1);
+};
+```
+
+Una función anónima es apropiada cuando no hace falta ese identificador interno; no es una regla que toda función por expresión deba ser anónima.
 
 #### 21.2 Parámetro vs. argumento
 
@@ -1877,7 +2780,7 @@ function saludar(nombre: string, materia: string): string {
 }
 ```
 
-**Sobrecarga de funciones o métodos (*overloading*):** en lenguajes tipados es posible tener dos funciones (o métodos) con el mismo nombre, siempre que se diferencien en su firma — por ejemplo, una versión que recibe dos parámetros y otra que recibe tres. El lenguaje decide cuál ejecutar según los argumentos con los que se la invoque.
+**Sobrecarga de funciones o métodos (*overloading*):** algunos lenguajes permiten declarar varias operaciones con el mismo nombre y resolver cuál corresponde a partir de su firma u otras reglas del lenguaje. No es una propiedad de “todo lenguaje tipado”. JavaScript no ofrece sobrecarga de declaraciones de función con despacho automático por firma de la misma manera que Java o C#; normalmente se implementa una sola función que inspecciona sus argumentos o se usan nombres distintos.
 
 ```typescript
 // Dos firmas distintas para el mismo nombre "saludar"
@@ -1911,25 +2814,53 @@ console.log(saludar("Grace"));   // "Hola Grace, bienvenido a undefined"
 
 El concepto de firma con tipos explícitos, y la sobrecarga de funciones, se aplican de lleno recién en TypeScript — sus variables son de tipado dinámico (sección 16) y pueden cambiar de tipo a lo largo de la ejecución, así que JavaScript no tiene forma de distinguir "versiones" de una función por su firma.
 
-#### 21.6 *Hoisting*: por qué gana la última definición
+#### 21.6 *Hoisting* y disponibilidad de declaraciones
 
-El motivo puntual por el que, al declarar dos funciones con el mismo nombre, "gana" la última (sección 21.5) tiene un nombre: ***hoisting*** (de *hoist*, "izar" o "levantar"). Antes de ejecutar el código línea por línea, el motor de JavaScript hace una primera pasada por todo el archivo y **sube las declaraciones de función hacia arriba**, dejándolas disponibles desde el principio de la ejecución — esto es lo que permite, por ejemplo, invocar una función antes del punto del código en el que aparece escrita su declaración.
+*Hoisting* es una forma pedagógica de describir que ciertas declaraciones quedan disponibles durante la fase de creación/instanciación del entorno antes de que empiece la evaluación secuencial del cuerpo.
 
-Cuando hay dos declaraciones con el mismo nombre, ambas se "izan" en el orden en que aparecen en el archivo — y como la segunda se procesa después que la primera, **sobreescribe** la referencia que había quedado guardada con ese nombre. Por eso, al momento de invocar la función, lo único que queda disponible es la última definición: no es que JavaScript "elija" la mejor versión (como pasaría con la sobrecarga de un lenguaje tipado), es que solo sobrevive una, por orden de escritura en el archivo.
+No significa que el motor mueva físicamente líneas de código hacia arriba.
+
+Una **function declaration** puede invocarse antes de la línea donde aparece textualmente:
 
 ```javascript
-saludar("Ada");   // se puede invocar ANTES de la línea donde está escrita, gracias al hoisting
+saludar("Ada");
 
 function saludar(nombre) {
   console.log(`Hola ${nombre}`);
 }
 ```
 
-*Hoisting* aplica a las funciones declaradas con la palabra `function` (sección 21.1). Las funciones por expresión (`const saludar = function () {}`) y las funciones flecha no se "izan" de la misma manera: la variable existe desde el principio, pero sin el valor de función asignado todavía, así que invocarlas antes de la línea donde se les asigna la función produce un error.
+El binding de `saludar` ya fue creado e inicializado con la función cuando comienza la ejecución del cuerpo correspondiente.
+
+#### Expresiones de función y Temporal Dead Zone
+
+```javascript
+saludar(); // ReferenceError
+
+const saludar = function () {
+  console.log("Hola");
+};
+```
+
+La declaración léxica `const saludar` también pertenece al entorno desde el comienzo de su scope, pero permanece en la **Temporal Dead Zone** hasta que la ejecución alcanza su inicialización.
+
+Por eso no es preciso decir simplemente:
+
+> “las function declarations se hoistean y las const no”.
+
+Ambas participan de la creación del entorno, pero **quedan inicializadas de manera diferente**.
+
+#### Declaraciones duplicadas
+
+Declarar varias funciones con el mismo nombre dentro del mismo ámbito puede producir reglas dependientes del tipo de código y del contexto sintáctico. En ejemplos simples puede observarse que una declaración posterior termina siendo la que se obtiene bajo ese nombre, pero depender de declaraciones duplicadas es una mala base de diseño.
+
+La práctica mantenible es que cada binding tenga una intención única y no utilizar duplicación de nombres como mecanismo de sobrecarga.
 
 #### 21.7 Alcance (*scope*) de una variable declarada dentro de una función
 
-Una variable declarada con `let` o `const` **dentro del cuerpo de una función** solo existe mientras esa función se está ejecutando: su alcance (*scope*) es esa función. Cada vez que la función se invoca, la variable se **crea de nuevo**, sin memoria de ejecuciones anteriores.
+Una variable declarada con `let` o `const` dentro de una función pertenece al **alcance léxico** de ese bloque/función. Cada invocación crea un nuevo entorno de ejecución para sus bindings locales.
+
+En el caso simple, cuando la función termina y ningún valor conserva referencias a ese entorno, sus datos dejan de ser alcanzables y pueden ser recuperados por el garbage collector. Sin embargo, una **closure** puede mantener vivo ese entorno después de que la llamada original terminó; por eso scope y tiempo de vida no son exactamente la misma idea.
 
 ```javascript
 function frenar() {
@@ -1943,7 +2874,7 @@ frenar();   // 90 de nuevo — no 80
 frenar();   // sigue dando 90
 ```
 
-Por más veces que se invoque `frenar`, siempre imprime `90`: en cada invocación, `velocidad` se vuelve a crear e inicializar en `100`, se le resta `10`, se imprime, y ahí termina la ejecución de la función. Cuando la función termina, esa variable deja de existir — queda disponible para que el ***garbage collector*** (el mecanismo del motor de JavaScript que libera memoria que ya no se usa) la elimine.
+Por más veces que se invoque `frenar`, siempre imprime `90`: cada invocación crea un binding local nuevo, lo inicializa en `100`, resta `10` y termina. Como nada conserva una closure que referencie ese entorno, los objetos/entornos que queden inalcanzables pueden ser recuperados posteriormente por el garbage collector.
 
 Si en cambio la variable se declara **fuera** de la función, pero la función la usa dentro de su cuerpo, esa variable sigue viva entre una invocación y la siguiente — porque nunca se vuelve a crear, es siempre la misma:
 
@@ -2010,9 +2941,9 @@ function sumar(numero1, numero2) {
 
 Varios métodos que ya vienen incorporados en JavaScript para trabajar con arrays (`forEach`, `map`, entre otros, que se ven en profundidad más adelante) son también funciones de orden superior: reciben como argumento una función que define qué hacer con cada elemento del array.
 
-#### 22.2 Toda callback recibida como parámetro se tiene que invocar internamente
+#### 22.2 Recibir una callback no implica ejecutarla automáticamente
 
-En la práctica, las funciones que se usan como callback casi siempre se escriben como **funciones por expresión** (sección 21.1) — guardadas dentro de una constante, ya sea como **función anónima** (sin nombre propio) o como **función flecha** (arrow):
+Las callbacks pueden escribirse como declaraciones, expresiones o funciones flecha. En ejemplos cortos es frecuente utilizar expresiones/flechas porque permiten definir el comportamiento cerca del lugar donde se registra:
 
 ```javascript
 const funcionB = function () {                    // función por expresión, con función anónima
@@ -2030,7 +2961,9 @@ const funcionA = function (callback) {             // función por expresión, c
 funcionA(funcionB);   // se le pasa funcionB, pero como funcionA nunca hace callback(), NUNCA se ejecuta funcionB
 ```
 
-Si una función declara que va a recibir una callback como parámetro, pero nunca la ejecuta en ningún punto de su cuerpo, esa callback no cumple ninguna función — es lo mismo que declarar una función en el código y no invocarla nunca: no tiene ningún efecto.
+Pasar una función como argumento no la ejecuta automáticamente. La función receptora decide si la invoca, cuándo y cuántas veces.
+
+En un contrato donde el propósito del parámetro es “ejecutar esta callback”, no invocarla haría que ese contrato no se cumpla. Pero una API también puede recibir una función para almacenarla, registrarla, devolverla o invocarla solamente bajo ciertas condiciones.
 
 Para que la callback tenga efecto, la función que la recibe la tiene que invocar en algún punto de su cuerpo:
 
@@ -2044,7 +2977,7 @@ const funcionA = function (callback) {
 funcionA(funcionB);   // ahora sí: el log de funcionB aparece entre los dos logs de funcionA
 ```
 
-La invocación puede ubicarse al principio, en el medio o al final del cuerpo de la función — lo único que importa es que se ejecute en algún punto. Incluso puede depender de una condición (`if`/`else`, ver 22.5): lo único obligatorio es que exista al menos un camino de ejecución donde efectivamente se la invoque, si se espera que cumpla algún propósito.
+La invocación puede ocurrir inmediatamente, más tarde, repetirse o no ocurrir en determinada ejecución. Ese comportamiento forma parte del contrato de la función de orden superior y debe ser comprensible para quien la utiliza.
 
 #### 22.3 Pasar la función, no su ejecución
 
@@ -2063,19 +2996,23 @@ funcionA({ id: 1 });          // TypeError: callback is not a function
 funcionA();                   // TypeError: callback is not a function → callback vale undefined
 ```
 
-#### 22.4 Buena práctica: la callback como último parámetro
+#### 22.4 Posición de callbacks: convención según la API
 
-Cuando una función recibe una callback, la convención (y buena práctica) es ubicarla como el **último parámetro** de la firma — mejora la legibilidad, ya que es más difícil de seguir si aparece en el medio de otros parámetros.
+Muchas APIs históricas de Node colocan la callback al final porque primero reciben los datos/opciones de la operación y luego la función a ejecutar cuando exista un resultado.
 
 ```javascript
-// ✅ recomendado: callback al final
-function calculadora(numero1, numero2, callback) { /* ... */ }
-
-// ❌ menos legible: callback en el medio
-function calculadora(numero1, callback, numero2) { /* ... */ }
+fs.readFile(ruta, opciones, callback);
 ```
 
-Nombrar el parámetro `callback` es también una convención, no una obligación del lenguaje: ayuda a que quien lea la firma entienda de entrada que ahí se espera una función que va a ser invocada internamente (lo mismo aplica a otros nombres convencionales del lenguaje, como el parámetro de `setTimeout`).
+Sin embargo, JavaScript no establece una regla universal que obligue a ubicar toda callback como último parámetro. APIs distintas pueden diseñar firmas distintas.
+
+Lo importante es que la firma sea consistente y haga evidente qué representa cada argumento.
+
+Nombrar un parámetro `callback` puede ser útil en ejemplos genéricos; en código de aplicación suele ser todavía más expresivo usar nombres semánticos:
+
+```javascript
+function procesar(datos, onSuccess, onError) { /* ... */ }
+```
 
 En la práctica, muchas veces la callback se pasa directamente como una **función flecha**, definida ahí mismo en el lugar del argumento, sin necesidad de declararla y nombrarla antes:
 
@@ -2134,13 +3071,17 @@ Función A no imprime *"Saliendo de función A"* hasta que función B termina de
 
 ### 23. Arrays
 
-Un **array** (o arreglo/*raíz*, en la jerga de la clase) es una colección de elementos ordenados por posición, todos asociados a una sola variable. Se puede pensar como una fila de "cajitas" contiguas en memoria, cada una identificada por su posición: cada cajita guarda un elemento, y a través de esa posición se puede acceder, leer o modificar lo que contiene.
+Un **array** es un objeto especializado para trabajar con una secuencia indexada de valores.
+
+Los elementos se acceden mediante índices enteros no negativos y el objeto mantiene una propiedad `length` relacionada con el mayor índice utilizado.
+
+La imagen de “cajitas consecutivas” puede servir para visualizar posiciones, pero no debe interpretarse como una garantía sobre memoria física contigua: la especificación de JavaScript define comportamiento observable, no una representación concreta de memoria interna del motor.
 
 #### 23.1 Elementos e índices
 
 No hay que confundir el **elemento** (el valor guardado en una cajita) con el **índice** (la posición de esa cajita dentro del array). La numeración de los índices arranca en **cero**, no en uno — esto es así en la gran mayoría de los lenguajes de programación, no solo en JavaScript.
 
-Como consecuencia directa, el índice de un elemento siempre es **uno menos** que su posición contada "naturalmente" (como se contaría a mano, empezando de 1): el primer elemento está en el índice `0`, el quinto elemento está en el índice `4`, y así sucesivamente. También se puede usar el índice más alto para saber cuántos elementos tiene el array: si el índice más alto es `10`, el array tiene 11 elementos (del índice `0` al `10`).
+En un array denso común, el primer elemento está en el índice `0`, el quinto en el índice `4`, etc. La propiedad `length` suele coincidir con “último índice usado + 1”, pero JavaScript también permite arrays dispersos y modificar `length` explícitamente, por lo que no debe entenderse como un conteo garantizado de posiciones realmente ocupadas.
 
 ```javascript
 let frutas = ["manzana", "banana", "pera", "tomate", "ananá"];
@@ -2150,17 +3091,44 @@ frutas[2];   // "pera"    → tercer elemento, índice 2
 frutas.length;   // 5 → cantidad total de elementos
 ```
 
-#### 23.2 Arrays fuertemente tipados vs. arrays en JavaScript
+#### 23.2 Heterogeneidad de valores en arrays JavaScript
 
-En la mayoría de los lenguajes fuertemente tipados, un array solo puede guardar elementos de un único tipo de dato: un array de números enteros no admite un `float` en el medio, un array de `string` no admite un objeto, etc.
-
-JavaScript, al ser un lenguaje de tipado dinámico e interpretado (secciones 13 y 16), no impone esa restricción: un mismo array puede mezclar números, strings, objetos y booleanos sin ningún error, porque el motor va leyendo y evaluando cada posición en tiempo real, línea a línea, sin necesidad de que todas coincidan en tipo de antemano.
+JavaScript no impone que todos los elementos de un `Array` pertenezcan al mismo tipo:
 
 ```javascript
-let mezclado = [1, "dos", { id: 3 }, true];   // válido en JavaScript, sin ningún error
+const mezclado = [1, "dos", { id: 3 }, true];
 ```
 
-Que el lenguaje lo permita no significa que sea recomendable: mezclar tipos de datos en un mismo array es considerada una mala práctica, porque después, en otra parte del código, no queda claro qué tipo de valor se puede llegar a encontrar en cada posición. Por eso, salvo que haya una razón concreta, conviene mantener un único tipo de dato por array.
+Esto se debe al modelo dinámico de valores del lenguaje, **no** a que el motor “lea cada posición línea por línea”.
+
+Otros lenguajes y sistemas de tipos pueden imponer o expresar restricciones distintas:
+
+```text
+array de Number
+lista genérica de Usuario
+unión de varios tipos
+colección de una interfaz común
+```
+
+Por eso “lenguaje fuertemente tipado = un array solo admite un tipo exacto” también es una simplificación demasiado fuerte.
+
+En una aplicación JavaScript suele ser útil mantener colecciones conceptualmente homogéneas:
+
+```javascript
+const usuarios = [usuario1, usuario2, usuario3];
+```
+
+no porque el runtime lo exija, sino porque un contrato predecible simplifica:
+
+```text
+iteración
+validación
+mantenimiento
+autocompletado
+tipado estático posterior
+```
+
+Una colección heterogénea puede ser completamente válida cuando el dominio realmente lo requiere.
 
 #### 23.3 Formas de crear un array
 
@@ -2176,7 +3144,21 @@ let frutas2 = new Array("manzana", "banana", "pera");
 let vacio2 = new Array();
 ```
 
-Un array **es, en el fondo, un objeto** (`Array` es una clase incorporada de JavaScript): al usar el operador `new`, lo que se está invocando es el **método constructor** de esa clase — recordando lo visto de programación orientada a objetos, invocar con `new` siempre significa "instanciar la clase e invocar su constructor", y el resultado es el objeto recién creado. Por eso a `"manzana"`, `"banana"` y `"pera"` en `new Array(...)` se los llama **argumentos**: se está *invocando* el constructor, no declarándolo.
+Un array es un **objeto Array**. `Array` es una función constructora incorporada y puede invocarse con `new`, aunque la sintaxis literal `[]` suele ser más clara.
+
+```javascript
+const a = [];
+const b = new Array();
+```
+
+Ambas expresiones producen arrays, pero existe una diferencia que vuelve confuso al constructor con un único número:
+
+```javascript
+new Array(3); // array con length 3 y posiciones vacías
+[3];          // array con un único elemento: 3
+```
+
+Por eso los literales son normalmente la forma preferida.
 
 #### 23.4 Los arrays son objetos: acceso a sus métodos
 
@@ -2186,7 +3168,7 @@ Como un array es un objeto, tiene **propiedades** — y muchas de esas propiedad
 frutas.push("kiwi");   // frutas es el objeto, push es el método (una propiedad de tipo función)
 ```
 
-Reconocer esto no requiere memorizar cada método de antemano: siempre que aparezca el patrón **nombre, punto, algo, paréntesis**, lo que está antes del punto es un objeto, y lo que sigue es una propiedad que en ese caso es una función que se está invocando.
+Reconocer esto no requiere memorizar cada método de antemano: el patrón **valor.propiedad(...)** indica que se obtiene una propiedad y se invoca el valor función resultante como parte de esa expresión.
 
 #### 23.5 Métodos que modifican el array original
 
@@ -2396,7 +3378,7 @@ console.log(numeros4);     // [1, 2, 99, 100, 5]
 console.log(eliminados);   // [3, 4] → lo que splice sacó, disponible por si hace falta
 ```
 
-Como `splice` modifica el array original de forma irreversible (si no se guarda lo eliminado), conviene aplicarlo con cuidado y, siempre que sea posible, preferir un método que no mute el original (como `slice`, `filter` o `map`) — retomando el principio de inmutabilidad de la sección 20.5.
+Como `splice` modifica el array original, conviene usarlo cuando esa mutación sea realmente parte de la intención. En otros casos, `slice`, `filter`, `map` o las nuevas alternativas no mutantes pueden hacer más explícito que se desea producir otra colección. La elección depende del contrato y del costo de cada operación, no de una prohibición general de mutar.
 
 #### 23.13 `slice`: copiar una porción del array
 
@@ -2558,9 +3540,9 @@ Las llaves del lado izquierdo **no crean un objeto nuevo para exportar**: forman
 
 ---
 
-## Ejemplo práctico — Tipos de funciones en JavaScript
+### Ejemplo práctico — Tipos de funciones en JavaScript
 
-Código completo trabajado en clase, con las cuatro combinaciones de funciones (con/sin parámetros, con/sin retorno) y su forma de invocación:
+Ejemplo completo con las cuatro combinaciones de funciones (con/sin parámetros, con/sin retorno) y su forma de invocación:
 
 ```javascript
 // TIPOS DE FUNCIONES
@@ -2600,17 +3582,17 @@ console.log(saludarAClaseApurada());                  // ejecuta la función y m
 console.log(saludarAClaseApurada);                    // muestra la función en sí (su definición), no la ejecuta
 ```
 
-**Correcciones respecto al original tomado en clase:**
-- `saludarAClase("un valor")`: el argumento `"un valor"` se pasa pero la función no lo usa, porque se declaró sin parámetros — no genera un error, simplemente ese valor se descarta. Vale la pena notarlo porque es una fuente común de confusión (JavaScript no obliga a que la cantidad de argumentos coincida con la de parámetros).
-- Se agregó el comentario explícito en el último `console.log(saludarAClaseApurada)` (sin paréntesis) para remarcar la diferencia con la línea anterior — ver sección 21.1, `typeof` sobre una función vs. invocarla.
+**Puntos que conviene observar:**
+- `saludarAClase("un valor")`: el argumento `"un valor"` se pasa pero la función no lo usa porque se declaró sin parámetros. JavaScript no exige que la cantidad de argumentos coincida exactamente con la cantidad de parámetros declarados.
+- `console.log(saludarAClaseApurada)` muestra la función como valor; `console.log(saludarAClaseApurada())` la invoca y muestra su retorno.
 
-**Conceptos nuevos que aplica este ejemplo:** los 4 tipos de función según reciban parámetros y/o retornen valor, diferencia entre definir e invocar una función, y qué pasa cuando se le pasan argumentos de más a una función que no los declaró.
+**Conceptos que integra este ejemplo:** los 4 tipos de función según reciban parámetros y/o retornen valor, diferencia entre definir e invocar una función, y qué pasa cuando se le pasan argumentos de más a una función que no los declaró.
 
 ---
 
-## Ejemplo práctico — Paso por referencia en objetos
+### Ejemplo práctico — Identidad y referencias compartidas entre objetos
 
-Código completo trabajado en clase, mostrando cómo se comportan las referencias a medida que se van encadenando asignaciones entre objetos:
+Ejemplo completo de identidad y referencias compartidas entre objetos:
 
 ```javascript
 // Dos variables apuntando al mismo objeto (misma referencia)
@@ -2653,9 +3635,9 @@ objeto5 = { id: 400 };       // ❌ TypeError: Assignment to constant variable.
 
 ---
 
-## Ejemplo práctico — Función con múltiples callbacks condicionales
+### Ejemplo práctico — Función con múltiples callbacks condicionales
 
-Código completo trabajado en clase, combinando condicionales con múltiples callbacks:
+Ejemplo que combina condicionales con múltiples callbacks:
 
 ```javascript
 function saludar(nombre) {
@@ -2702,7 +3684,7 @@ funcionC(5, saludar, funcionB);
 
 ---
 
-## Ejemplo práctico — Arrays: creación, mutación e iteración
+### Ejemplo práctico — Arrays: creación, mutación e iteración
 
 Código que recorre los distintos puntos vistos sobre arrays, de punta a punta:
 
@@ -2748,9 +3730,9 @@ console.log(numeros);   // [0, 1, 2, 3, 4, 5, 6, 7, 8] → el original sigue int
 
 ---
 
-## Ejemplo práctico — Objeto con métodos, validación y scope
+### Ejemplo práctico — Objeto con métodos, validación y scope
 
-Código trabajado en clase: un objeto `auto` con acciones guardadas como funciones flecha en sus propiedades (sección 20.1, 21.1), parámetros para hacerlas configurables, validación de esos parámetros con `if`/`else`, y una propiedad (`velocidad`) que persiste entre invocaciones gracias a su alcance (sección 21.7).
+Ejemplo integrado: un objeto `auto` con acciones guardadas como funciones flecha en sus propiedades (secciones 20.1 y 21.1), parámetros configurables, validación con `if`/`else` y una propiedad (`velocidad`) cuyo estado se conserva entre invocaciones mientras el objeto siga existiendo.
 
 ```javascript
 let velocidad = 100;
@@ -2792,24 +3774,229 @@ auto.acciones.frenar(9999);    // El valor que recibe el frenado tiene que ser u
 
 ## Unidad 3 — Node.js
 
-> Esta unidad quedó a mitad de dar en la Clase 07 (la clase se cortó con Node.js recién presentado y NPM a medio explicar) — se retoma y completa en la clase siguiente.
+### 24. Node.js: runtime de JavaScript fuera del navegador
 
-### 24. Node.js: qué es y por qué existe
+**Node.js es un entorno de ejecución de JavaScript**.
 
-**Node.js no es un lenguaje de programación, no es un framework y no es una librería: es un *entorno de ejecución*** (*runtime*). Un framework es un marco de trabajo que trae funcionalidades preestablecidas para resolver un problema puntual; Node no hace eso — lo que provee es el entorno completo necesario para que el código JavaScript (o TypeScript, que en definitiva termina transpilado a JavaScript — sección 14) se pueda ejecutar **fuera del navegador**, del lado del servidor.
+No es:
 
-El motor que usa Node para interpretar y ejecutar JavaScript es **V8**, el mismo motor que usa Google Chrome (sección 13) — es de código abierto, y Node lo toma y lo ejecuta dentro de un entorno propio, en vez de depender de un navegador. Esto es necesario porque un navegador no está pensado para correr como servidor: no tiene buena gestión de los recursos del sistema por sí mismo (delega buena parte de eso al sistema operativo), y no fue diseñado para ese propósito. Node arma alrededor de V8 un entorno completo, con acceso a los recursos del sistema operativo necesarios para actuar como servidor.
+```text
+un lenguaje
+un framework web
+un gestor de paquetes
+```
 
-### 25. Características de Node.js
+Su función principal es proporcionar un host donde pueda ejecutarse JavaScript fuera de un navegador.
 
-- **Basado en eventos, orientado a callbacks, y no bloqueante (*event-driven*, *non-blocking I/O*):** Node no se queda "frenado" esperando a que termine una operación de entrada/salida (por ejemplo, leer un archivo o consultar una base de datos) — sigue procesando otras cosas mientras tanto, y retoma cuando esa operación termina. El "no bloqueante" no quiere decir que Node sea literalmente imposible de bloquear, sino que su arquitectura está pensada específicamente para evitarlo en la mayoría de los casos. Esto se relaciona directamente con el concepto de *asincronía*, que se desarrolla en profundidad más adelante.
-- **Corre sobre un único hilo (*single-threaded*):** un **núcleo** (o procesador) puede gestionar una cierta cantidad de **hilos** — no son lo mismo, un núcleo puede manejar varios hilos. Node ejecuta el código de la aplicación sobre un solo hilo. Cómo se relaciona esto con la concurrencia se desarrolla en profundidad más adelante.
-- **Basado en módulos:** permite dividir una aplicación grande y compleja en partes más chicas y manejables — el mismo principio de reutilización de código que ya se vio con las funciones (sección 21), pero aplicado a nivel de archivos/módulos completos.
-- **Rápido y escalable:** diseñado para poder atender desde una solicitud hasta millones, sin perder rendimiento a medida que crece la demanda — mientras el servidor donde corre tenga capacidad de procesamiento.
-- **Multiplataforma:** corre sobre Windows, Linux y macOS.
-- **Comunidad activa:** una gran cantidad de desarrolladores contribuyendo con librerías, soluciones y mejoras constantemente.
+```mermaid
+flowchart TB
+    JS[Código JavaScript]
+    V8[Motor V8]
+    NODE[Node.js<br/>runtime / host]
+    OS[Sistema operativo]
 
-Algunos usos típicos de Node.js: servidores de una API REST (el caso central de esta materia), el backend de una *Single Page Application*, aplicaciones de IoT (Internet de las Cosas), servidores de streaming, y aplicaciones de chat en tiempo real.
+    JS --> V8
+    V8 --> NODE
+    NODE --> OS
+```
+
+Node incorpora V8 para ejecutar el lenguaje y agrega APIs que permiten interactuar con capacidades propias de una aplicación de sistema/servidor:
+
+```text
+archivos
+red
+procesos
+streams
+timers
+variables de entorno
+módulos
+```
+
+Esto permite escribir:
+
+```javascript
+const fs = require("node:fs");
+```
+
+algo que no pertenece al núcleo de ECMAScript sino al host Node.
+
+#### 24.1 El problema que resuelve Node
+
+JavaScript se popularizó inicialmente dentro del navegador.
+
+El navegador ya proporcionaba:
+
+```text
+un motor JavaScript
++
+APIs del entorno web
+```
+
+pero un backend necesita otras capacidades:
+
+```text
+escuchar conexiones
+abrir sockets
+leer archivos del servidor
+trabajar con procesos
+interactuar con el sistema operativo
+```
+
+Node combina un motor JavaScript con APIs y librerías orientadas a ese entorno.
+
+La idea no es que “un navegador administre mal los recursos”. Navegador y Node son **hosts distintos, diseñados para responsabilidades diferentes**.
+
+#### 24.2 Runtime, motor y framework no son sinónimos
+
+```text
+V8
+→ ejecuta el lenguaje
+
+Node.js
+→ host/runtime que incluye V8 y APIs
+
+Express
+→ framework/librería web ejecutada dentro de Node
+
+NPM
+→ gestor/registro de paquetes del ecosistema
+```
+
+Esta separación evita confundir capas de la plataforma.
+
+Por ejemplo:
+
+```javascript
+const express = require("express");
+```
+
+Express necesita un runtime donde ejecutarse; en este proyecto ese runtime es Node.
+
+### 25. Concurrencia, Event Loop y modelo de ejecución en Node.js
+
+La frase “Node es single-threaded” necesita precisión.
+
+El **código JavaScript principal** de una instancia de Node normalmente se ejecuta sobre el hilo asociado al Event Loop, una operación JavaScript a la vez.
+
+Pero el proceso Node no está compuesto literalmente por un único hilo.
+
+Puede involucrar:
+
+```text
+Event Loop
+Worker Pool de libuv
+trabajo realizado por el sistema operativo
+worker_threads explícitos
+otros componentes internos
+```
+
+#### 25.1 ¿Cómo puede atender muchas operaciones si JavaScript ejecuta una a la vez?
+
+La clave es evitar que el hilo que ejecuta callbacks JavaScript quede esperando pasivamente operaciones de entrada/salida.
+
+Ejemplo conceptual:
+
+```text
+request A → inicia consulta de red ─────────────┐
+                                               │
+request B → se procesa mientras A espera       │
+                                               │
+request C → se procesa mientras A espera       │
+                                               │
+consulta A termina → callback vuelve al loop ◄─┘
+```
+
+Esto funciona bien cuando el tiempo se consume principalmente esperando:
+
+```text
+red
+base de datos
+archivos
+servicios externos
+```
+
+y cada callback JavaScript realiza trabajo relativamente breve.
+
+#### 25.2 No bloqueante no significa “imposible de bloquear”
+
+Este código bloquea el Event Loop mientras el ciclo se ejecuta:
+
+```javascript
+while (true) {
+  // trabajo sin fin
+}
+```
+
+Mientras tanto, otros callbacks JavaScript de esa instancia no pueden avanzar.
+
+También pueden resultar problemáticas operaciones sincrónicas costosas:
+
+```javascript
+fs.readFileSync(...)
+```
+
+dentro del camino de atención de muchas requests.
+
+La ventaja de Node depende de una condición:
+
+> el trabajo ejecutado en el Event Loop debe mantenerse razonablemente pequeño y las operaciones costosas deben diseñarse para no monopolizarlo.
+
+#### 25.3 I/O-bound vs. CPU-bound
+
+Node resulta especialmente natural para cargas **I/O-bound**:
+
+```text
+recibir request
+consultar servicio
+consultar DB
+leer/escribir red
+esperar respuesta
+```
+
+Una carga **CPU-bound** intensa:
+
+```text
+procesar millones de cálculos
+comprimir grandes volúmenes
+transformaciones criptográficas pesadas
+```
+
+puede bloquear el hilo de JavaScript si se ejecuta directamente allí.
+
+Según el problema pueden utilizarse:
+
+```text
+Worker Pool
+worker_threads
+procesos separados
+servicios especializados
+```
+
+Por eso “Node es rápido y escalable” no es una propiedad mágica independiente del diseño. Su arquitectura facilita manejar mucha concurrencia de I/O con pocos hilos, pero un callback costoso puede degradar el throughput de todo el servidor.
+
+#### 25.4 Arquitectura orientada a eventos
+
+Node organiza gran parte de su trabajo alrededor de eventos y callbacks:
+
+```text
+ocurre un evento
+→ queda disponible trabajo asociado
+→ el Event Loop ejecuta el callback correspondiente
+```
+
+Este modelo conecta directamente con:
+
+```text
+callbacks
+timers
+promesas
+async/await
+servidores HTTP
+streams
+EventEmitter
+```
+
+Los conceptos posteriores no son temas aislados: son distintas formas de programar sobre el mismo modelo de ejecución.
 
 ### 26. Módulos, paquetes y dependencias
 
@@ -2827,7 +4014,23 @@ Antes de hablar de NPM hace falta distinguir tres conceptos relacionados, que su
 | **Locales** | Los escribe el propio equipo de desarrollo, viven dentro del proyecto | Sí |
 | **Externos** | Paquetes de terceros instalados con NPM (`Express`, etc.) | **No** — se declaran en `package.json` y NPM los reinstala con `npm install` |
 
-Con un módulo **local** se tiene control total: está en el proyecto, se puede editar o eliminar libremente. Con un módulo **externo** la situación es distinta: al instalarlo, el proyecto pasa a **depender directamente de código que no se escribió ni se controla**. Como JavaScript es un lenguaje interpretado (secciones 12-13), su código fuente queda expuesto como texto plano y es habitualmente de código abierto — lo cual también significa que, si alguien logra comprometer un paquete externo (inyectando código malicioso en una actualización), ese código se ejecuta tal cual dentro del proyecto que lo instaló, sin que haya un paso de compilación intermedio que lo intercepte.
+Con un módulo **local** el equipo controla directamente su implementación. Con un módulo **externo**, el proyecto pasa a depender de código mantenido por terceros.
+
+El riesgo de cadena de suministro no existe porque JavaScript sea “interpretado” ni desaparece por compilar un lenguaje. El problema es de **confianza y procedencia del código**: si una dependencia o una versión publicada queda comprometida y el proyecto la instala/ejecuta, ese código obtiene las capacidades que le permita el entorno.
+
+Por eso agregar una dependencia implica evaluar, según el contexto:
+
+```text
+mantenimiento
+licencia
+versiones
+dependencias transitivas
+vulnerabilidades conocidas
+procedencia
+necesidad real del paquete
+```
+
+Una dependencia pequeña también agrega superficie de mantenimiento y seguridad.
 
 **Ejemplo de un módulo incorporado: `os`.** Da acceso a información del sistema operativo sobre el que corre Node — algo que un código corriendo dentro de un navegador no podría hacer, y que es posible acá justamente porque Node corre directamente sobre el sistema operativo (sección 24).
 
@@ -2862,20 +4065,90 @@ Lo que este caso deja como lección: **una dependencia externa, por más pequeñ
 
 #### 26.4 Sistemas de módulos: CommonJS vs. ES Modules
 
-Node soporta dos sistemas distintos para importar y exportar código entre módulos:
+Node.js soporta dos formatos principales de módulos:
 
-| | CommonJS (`.cjs`) | ES Modules (`.mjs`) |
+| Característica | CommonJS | ECMAScript Modules (ESM) |
 |---|---|---|
-| Palabra clave para importar | `require()` | `import` |
-| Palabra clave para exportar | `module.exports` | `export` |
-| Tipo de carga | Sincrónica | Asincrónica |
-| Historia | Sistema de módulos original de Node | El mismo estándar que usan los navegadores (y, por lo tanto, el Front); Node le agregó soporte más adelante |
+| Importación típica | `require(...)` | `import ... from ...` |
+| Exportación típica | `module.exports` / `exports` | `export` |
+| Extensión explícita | `.cjs` | `.mjs` |
+| Configuración para `.js` | `"type": "commonjs"` | `"type": "module"` |
+| Origen | formato histórico de Node | estándar oficial de ECMAScript |
 
-`CommonJS` es, todavía hoy, el sistema **por defecto en Node**, salvo que se indique explícitamente lo contrario en `package.json` (sección 27). `ES Modules` es el que se usa históricamente del lado del navegador — Node le agregó soporte con el tiempo, entre otras razones para que un mismo desarrollador *full-stack* pueda importar código de la misma manera tanto en el Front como en el Back, sin tener que acordarse de dos sintaxis distintas según en qué lado del proyecto esté parado.
+Ejemplo CommonJS:
 
-**Los dos sistemas pueden convivir dentro de un mismo proyecto** — algo útil para el caso de un módulo externo viejo que nunca se migró a `import`/`export` y que, para poder seguir usándose, hay que seguir requiriendo con `require()`.
+```javascript
+const { readFile } = require("node:fs");
+module.exports = { miFuncion };
+```
 
-La diferencia entre carga sincrónica y asincrónica (por qué existe esa distinción, y cómo repercute en el rendimiento) se retoma en profundidad más adelante, junto con el resto de los conceptos de sincronía y asincronía en JavaScript.
+Ejemplo ESM:
+
+```javascript
+import { readFile } from "node:fs";
+export { miFuncion };
+```
+
+La diferencia **no debe reducirse a**:
+
+```text
+CommonJS = sincrónico
+ESM = asincrónico
+```
+
+Los sistemas poseen diferencias de resolución, evaluación, sintaxis e interoperabilidad. Además, Node moderno permite determinados cruces entre ambos formatos bajo condiciones específicas.
+
+#### Cómo decide Node el formato
+
+La forma más clara es declararlo explícitamente:
+
+```text
+.cjs
+→ CommonJS
+
+.mjs
+→ ESM
+```
+
+o mediante `package.json`:
+
+```json
+{
+  "type": "module"
+}
+```
+
+o:
+
+```json
+{
+  "type": "commonjs"
+}
+```
+
+En archivos `.js` sin una marca explícita, versiones modernas de Node también pueden aplicar detección de sintaxis. Por mantenibilidad conviene evitar depender accidentalmente de esa ambigüedad y declarar el formato del proyecto.
+
+#### Interoperabilidad
+
+Node ofrece interoperabilidad entre ambos sistemas, pero no conviene asumir que cualquier combinación funciona idénticamente.
+
+Por ejemplo:
+
+```text
+importar CommonJS desde ESM
+requerir determinados ESM desde CommonJS
+```
+
+está sujeto a reglas específicas del loader y de la estructura del módulo.
+
+Para aprender el proyecto de la materia, lo importante es mantener consistente el formato elegido y comprender que:
+
+```text
+forma del export
+→ determina qué valor recibe quien importa
+```
+
+Los detalles de `module.exports`, `exports` y `require` se desarrollan en la sección 28.
 
 ### 27. NPM (*Node Package Manager*)
 
@@ -2884,9 +4157,9 @@ La diferencia entre carga sincrónica y asincrónica (por qué existe esa distin
 - **`package.json`:** el archivo de configuración de un proyecto de Node — describe, entre otras cosas, sus dependencias, sus scripts, y dónde vive su repositorio. Cuando se ejecuta `npm install`, NPM lee este archivo para saber qué paquetes tiene que descargar.
 - **`node_modules`:** la carpeta donde NPM descarga y guarda todos los paquetes instalados (las dependencias declaradas, y las dependencias de esas dependencias). Por su tamaño, esta carpeta no se sube al repositorio: alcanza con subir `package.json`, ya que contiene toda la información necesaria para que cualquier otra persona pueda regenerar `node_modules` corriendo `npm install`.
 
-Node.js también trae, además del entorno de ejecución en sí, un conjunto de **paquetes nativos** ya incluidos — esos no se gestionan a través de NPM, sino que se actualizan junto con la versión del propio Node.
+Node.js también incluye **módulos built-in/core** (`node:fs`, `node:http`, `node:path`, etc.). No se instalan mediante NPM: forman parte del runtime y cambian con la versión de Node.
 
-*Existen alternativas a NPM como gestor de paquetes (por ejemplo, PNPM, mencionado en clase como una opción más segura en cuanto a cómo instala y actualiza los paquetes, o Yarn) — todos cumplen la misma función (gestionar dependencias y paquetes), difieren en cómo lo hacen por dentro.*
+Existen alternativas como **pnpm** y **Yarn**. Comparten la responsabilidad general de gestionar paquetes y dependencias, pero difieren en estrategias de instalación, almacenamiento, resolución y experiencia de uso. No corresponde asumir que un gestor sea globalmente “más seguro” solamente por su estrategia de instalación; la seguridad también depende de procedencia, configuración, versiones, scripts y políticas de la cadena de suministro.
 
 #### 27.1 Comandos más usados
 
@@ -2974,7 +4247,7 @@ Antes de agregar una dependencia a un proyecto (recordando el caso de la secció
 - **Tipo de licencia**.
 - **Cantidad de paquetes que dependen de él** (*dependents*) — cuantos más, más impacto tendría un problema con ese paquete (como el caso de `left-pad`).
 - **Sus propias dependencias** — cuántos paquetes más va a traer instalados como consecuencia.
-- **Repositorio del código fuente** — al ser JavaScript un lenguaje interpretado y open source, el código del paquete se puede leer directamente antes de decidir instalarlo.
+- **Repositorio del código fuente** — cuando el paquete publica su código fuente, permite revisar implementación, mantenimiento, issues y cambios antes de incorporarlo. Que un proyecto esté escrito en JavaScript no implica por sí solo que sea open source.
 
 ### 28. Módulos locales: crear y exportar código propio
 
@@ -3309,133 +4582,272 @@ Cuando un módulo no parece funcionar:
 Esta secuencia suele ser más eficiente que modificar código al azar.
 
 
-### 29. Pila (*Stack*) y Cola (*Queue*): dos estructuras de datos
+### 29. Pila (*Stack*) y Cola (*Queue*): estructuras para razonar sobre ejecución
 
-Antes de entender cómo JavaScript maneja la sincronía y la asincronía, hace falta conocer dos estructuras de datos que se usan para ordenar tareas: la pila y la cola. Las dos organizan elementos de forma lineal, pero se diferencian en el orden en que los liberan.
+Antes de estudiar asincronía conviene comprender dos estructuras abstractas.
 
-| | Pila (*Stack*) | Cola (*Queue*) |
-|---|---|---|
-| Orden de salida | El **último** que entró es el **primero** en salir | El **primero** que entró es el **primero** en salir |
-| Sigla | **LIFO** (*Last In, First Out*) | **FIFO** (*First In, First Out*) |
-| Acceso | Desde un solo extremo | Desde los dos extremos (entra por uno, sale por el otro) |
-| Ejemplos cotidianos | Una pila de platos o de libros (se saca el de arriba); el historial de navegación (`atrás` vuelve al último visitado); `Ctrl+Z`; `git stash` (el último guardado es el primero que vuelve con `git stash pop`) | Una fila de supermercado o de banco; un sistema de turnos; las solicitudes entrantes de un servidor, que se van resolviendo en el orden en que llegaron |
+#### Stack — LIFO
 
-```mermaid
-flowchart LR
-    subgraph Pila["Pila (LIFO)"]
-        direction TB
-        P3["3 ← sale primero"] --> P2["2"] --> P1["1 ← entró primero, sale último"]
-    end
-    subgraph Cola["Cola (FIFO)"]
-        direction LR
-        C1["1 ← entró primero, sale primero"] --> C2["2"] --> C3["3 ← entró último"]
-    end
+Una pila sigue la regla:
+
+```text
+Last In, First Out
 ```
 
-### 30. Programación sincrónica y el *Call Stack*
+El último elemento que entra es el primero que sale.
 
-Dentro del entorno de ejecución de Node hay una **pila de ejecución de funciones**, llamada ***call stack*** (o pila de llamadas): cada vez que se invoca una función, esa llamada se apila; cuando la función termina de ejecutarse, se desapila. Como es una pila, sigue el orden LIFO de la sección 29.
+```text
+push A
+push B
+push C
 
-**Invocaciones secuenciales** (una función termina antes de que se invoque la siguiente): cada llamada se apila, se ejecuta por completo, y se desapila antes de que se apile la siguiente.
+top
+ C   ← sale primero
+ B
+ A
+```
+
+Este comportamiento aparece en el **call stack** porque una función invocada debe terminar antes de devolver el control exacto al punto desde donde fue llamada.
+
+#### Queue — FIFO
+
+Una cola típica sigue:
+
+```text
+First In, First Out
+```
+
+```text
+entra A
+entra B
+entra C
+
+sale A
+sale B
+sale C
+```
+
+El modelo real del Event Loop posee distintas colas/fases y prioridades, por lo que no debe imaginarse como una única fila universal. La idea FIFO sirve como base para entender por qué existe trabajo **pendiente** que espera su turno de ejecución.
+
+La utilidad de estas estructuras no es memorizar LIFO/FIFO de forma aislada, sino poder explicar:
+
+```text
+por qué una función anidada vuelve al llamador
+por qué un callback no se ejecuta mientras el stack actual sigue ocupado
+por qué algunas tareas pendientes se ejecutan antes que otras
+```
+
+### 30. Programación sincrónica y Call Stack
+
+El **Call Stack** registra los contextos de ejecución activos.
+
+```javascript
+function c() {
+  console.log("C");
+}
+
+function b() {
+  c();
+}
+
+function a() {
+  b();
+}
+
+a();
+```
+
+Modelo simplificado:
+
+```text
+push a
+  push b
+    push c
+    pop c
+  pop b
+pop a
+```
+
+Cada función:
+
+1. entra en ejecución;
+2. puede invocar otras funciones;
+3. espera el retorno de esas llamadas sin abandonar su propio contexto;
+4. termina;
+5. devuelve el control al contexto anterior.
+
+Una operación **sincrónica y costosa** ocupa ese hilo hasta terminar.
+
+```javascript
+function trabajoPesado() {
+  // cálculo largo
+}
+
+trabajoPesado();
+console.log("después");
+```
+
+`"después"` no puede ejecutarse mientras `trabajoPesado()` siga ocupando el stack.
+
+En un servidor Node, esto importa porque monopolizar el Event Loop con una callback larga impide que otras requests obtengan tiempo de ejecución JavaScript.
+
+### 31. Programación asincrónica y Event Loop
+
+La asincronía permite iniciar una operación cuyo resultado estará disponible en otro momento sin mantener ocupado el stack JavaScript esperando activamente.
+
+Ejemplo:
+
+```javascript
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
+}, 0);
+
+console.log("C");
+```
+
+Resultado:
+
+```text
+A
+C
+B
+```
+
+El `0` no significa “ejecutar inmediatamente”.
+
+Significa que la callback podrá quedar disponible **como mínimo** cuando corresponda según el mecanismo del timer; todavía debe esperar a que el trabajo JavaScript actual termine y a que el Event Loop pueda procesarla.
 
 ```mermaid
 sequenceDiagram
-    participant CS as Call Stack
-    Note over CS: invoco función1()
-    CS->>CS: función1 se apila y se ejecuta
-    CS->>CS: función1 termina y se desapila
-    Note over CS: invoco función2()
-    CS->>CS: función2 se apila y se ejecuta
-    CS->>CS: función2 termina y se desapila
+    participant JS as Call Stack
+    participant HOST as Runtime / timer
+    participant Q as Cola/fase pendiente
+
+    JS->>HOST: setTimeout(callback, 0)
+    JS->>JS: continúa código sincrónico
+    HOST->>Q: callback disponible
+    JS->>JS: termina trabajo actual
+    Q->>JS: callback se ejecuta
 ```
 
-**Invocaciones anidadas** (una función invoca a otra dentro de su propio cuerpo — el caso más habitual): la función externa queda apilada mientras la interna se ejecuta, porque todavía no terminó su propio trabajo.
+#### 31.1 Motor y host cooperan
+
+JavaScript por sí solo no define cómo leer un archivo del sistema o escuchar un socket.
+
+El host —Node o navegador— implementa mecanismos externos y, cuando el resultado está disponible, programa trabajo JavaScript asociado.
+
+Por eso el modelo completo debe distinguir:
+
+```text
+motor JavaScript
++
+host/runtime
++
+colas/fases de tareas
+```
+
+#### 31.2 Una callback pendiente no interrumpe el código actual
+
+JavaScript ejecuta cada trabajo hasta que ese turno termina.
+
+Si una operación asíncrona completa mientras existe una función larga ejecutándose:
+
+```text
+la callback queda pendiente
+→ no entra a mitad de esa función
+→ espera hasta que el runtime pueda darle un turno
+```
+
+Esto evita determinadas carreras dentro de un mismo turno de JavaScript, aunque una aplicación asincrónica sí puede sufrir condiciones de carrera **lógicas** entre operaciones que observan/modifican estado en momentos diferentes.
+
+#### 31.3 Promesas agregan otra cola de trabajo
+
+Los handlers de promesas (`then`, `catch`, `finally`) utilizan la cola de *jobs/microtasks* del lenguaje.
+
+Por eso pueden tener prioridad distinta respecto de callbacks de timers.
+
+Ejemplo:
 
 ```javascript
-function funcion1() { /* ... */ }
-function funcion2() { funcion1(); /* ... */ }
-function funcion3() { funcion2(); /* ... */ }
+setTimeout(() => console.log("timer"), 0);
 
-funcion3();
+Promise.resolve().then(() => {
+  console.log("promise");
+});
+
+console.log("sync");
 ```
 
-Al invocar `funcion3`, esta se apila; dentro de su cuerpo invoca a `funcion2`, que se apila **encima** de `funcion3` (porque `funcion3` todavía no terminó); `funcion2` a su vez invoca a `funcion1`, que se apila encima de las otras dos. `funcion1` es la primera en terminar y desapilarse (es la última que entró), después `funcion2`, y por último `funcion3` — exactamente el comportamiento LIFO de una pila.
+De forma típica:
 
-### 31. Programación asincrónica: *Callback Queue* y *Event Loop*
-
-El término "asincronía" en JavaScript no significa que el código se ejecute en paralelo — Node corre sobre un **único hilo** (sección 25), así que dos cosas nunca se están ejecutando literalmente al mismo tiempo. Lo que sí ocurre es que ciertas tareas (una que tarda un tiempo indeterminado, como esperar una respuesta de un servidor) no bloquean el resto del programa mientras se resuelven — se van resolviendo aparte, y el resultado se atiende cuando haya lugar.
-
-Para lograr esto, además del *call stack* interviene una **cola de callbacks** (*callback queue*), y un mecanismo llamado ***event loop*** (bucle de eventos) que se encarga de ir llevando llamadas de esa cola hacia el *call stack*, a medida que este se va liberando.
-
-```javascript
-function funcion1() {
-  console.log("Función 1");
-}
-
-function funcion2() {
-  console.log("Función 2");
-}
-
-function main() {
-  console.log("Main");
-  setTimeout(funcion1, 5000);   // asincrónico: no bloquea, se resuelve aparte
-  funcion2();
-}
-
-main();
+```text
+sync
+promise
+timer
 ```
 
-Cómo se ejecuta esto, paso a paso:
+Este detalle explica por qué “todo lo asincrónico va a una sola callback queue FIFO” es un modelo demasiado simple.
 
-1. `main()` se apila en el *call stack*.
-2. Dentro de `main`, el primer `console.log("Main")` se apila, se ejecuta, y se desapila.
-3. `setTimeout` se apila — pero como es asincrónico, no ejecuta `funcion1` ahí mismo: la deja en espera aparte (en Node, gestionada internamente; en el navegador, a través de las *Web APIs*) durante el tiempo indicado, y se desapila.
-4. `funcion2()` se apila, imprime `"Función 2"`, y se desapila.
-5. `main` ya no tiene más instrucciones, así que se desapila — el *call stack* queda vacío.
-6. Recién ahí, cuando pasó el tiempo indicado y el *call stack* está libre, el *event loop* saca a `funcion1` de la cola de callbacks y la apila para que se ejecute, imprimiendo `"Función 1"`.
+### 32. Timers en Node.js
 
-El resultado impreso en consola es: `Main`, `Función 2`, `Función 1` — no en el orden en que aparecen escritas las instrucciones, sino según cuándo termina de resolverse cada una.
+Los timers permiten programar callbacks para un momento posterior.
 
-*El *event loop* generalmente respeta el orden de llegada de la cola (FIFO, sección 29), pero puede alterar las prioridades en casos puntuales — de forma parecida a como una fila del supermercado, sin dejar de ser una fila, le da preferencia a alguien con una necesidad puntual, sin que eso rompa el orden del resto.*
-
-### 32. Módulo `timers`: `setTimeout`, `setInterval` y `setImmediate`
-
-El módulo `timers` es un módulo incorporado (sección 26.1) con funciones para ejecutar código después de un tiempo determinado — todas son asincrónicas.
-
-| Función | Qué hace |
+| Función | Idea principal |
 |---|---|
-| `setTimeout(callback, retraso, ...args)` | Ejecuta `callback` una única vez, como mínimo después de `retraso` milisegundos (el tiempo es un umbral **mínimo**, no exacto — no sirve para medir tiempo con precisión) |
-| `setInterval(callback, intervalo, ...args)` | Ejecuta `callback` repetidamente, cada `intervalo` milisegundos, de forma indefinida hasta que se cancele |
-| `clearInterval(id)` | Cancela un `setInterval` en marcha, usando el identificador que `setInterval` retornó al crearlo |
-| `setImmediate(callback, ...args)` | Ejecuta `callback` en la siguiente vuelta del *event loop* — hoy en día se usa poco |
+| `setTimeout(callback, delay)` | ejecutar una vez después de un umbral mínimo |
+| `setInterval(callback, delay)` | repetir aproximadamente según un intervalo |
+| `setImmediate(callback)` | programar para la fase *check* del Event Loop |
+| `clearTimeout` / `clearInterval` / `clearImmediate` | cancelar la programación correspondiente |
 
-Los argumentos que se agregan después del tiempo/intervalo son los que se le van a pasar a `callback` cuando finalmente se invoque:
+#### 32.1 El tiempo no es una garantía exacta
 
 ```javascript
-function mostrarTema(tema) {
-  console.log(`Estoy aprendiendo ${tema}`);
-}
-
-setTimeout(mostrarTema, 5000, "Node.js");   // a los 5 segundos (como mínimo): "Estoy aprendiendo Node.js"
+setTimeout(callback, 1000);
 ```
 
-**`setTimeout(callback, 0)` vs. `setImmediate(callback)`: orden no determinista.** Ambos buscan ejecutar la callback "lo antes posible", pero en momentos distintos del *event loop* (`setImmediate` después de la fase de *poll*, `setTimeout(..., 0)` en la fase de *timers*). Cuál de los dos se ejecuta primero **no está garantizado**: corriendo exactamente el mismo código varias veces, el orden entre ambos puede variar de una ejecución a otra. Esta falta de previsibilidad es, junto con los problemas ya vistos del módulo `timers` (sección 32), una de las razones por las que `setImmediate` se usa cada vez menos: un mismo código no debería dar resultados distintos en cada corrida.
+no promete:
 
-`setInterval` retorna un identificador que hay que guardar para poder cancelarlo más adelante con `clearInterval` — si nunca se cancela, sigue ejecutándose indefinidamente:
+> “ejecutar exactamente a los 1000 ms”.
+
+Promete que no debería programarse para ejecutarse **antes del umbral correspondiente**, pero puede ejecutarse después si:
+
+```text
+el Event Loop está ocupado
+hay otros callbacks pendientes
+el sistema está bajo carga
+```
+
+Por eso los timers no son cronómetros de precisión.
+
+#### 32.2 `setTimeout(..., 0)` y `setImmediate(...)`
+
+No existe una regla universal de una línea que garantice cuál se ejecutará primero en cualquier contexto.
+
+Su orden depende de la fase del Event Loop y del punto desde donde fueron programados.
+
+Esto no convierte a `setImmediate()` en una API “mala” ni explica por sí solo que se use poco. Su semántica es útil precisamente cuando se necesita programar trabajo para una fase posterior concreta del loop.
+
+La conclusión pedagógica correcta es:
+
+> no depender de un orden accidental entre mecanismos cuya prioridad no forma parte del contrato que la aplicación necesita.
+
+#### 32.3 `setInterval` y acumulación de trabajo
 
 ```javascript
-let vuelta = 0;
-
-const intervalId = setInterval(() => {
-  console.log(`Estoy en la vuelta ${vuelta}`);
-
-  if (vuelta === 10) {
-    clearInterval(intervalId);   // acá se corta el ciclo
-  } else {
-    vuelta += 1;
-  }
+const id = setInterval(() => {
+  // tarea
 }, 1000);
 ```
+
+debe cancelarse cuando deja de ser necesario:
+
+```javascript
+clearInterval(id);
+```
+
+En servicios de larga duración, dejar timers activos innecesarios puede mantener recursos vivos y generar trabajo periódico sin utilidad.
 
 ### 33. Módulo `fs` (*File System*): trabajar con archivos y carpetas
 
@@ -3605,9 +5017,9 @@ miPromesaSuma.then((resultado) => {
 
 ---
 
-## Ejemplo práctico — Promesa completa: comprar la crema
+### Ejemplo práctico — Promesa completa: comprar la crema
 
-Código trabajado en clase: una promesa que simula ir a comprar crema para una torta, con un resultado que puede ser favorable o no, resuelto recién después de un retraso simulado con `setTimeout`.
+Ejemplo de una promesa que simula una operación cuyo resultado favorable o desfavorable llega después de un retraso con `setTimeout`:
 
 ```javascript
 let hayCrema = true;   // simula el resultado, todavía desconocido, de la operación asincrónica
@@ -3659,15 +5071,15 @@ Terminamos con la promesa
 
 **Puntos clave de este ejemplo:**
 - `hayCrema` cumple el rol de la condición real que, en un caso concreto, vendría de una consulta a una base de datos o a un servicio externo (por ejemplo, si una cuenta tiene saldo suficiente para una transferencia) — acá se simula con un valor fijo para poder probar los dos caminos (`true`/`false`).
-- `manejarPromesaCumplida` y `manejarPromesaRechazada` son funciones declaradas aparte, con nombre propio, y **pasadas por referencia** a `.then` y `.catch` (sección 22.2) — nunca invocadas ahí mismo (nunca `manejarPromesaCumplida()`, siempre `manejarPromesaCumplida` a secas). Quien las termina ejecutando, con el valor correspondiente, es `.then`/`.catch`.
+- `manejarPromesaCumplida` y `manejarPromesaRechazada` son funciones declaradas aparte y **pasadas como valores función** a `.then` y `.catch` (sección 22.2). No se invocan al registrarlas; el mecanismo de promesas las ejecuta posteriormente con el valor correspondiente.
 - `"Antes de la promesa"` y `"Después de la promesa"` salen impresos **antes** que cualquier mensaje de `.then`/`.catch`/`.finally`, aunque la promesa se declare en el medio del código — confirma lo visto en 34.4: la promesa no bloquea la ejecución de lo que sigue.
 - Cambiar `hayCrema` a `false` cambia el resultado completo: la promesa termina rechazada, y la salida pasa por `manejarPromesaRechazada` en vez de `manejarPromesaCumplida` — pero `.finally` se ejecuta en los dos casos por igual.
 
 ---
 
-## Ejemplo práctico — Promesa con dos valores, depurada paso a paso
+### Ejemplo práctico — Promesa con dos valores, depurada paso a paso
 
-Código trabajado en clase: una promesa que necesita **dos** números para poder resolverse, con el error real (`resolve` recibiendo dos valores en vez de uno, sección 34.5) encontrado siguiendo el mismo método de depuración que usó el profesor.
+Ejemplo de una promesa que necesita **dos** números para poder resolverse y de cómo diagnosticar el error de intentar entregar varios argumentos separados a `resolve`.
 
 ```javascript
 let numero1;   // undefined
@@ -3859,9 +5271,9 @@ Esta separación prepara el código para integrarlo con Express: el handler de l
 
 ---
 
-## Ejemplo práctico — Promesas encadenadas: validar stock antes de vender
+### Ejemplo práctico — Promesas encadenadas: validar stock antes de vender
 
-Código trabajado en clase, extendiendo el ejemplo anterior con una tercera promesa (`imprimirFactura`) encadenada después de `ejecutarVenta`:
+Ejemplo extendido con una tercera promesa (`imprimirFactura`) encadenada después de `ejecutarVenta`:
 
 ```javascript
 function validarStock(producto) {
@@ -3934,9 +5346,29 @@ async function realizarPedido() {
 
 Es el equivalente de la cadena de `.then` de la sección 35, escrito de forma más lineal: `await pedirProducto()` frena la ejecución hasta tener el resultado, lo guarda en `respuesta`, y recién ahí sigue con la línea de `procesarPedido`.
 
-#### 36.2 `await` no bloquea todo el programa, solo esa función
+#### 36.2 `await` suspende la función async; no bloquea el Event Loop
 
-Un malentendido frecuente es pensar que `await` bloquea la aplicación entera — no es así: lo único que pausa es la ejecución de **esa función puntual**, mientras el resto del programa sigue funcionando con normalidad. Dicho esto, sí implica un cambio de modelo dentro de esa función: mientras que las promesas encadenadas mantienen el modelo no bloqueante de Node (sección 25), usar `await` significa frenar deliberadamente esa función hasta tener el resultado — un modelo bloqueante, pero acotado a esa función.
+Un malentendido frecuente es describir `await` como “bloqueante dentro de esa función”.
+
+Es más preciso decir que **suspende la continuación de esa función async** hasta que la promesa se resuelve.
+
+```javascript
+async function cargar() {
+  const datos = await leerDatos();
+  console.log(datos);
+}
+```
+
+Mientras `cargar()` está suspendida, el Event Loop puede ejecutar otro trabajo JavaScript.
+
+Por eso `await` no convierte una operación asincrónica en una operación bloqueante del hilo. Lo que hace es ofrecer una sintaxis secuencial para expresar dependencias:
+
+```text
+necesito el resultado A
+→ antes de continuar con B
+```
+
+Lo que sí puede bloquear es el trabajo sincrónico costoso que se ejecute **antes o después** del `await`.
 
 #### 36.3 Manejo de errores: `try`/`catch` en vez de `.catch`
 
@@ -3956,26 +5388,106 @@ async function realizarPedido() {
 
 Si cualquiera de las promesas dentro del `try` se rechaza, la ejecución salta directamente al bloque `catch` — el mismo comportamiento del `.catch` compartido de una cadena de promesas (sección 35.3), pero con la sintaxis de `try`/`catch`.
 
-**Una función `async` con `try`/`catch` siempre termina "resuelta" desde afuera, salvo que el `catch` vuelva a lanzar el error.** Si algo fallá dentro del `try` y el `catch` simplemente lo atiende (por ejemplo, con un `console.log`) sin volver a lanzarlo (`throw`) ni retornarlo, quien invoque a esa función `async` nunca se entera de que hubo un error — para esa función, todo se resolvió sin problemas. Esto puede ser justo lo que se busca (contener el error ahí mismo), pero si hace falta que el error se propague hacia quien llamó a la función, hay que relanzarlo explícitamente dentro del `catch`.
+Si un `catch` captura un rechazo y termina normalmente —por ejemplo, solo registrando el error y sin lanzar otro—, esa ejecución de la función `async` continúa como una promesa cumplida con el valor que corresponda (frecuentemente `undefined`). Si se necesita que la capa superior también observe el fallo, el `catch` puede volver a lanzarlo (`throw`) o devolver una promesa rechazada. Un `catch` también podría fallar por otra causa, por lo que no conviene resumirlo como “una función con try/catch siempre resuelve”.
 
 #### 36.4 Tres errores comunes con `async`/`await`
 
-1. **Usar `await` dentro de una función que no fue declarada `async`.** Sin la palabra `async` delante de la función, el entorno de desarrollo marca un error de sintaxis apenas se intenta usar `await` — no llega a ejecutarse mal, directamente no compila.
-2. **No envolver el código en `try`/`catch`.** Sin ese bloque, un error dentro de una de las promesas puede pasar completamente desapercibido, en vez de detenerse y avisar como corresponde.
+1. **Usar `await` en un contexto donde no está permitido.** Dentro de scripts normales, un `await` fuera de una función `async` produce un `SyntaxError`. Los módulos permiten además *top-level await*; por eso la regla exacta depende del contexto sintáctico, no de que el archivo “compile” o no.
+2. **Suponer que toda función `async` necesita obligatoriamente un `try`/`catch` local.** Si una promesa esperada se rechaza y no se captura ahí, la función `async` devuelve una promesa rechazada y el error puede propagarse hacia quien la invocó. `try`/`catch` se usa cuando esa capa puede manejar, traducir o enriquecer el error; si no, propagarlo puede ser el comportamiento correcto.
 3. **Encadenar varios `await` de forma innecesariamente secuencial cuando las operaciones no dependen entre sí.** Esperar una tras otra, con un `await` detrás de otro, frena la ejecución de la función más de lo necesario — perdiendo buena parte del beneficio de la programación asincrónica. Si dos operaciones no dependen la una de la otra, conviene dispararlas en simultáneo en vez de esperarlas en fila (mecanismo que se desarrolla en profundidad más adelante).
 
-### 37. Eventos: introducción (*preview* — se retoma con código en una próxima clase)
+### 37. Eventos y `EventEmitter`
 
-> Esta sección queda a nivel introductorio: se dio solo en teoría, sin ejemplo de código en vivo, y el propio profesor aclaró que no es contenido de examen por ahora. Se amplía cuando se retome con práctica.
+La programación orientada a eventos modela situaciones donde un componente **emite un suceso** y uno o más listeners reaccionan a él.
 
-Un **evento** es un suceso que altera el flujo normal de ejecución del programa para ser atendido — una acción que dispara un proceso, ya sea generada por quien usa la aplicación (un clic, una tecla presionada) o generada internamente por el propio sistema. A diferencia de la programación secuencial (donde el propio código, línea por línea, determina el orden de ejecución), en la **programación basada en eventos** el flujo del programa queda determinado por los eventos que van ocurriendo: el programa sigue ejecutándose con normalidad hasta que ocurre un evento, en cuyo momento se desvía a atenderlo, para después continuar. Esto se relaciona directamente con el *event loop* ya visto (sección 31): es, en el fondo, el mecanismo que se encarga de gestionar estos eventos.
+```text
+evento
+→ "algo ocurrió"
 
-Un evento puede a su vez disparar otro evento, y un método también puede disparar un evento. En Node, el módulo incorporado (sección 26.1) para trabajar con esto es `events`, a través de su clase `EventEmitter` — el mismo concepto que se usa también del lado del Frontend (por ejemplo, en Angular, con el mismo nombre). Los dos métodos centrales son:
+listener
+→ "cuando ocurra, ejecutar esta función"
+```
 
-- **`.on(nombreDelEvento, callback)`**: registra una callback que se va a ejecutar cada vez que ocurra el evento indicado — es el método de "escucha".
-- **`.emit(nombreDelEvento)`**: dispara (emite) ese evento — es lo que hace que las callbacks registradas con `.on` para ese evento se ejecuten.
+En Node.js, `EventEmitter` implementa un patrón de publicación/escucha dentro del proceso.
 
-Dos objetos distintos pueden tener eventos con el mismo nombre sin interferir entre sí, porque cada evento queda asociado al objeto puntual que lo emite — el `.on` de un objeto solo escucha los `.emit` de ese mismo objeto, no los de otro.
+```javascript
+const { EventEmitter } = require("node:events");
+
+const bus = new EventEmitter();
+
+bus.on("pedidoCreado", pedido => {
+  console.log("Nuevo pedido:", pedido.id);
+});
+
+bus.emit("pedidoCreado", { id: 42 });
+```
+
+#### 37.1 `.on()` registra; `.emit()` dispara
+
+```javascript
+bus.on("evento", callback);
+```
+
+registra una función asociada a ese nombre.
+
+```javascript
+bus.emit("evento", valor);
+```
+
+invoca de forma sincrónica los listeners registrados para ese evento, en el orden correspondiente.
+
+Esto es importante: `EventEmitter.emit()` **no convierte automáticamente el listener en trabajo asincrónico**.
+
+El código dentro del listener puede iniciar operaciones asincrónicas, pero el acto de emitir el evento y llamar a listeners no debe confundirse con la cola de timers o con una promesa.
+
+#### 37.2 EventEmitter y Event Loop están relacionados, pero no son lo mismo
+
+Node utiliza una arquitectura orientada a eventos a gran escala, pero:
+
+```text
+Event Loop
+→ mecanismo de scheduling/ejecución del runtime
+
+EventEmitter
+→ abstracción JavaScript para publicar y escuchar eventos
+```
+
+Un `EventEmitter` puede utilizarse incluso dentro de código totalmente sincrónico.
+
+#### 37.3 Desacoplar productor y consumidores
+
+Sin eventos:
+
+```javascript
+crearPedido();
+enviarEmail();
+actualizarMetricas();
+notificarSistemaExterno();
+```
+
+el productor conoce explícitamente a todos los consumidores.
+
+Con un evento:
+
+```javascript
+emit("pedidoCreado", pedido);
+```
+
+distintos listeners pueden reaccionar sin que la función que crea el pedido conozca cada detalle.
+
+Eso reduce acoplamiento, aunque también introduce costos:
+
+```text
+flujo menos visible
+orden de listeners
+manejo de errores
+dificultad de rastreo
+posibles listeners olvidados
+```
+
+Por eso un evento es útil cuando representa realmente una relación de “algo ocurrió y varios componentes pueden reaccionar”, no como sustituto automático de cualquier llamada de función.
+
+> 📌 **Para el examen:** la cátedra indicó explícitamente que la introducción a eventos no formaba parte del alcance del primer parcial.
 
 ### 38. Arquitectura cliente-servidor
 
@@ -4267,23 +5779,124 @@ Esto explica por qué la pregunta “¿`PUT` necesita parámetro y body?” no t
 
 ### 40. Dirección de un servicio: host, IP y puerto
 
-Para establecer una conexión de red hay que identificar dónde escucha el servicio. En el desarrollo local aparecen tres conceptos fundamentales:
+Para que un cliente pueda conectarse a un servicio de red necesita identificar **dónde** está disponible.
 
-- **host**: nombre o dirección de la máquina/interfaz;
-- **IP**: dirección numérica utilizada para el enrutamiento;
-- **puerto**: identificador lógico que permite distinguir múltiples servicios dentro de un mismo host.
-
-`127.0.0.1` pertenece al rango de **loopback** IPv4: apunta a la propia máquina. El nombre `localhost` suele resolver a una dirección de loopback (`127.0.0.1` en IPv4 o `::1` en IPv6).
-
-Una URL local típica puede ser:
+Una forma simplificada de pensarlo:
 
 ```text
-http://127.0.0.1:3000/api
-└─┬─┘ └─────┬─────┘ └┬─┘ └┬─┘
- protocolo    host    puerto ruta
+host
+→ qué máquina/interfaz
+
+puerto
+→ qué servicio/proceso dentro de esa máquina
 ```
 
-El puerto `3000` es una convención frecuente en desarrollo, no una exigencia de Node ni de HTTP.
+#### 40.1 IP
+
+Una dirección IP identifica una interfaz de red dentro del alcance correspondiente.
+
+Ejemplo IPv4:
+
+```text
+127.0.0.1
+```
+
+`127.0.0.1` pertenece al rango de loopback y representa la propia máquina desde el punto de vista del host local.
+
+Por eso:
+
+```text
+http://127.0.0.1:3000
+```
+
+no apunta a “Internet”: intenta conectarse a un proceso que escucha en la misma computadora.
+
+#### 40.2 Hostname
+
+Un hostname permite utilizar un nombre en lugar de recordar una dirección numérica.
+
+```text
+localhost
+```
+
+normalmente resuelve hacia loopback.
+
+En Internet:
+
+```text
+api.ejemplo.com
+```
+
+puede resolverse mediante DNS a una o más direcciones IP.
+
+El nombre y la IP no son lo mismo:
+
+```text
+hostname
+→ identificador legible/resoluble
+
+IP
+→ dirección de red utilizada para alcanzar una interfaz
+```
+
+#### 40.3 Puerto
+
+Una misma máquina puede ejecutar muchos servicios de red.
+
+```text
+IP 203.0.113.10
+├── puerto 22   → SSH
+├── puerto 80   → HTTP
+├── puerto 443  → HTTPS
+└── puerto 3000 → aplicación de desarrollo
+```
+
+El puerto permite distinguir qué endpoint de transporte dentro del host debe recibir la conexión.
+
+En desarrollo:
+
+```javascript
+app.listen(3000, "127.0.0.1");
+```
+
+expresa:
+
+```text
+escuchar conexiones
+en la interfaz loopback
+puerto 3000
+```
+
+Un servidor puede enlazarse a otras interfaces —por ejemplo todas las disponibles—, pero eso cambia quién puede alcanzarlo y debe evaluarse con criterios de red y seguridad.
+
+#### 40.4 Escuchar no equivale a tener una ruta
+
+Que el proceso esté escuchando en:
+
+```text
+127.0.0.1:3000
+```
+
+solo significa que existe un servidor disponible en ese host/puerto.
+
+Todavía puede responder:
+
+```text
+404
+Cannot GET /algo
+```
+
+si la aplicación no tiene una operación configurada para esa ruta.
+
+Esto separa dos niveles de diagnóstico:
+
+```text
+conectividad
+→ ¿hay proceso escuchando?
+
+routing de aplicación
+→ ¿existe handler para método + path?
+```
 
 ### 41. URL, DNS, rutas y parámetros
 
@@ -4469,35 +6082,116 @@ produce orden numérico ascendente, mientras que invertir la resta produce desce
 
 > ⚠️ `Array.prototype.sort()` **muta el array sobre el que se ejecuta**. En el ejemplo de la materia el ordenamiento se aplica después de `filter()`, y `filter()` ya produjo un array nuevo; por eso no se modifica directamente la colección original. Si se ordenara la colección del repository sin copiarla, el orden persistiría en esa estructura en memoria para requests posteriores.
 
-### 42. Servidor HTTP básico con Node.js
+### 42. Servidor HTTP básico con `node:http`
 
-Express simplifica el trabajo, pero **Node.js puede crear un servidor HTTP sin instalar paquetes externos** mediante el módulo incorporado `node:http`.
+Node incluye el módulo nativo `node:http`, suficiente para crear un servidor HTTP sin instalar Express.
 
 ```javascript
-const { createServer } = require("node:http");
+const http = require("node:http");
 
-const HOSTNAME = "127.0.0.1";
-const PORT = 3000;
-
-const server = createServer((req, res) => {
+const server = http.createServer((req, res) => {
   res.statusCode = 200;
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.end("<h1>Hola mundo</h1>");
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.end("Hola");
 });
 
-server.listen(PORT, HOSTNAME, () => {
-  console.log(`Servidor en http://${HOSTNAME}:${PORT}/`);
-});
+server.listen(3000, "127.0.0.1");
 ```
 
-`createServer(...)` recibe una callback y retorna un objeto `http.Server`. Cada vez que llega una solicitud, Node invoca la callback y le proporciona dos objetos:
+#### 42.1 Qué problema resuelve cada parte
 
-- `req`: la solicitud entrante (*request*);
-- `res`: la respuesta que se está construyendo (*response*).
+```javascript
+http.createServer(callback)
+```
 
-`server.listen(...)` pone el servidor a escuchar conexiones. En la firma utilizada en clase, los argumentos siguen el orden **puerto, host, callback**. El `host` y la callback pueden omitirse; el puerto puede incluso ser `0` para que el sistema operativo elija uno disponible.
+crea el servidor y registra una función que se ejecutará para las requests recibidas.
 
-Este ejemplo permite conectar temas anteriores: callbacks, objetos, métodos, módulos incorporados, destructuring y asincronía aparecen juntos en una operación real de backend.
+La callback recibe:
+
+```text
+req
+→ información de la solicitud
+
+res
+→ interfaz para construir la respuesta
+```
+
+```javascript
+server.listen(...)
+```
+
+abre el punto de escucha de red.
+
+Por eso existen dos momentos distintos:
+
+```text
+configurar cómo responder
++
+empezar a escuchar conexiones
+```
+
+#### 42.2 `req` y `res` son objetos del protocolo
+
+`req` permite consultar información como:
+
+```text
+método
+URL
+headers
+stream del body
+```
+
+`res` permite configurar:
+
+```text
+status
+headers
+body
+fin de la respuesta
+```
+
+El ciclo mínimo:
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant N as node:http
+
+    C->>N: Request
+    N->>N: callback(req, res)
+    N-->>C: status + headers + body
+```
+
+#### 42.3 ¿Por qué aparece Express si Node ya puede hacer esto?
+
+Porque `node:http` ofrece primitivas de bajo nivel.
+
+A medida que una API crece hay que resolver repetidamente:
+
+```text
+matching de rutas
+path params
+query params
+parsing de bodies
+middleware
+serialización JSON
+manejo de errores
+organización de handlers
+```
+
+Todo puede programarse manualmente, pero aparece repetición.
+
+Express abstrae gran parte de ese trabajo:
+
+```text
+node:http
+→ primitives del servidor HTTP
+
+Express
+→ capa de conveniencia y composición sobre esas primitives
+```
+
+Esta relación es importante: Express no reemplaza a Node ni crea un protocolo nuevo. Organiza de forma más cómoda un servidor que sigue utilizando las capacidades HTTP/red del runtime.
 
 ### 43. Express.js
 
@@ -5997,7 +7691,7 @@ En una API backend pura, la “vista” tradicional no vive necesariamente dentr
 
 #### 49.3 Arquitectura utilizada en el backend: Router → Controller → Service → Repository
 
-La organización introducida para el proyecto backend divide el servidor en cuatro capas principales:
+La organización utilizada en el curso divide el backend en cuatro responsabilidades principales:
 
 ```mermaid
 flowchart LR
@@ -6006,53 +7700,383 @@ flowchart LR
     CTRL --> SERVICE[Service]
     SERVICE --> REPO[Repository]
     REPO --> DATA[(Fuente de datos)]
+
     DATA --> REPO
     REPO --> SERVICE
     SERVICE --> CTRL
     CTRL --> CLIENT
 ```
 
-**Router**
-
-Responsable del **enrutamiento**. Asocia método + path con la función del controller que debe atender esa operación.
+A primera vista puede parecer innecesario. Si el objetivo inmediato fuera solamente agregar un objeto a un array, técnicamente podría escribirse:
 
 ```javascript
-router.get("/peliculas/:id", peliculaController.obtenerPorId);
+router.post("/", (req, res) => {
+  infoLenguajes.frontend.push(req.body);
+  return res.status(201).json(req.body);
+});
 ```
 
-No debería contener la lógica de negocio ni acceder a la base de datos.
+Ese código **funciona**.
 
-**Controller**
-
-Es la frontera HTTP de la funcionalidad. Lee lo necesario de `req`, delega al service y traduce el resultado a una respuesta HTTP mediante `res`.
-
-```javascript
-async function obtenerPorId(req, res, next) {
-  // obtener input HTTP
-  // delegar al service
-  // construir response
-}
-```
-
-El controller no debería implementar consultas directas a la base de datos.
-
-**Service**
-
-Contiene la **lógica de negocio**: reglas, validaciones y coordinación de operaciones del dominio.
+La arquitectura por capas no nace porque JavaScript o Express sean incapaces de hacer lo anterior. Nace porque, a medida que el sistema crece, esa función empieza a acumular decisiones de naturalezas distintas:
 
 ```text
-¿se puede alquilar esta película?
-¿el alumno cumple la correlativa?
-¿hay stock suficiente?
+¿qué URL atiende?
+¿qué método HTTP corresponde?
+¿cómo leo el body?
+¿el body tiene los campos correctos?
+¿el usuario puede realizar esta operación?
+¿el ID ya existe?
+¿hay que normalizar algún valor?
+¿cómo se guarda?
+¿se guarda en un array, SQL o MongoDB?
+¿qué ocurre si falla la persistencia?
+¿qué status HTTP corresponde?
+¿qué representación se devuelve?
 ```
 
-El service trabaja con conceptos del dominio y delega la persistencia/recuperación al repository.
+Todas esas preguntas pueden vivir en una sola función, pero entonces **cualquier cambio obliga a entrar al mismo lugar**.
 
-**Repository**
+La separación por capas intenta que las razones de cambio queden agrupadas:
 
-Encapsula el **acceso a la fuente de datos**. Es la capa que sabe si la información vive en un JSON local, SQL Server, MongoDB, otro servicio u otra fuente persistente.
+```text
+cambia la URL o el endpoint
+→ Router
 
-El resto de las capas no debería necesitar conocer ese detalle.
+cambia el contrato HTTP
+→ Controller
+
+cambia una regla del negocio
+→ Service
+
+cambia cómo se consulta o persiste la información
+→ Repository
+```
+
+Ese es el motivo real de crear carpetas y módulos separados. No es “porque una arquitectura profesional tiene cuatro carpetas”, sino porque se busca que cada parte del sistema tenga una **responsabilidad reconocible y una razón de cambio limitada**.
+
+##### Router: decidir qué operación recibe la request
+
+El Router representa el **mapa de entrada HTTP** de un conjunto de funcionalidades.
+
+```javascript
+router.get("/", frontendController.readAll);
+router.get("/:id", frontendController.readOne);
+router.post("/", frontendController.create);
+router.put("/:id", frontendController.update);
+router.delete("/:id", frontendController.remove);
+```
+
+Su pregunta principal es:
+
+> **¿Qué función debe ejecutarse para esta combinación de método HTTP y path?**
+
+El Router conoce:
+
+```text
+métodos HTTP
+paths
+parámetros declarados en la ruta
+middleware de routing
+Controller al que delegar
+```
+
+No necesita conocer:
+
+```text
+cómo se calcula un descuento
+cómo se valida una correlativa
+cómo se arma una consulta SQL
+cómo se accede a MongoDB
+cómo está estructurado el array interno
+```
+
+En Express es técnicamente válido responder directamente desde un handler del router. Por lo tanto:
+
+```javascript
+router.get("/", (req, res) => {
+  res.json(datos);
+});
+```
+
+no es “ilegal”.
+
+La arquitectura del curso establece otra convención:
+
+```text
+Router
+→ reconoce la operación
+→ delega al Controller
+```
+
+porque se quiere concentrar la frontera HTTP en una capa específica.
+
+##### Controller: traducir HTTP hacia la aplicación y viceversa
+
+El Controller está en el límite entre:
+
+```text
+mundo HTTP
+↕
+lógica de la aplicación
+```
+
+Por eso suele conocer `req` y `res`.
+
+En la entrada traduce:
+
+```javascript
+req.params.id
+req.query.ordenar
+req.body
+req.headers
+```
+
+a valores más específicos:
+
+```javascript
+const id = Number(req.params.id);
+const orderBy = req.query.ordenar;
+const nuevoLenguaje = req.body;
+```
+
+Luego invoca al Service:
+
+```javascript
+const resultado = frontendService.update(id, nuevoLenguaje);
+```
+
+En la vuelta traduce el resultado de aplicación a HTTP:
+
+```javascript
+if (!resultado) {
+  return res.status(404).json({
+    error: "Recurso no encontrado",
+  });
+}
+
+return res.status(200).json(resultado);
+```
+
+Su pregunta principal es:
+
+> **¿Cómo se convierte una request HTTP en una operación de aplicación y cómo se expresa el resultado como response HTTP?**
+
+Por eso tiene sentido que aquí aparezcan decisiones como:
+
+```text
+400 Bad Request
+404 Not Found
+201 Created
+204 No Content
+Content-Type
+headers
+body de respuesta
+```
+
+El Controller no debería necesitar saber si la información salió de:
+
+```text
+un array
+un archivo
+SQL Server
+MongoDB
+otra API
+```
+
+Si sabe demasiado de eso, queda acoplado a infraestructura.
+
+##### Service: aplicar las reglas que hacen que el sistema sea ese sistema
+
+El Service representa la parte donde se expresa el **comportamiento del dominio o caso de uso**.
+
+Ejemplos:
+
+```text
+si compra más de 10 unidades, aplicar descuento
+si la receta venció, rechazar la venta
+si no aprobó la correlativa, impedir la inscripción
+si el saldo es insuficiente, rechazar la transferencia
+normalizar un dato antes de compararlo
+coordinar dos repositories para completar una operación
+```
+
+Su pregunta principal es:
+
+> **¿Qué debe ocurrir según las reglas de esta aplicación?**
+
+Un Service no tiene por qué contener siempre código complejo.
+
+Durante las primeras etapas puede verse así:
+
+```javascript
+exports.deleteFrontendLanguage = id => {
+  return frontendRepository.deleteFrontendLanguage(id);
+};
+```
+
+Eso parece un “pasamanos”, y en ese momento efectivamente lo es.
+
+La razón para mantener la frontera no es inventar complejidad, sino disponer de un lugar estable para cuando aparezcan reglas:
+
+```javascript
+exports.deleteFrontendLanguage = id => {
+  const lenguaje = frontendRepository.findById(id);
+
+  if (!lenguaje) {
+    return null;
+  }
+
+  if (lenguaje.esObligatorio) {
+    throw new Error("El lenguaje obligatorio no puede eliminarse");
+  }
+
+  return frontendRepository.deleteById(id);
+};
+```
+
+El Router y el Repository no tuvieron que cambiar porque apareció una regla del negocio.
+
+##### Repository: aislar el mecanismo de acceso a datos
+
+El Repository encapsula la interacción con la **fuente de datos**.
+
+En la etapa actual:
+
+```javascript
+exports.create = lenguaje => {
+  infoLenguajes.frontend.push(lenguaje);
+  return lenguaje;
+};
+```
+
+Más adelante podría ser:
+
+```javascript
+exports.create = async lenguaje => {
+  return sql.query(/* ... */);
+};
+```
+
+o:
+
+```javascript
+exports.create = async lenguaje => {
+  return LenguajeModel.create(lenguaje);
+};
+```
+
+La pregunta principal del Repository es:
+
+> **¿Cómo obtengo, creo, actualizo o elimino estos datos en la fuente que utiliza actualmente el sistema?**
+
+El Repository sí necesita conocer detalles como:
+
+```text
+array
+archivo
+driver SQL
+colección MongoDB
+consulta
+documento
+fila
+transacción
+```
+
+pero las capas superiores deberían depender del **resultado de la operación**, no del mecanismo particular utilizado para conseguirlo.
+
+##### Las carpetas son una consecuencia, no el objetivo
+
+Una estructura típica:
+
+```text
+routers/
+controllers/
+services/
+repositories/
+```
+
+es solo una representación física de una separación conceptual.
+
+Crear cuatro carpetas y después mezclar responsabilidades dentro de ellas no produce una buena arquitectura.
+
+Por ejemplo:
+
+```javascript
+// services/frontendService.js
+
+exports.create = (req, res) => {
+  infoLenguajes.frontend.push(req.body);
+  res.status(201).json(req.body);
+};
+```
+
+está ubicado dentro de `services/`, pero sigue mezclando:
+
+```text
+HTTP
+datos
+persistencia
+reglas
+```
+
+Por el contrario, lo importante es poder responder:
+
+```text
+¿quién conoce HTTP?
+¿quién conoce las reglas del dominio?
+¿quién conoce la fuente de datos?
+¿quién decide el endpoint?
+```
+
+La carpeta ayuda a que esa decisión sea visible, pero no la reemplaza.
+
+##### El flujo de ida no es el mismo que el flujo de dependencias
+
+La request viaja conceptualmente:
+
+```text
+Cliente
+→ Router
+→ Controller
+→ Service
+→ Repository
+→ Datos
+```
+
+y el resultado vuelve:
+
+```text
+Datos
+→ Repository
+→ Service
+→ Controller
+→ Cliente
+```
+
+Esto no significa que cada capa “mande un paquete” físicamente a otra. Son llamadas de funciones/métodos entre módulos.
+
+Ejemplo:
+
+```javascript
+// Controller
+const resultado = frontendService.remove(id);
+```
+
+```javascript
+// Service
+return frontendRepository.remove(id);
+```
+
+```javascript
+// Repository
+return borrarDelArray(id);
+```
+
+La pila de llamadas baja hasta la operación de datos y luego los `return` hacen subir el resultado.
+
+Entender esto evita imaginar las capas como servidores independientes. En este proyecto siguen siendo módulos JavaScript ejecutándose dentro del mismo proceso Node.js.
+
 
 #### 49.4 La regla de dependencias: no saltear capas
 
@@ -6333,6 +8357,301 @@ const frontendController = require("../controllers/frontendController");
 ```
 
 La reducción de imports no es un objetivo estético: es una señal de **menor acoplamiento**.
+
+
+#### 49.9 ¿Por qué no hacer directamente el `push()` cuando llega la request?
+
+La pregunta es válida porque para una aplicación pequeña la solución directa es atractiva:
+
+```javascript
+router.post("/", (req, res) => {
+  datos.push(req.body);
+
+  return res.status(201).json(req.body);
+});
+```
+
+Tiene ventajas reales:
+
+```text
+pocas líneas
+fácil de escribir
+fácil de seguir en un ejemplo corto
+menos archivos
+menos imports
+```
+
+Por eso una arquitectura por capas tiene un **costo**. Agrega:
+
+```text
+módulos
+nombres
+contratos entre funciones
+imports
+navegación entre archivos
+decisiones sobre dónde ubicar cada cosa
+```
+
+No debe ocultarse ese costo.
+
+El problema aparece cuando se agregan requisitos.
+
+Supóngase que después se pide:
+
+```text
+1. validar que el ID no exista
+2. normalizar el nombre
+3. impedir altas si se superó un límite
+4. persistir en SQL
+5. registrar auditoría
+6. devolver errores HTTP distintos
+```
+
+En el handler directo puede terminar apareciendo:
+
+```javascript
+router.post("/", async (req, res) => {
+  // parsear entrada HTTP
+
+  // validar estructura
+
+  // validar reglas de negocio
+
+  // comprobar duplicados
+
+  // normalizar
+
+  // construir SQL
+
+  // abrir conexión
+
+  // persistir
+
+  // manejar error de DB
+
+  // decidir status HTTP
+
+  // serializar respuesta
+});
+```
+
+La función dejó de representar una sola idea.
+
+La versión por capas distribuye las razones de cambio:
+
+```text
+Router
+POST /
+    ↓
+Controller
+leer body + decidir HTTP
+    ↓
+Service
+validar reglas + normalizar + coordinar
+    ↓
+Repository
+insertar en la fuente de datos
+```
+
+La ventaja no es que el código total sea necesariamente menor. Muchas veces será **más largo**.
+
+La ventaja es que cada fragmento puede comprenderse, modificarse y probarse con menos conocimiento del resto.
+
+##### Ejemplo de cambio: array → SQL
+
+Con acceso directo:
+
+```javascript
+router.post("/", (req, res) => {
+  infoLenguajes.frontend.push(req.body);
+  return res.status(201).json(req.body);
+});
+```
+
+si la fuente cambia a SQL hay que modificar el propio handler HTTP.
+
+Con Repository:
+
+```javascript
+// Controller
+const creado = frontendService.create(req.body);
+```
+
+```javascript
+// Service
+return frontendRepository.create(nuevoLenguaje);
+```
+
+```javascript
+// Repository actual
+infoLenguajes.frontend.push(nuevoLenguaje);
+```
+
+la migración se concentra principalmente en:
+
+```text
+Repository actual
+→ Repository SQL
+```
+
+La URL, el Controller y buena parte del Service pueden conservar su contrato.
+
+##### Ejemplo de cambio: aparece una regla de negocio
+
+Supóngase:
+
+> No pueden existir dos lenguajes con el mismo nombre y turno.
+
+Esa regla no pertenece a HTTP ni a SQL.
+
+Puede implementarse en Service:
+
+```javascript
+exports.create = nuevoLenguaje => {
+  const existente = frontendRepository.findByNameAndTurn(
+    nuevoLenguaje.nombre,
+    nuevoLenguaje.turno
+  );
+
+  if (existente) {
+    throw new Error("El lenguaje ya existe para ese turno");
+  }
+
+  return frontendRepository.create(nuevoLenguaje);
+};
+```
+
+El Router sigue resolviendo la misma ruta.
+
+El Controller sigue recibiendo el mismo body.
+
+El Repository sigue concentrándose en consultar/persistir.
+
+La regla apareció en el lugar que representa al negocio.
+
+##### Ejemplo de cambio: aparece otro cliente
+
+En la implementación HTTP actual, la operación llega así:
+
+```text
+cliente web → Controller → Service
+```
+
+Mañana la misma regla podría necesitarse desde:
+
+```text
+job programado
+script interno
+cola de mensajes
+test automatizado
+```
+
+Si la lógica vive dentro de:
+
+```javascript
+(req, res) => { ... }
+```
+
+reutilizarla obliga a simular HTTP.
+
+Si vive en:
+
+```javascript
+frontendService.create(nuevoLenguaje)
+```
+
+puede invocarse desde distintos adaptadores.
+
+Ese desacoplamiento es una de las razones más importantes para no colocar toda la lógica dentro del endpoint.
+
+#### 49.10 Cuándo una arquitectura por capas puede ser excesiva
+
+Separar responsabilidades no significa que **todo programa necesite cuatro capas**.
+
+Para:
+
+```text
+un script de 30 líneas
+un prototipo descartable
+un ejercicio extremadamente acotado
+una automatización de una sola operación
+```
+
+la estructura completa puede aportar más ceremonia que beneficio.
+
+La decisión depende de:
+
+```text
+tamaño esperado
+vida útil
+cantidad de desarrolladores
+cantidad de reglas
+cantidad de fuentes de datos
+necesidad de pruebas
+frecuencia de cambios
+```
+
+En esta materia se adopta deliberadamente una arquitectura por capas porque el objetivo no es optimizar un script mínimo, sino aprender a construir una API que va a:
+
+```text
+tener CRUD completo
+crecer en endpoints
+incorporar base de datos
+ser desarrollada en grupo
+ser revisada y evaluada
+seguir cambiando durante el proyecto
+```
+
+Por eso la aparente sobreingeniería inicial funciona también como **preparación estructural para la complejidad que todavía no apareció**.
+
+#### 49.11 Cortes horizontales y funcionalidades verticales
+
+Las carpetas están organizadas horizontalmente:
+
+```text
+routers/
+controllers/
+services/
+repositories/
+```
+
+pero una funcionalidad real atraviesa todas ellas.
+
+Por ejemplo, eliminar un lenguaje:
+
+```mermaid
+flowchart LR
+    R["DELETE /lenguajes/:id"] --> C[Controller.remove]
+    C --> S[Service.remove]
+    S --> P[Repository.remove]
+    P --> D[(Datos)]
+```
+
+Ese recorrido completo es una **funcionalidad vertical** o *vertical slice* conceptual.
+
+Esto explica por qué, en un equipo, separar personas exclusivamente así:
+
+```text
+persona A → solo routers
+persona B → solo controllers
+persona C → solo services
+persona D → solo repositories
+```
+
+puede hacer que cada integrante entienda solo una fracción del comportamiento.
+
+Trabajar una operación “de punta a punta” obliga a comprender:
+
+```text
+entrada HTTP
+→ contrato
+→ regla
+→ persistencia
+→ respuesta
+```
+
+La organización del código puede ser horizontal y, al mismo tiempo, el trabajo sobre una feature puede ser vertical.
+
 
 ### 50. Routing modular con `express.Router`
 
@@ -7281,7 +9600,7 @@ El status no debe memorizarse como decoración: comunica al cliente **qué ocurr
 
 ### 53. Implementación de la arquitectura completa: Router → Controller → Service → Repository
 
-La clase anterior había separado el Router. El paso siguiente consiste en hacer real la arquitectura completa.
+Una vez separado el Router, el paso siguiente consiste en materializar el resto de la arquitectura por capas.
 
 Una operación de lectura puede dividirse así:
 
@@ -7323,7 +9642,7 @@ exports.getAllFrontendLanguages = () => {
 };
 ```
 
-Esta capa conoce que hoy los datos viven en:
+Esta capa conoce que, en la implementación actual, los datos viven en:
 
 ```javascript
 infoLenguajes.frontend
@@ -7520,6 +9839,262 @@ Controller
 El Router no necesita conocer el cambio.
 
 Eso es **localidad del cambio**: modificar una decisión debería afectar principalmente a la capa responsable de esa decisión.
+
+
+#### 53.7 Cómo decidir en qué capa colocar una línea de código
+
+Cuando aparece una nueva instrucción, una forma útil de decidir su ubicación es preguntar **qué conocimiento necesita**.
+
+| Pregunta | Capa más probable |
+|---|---|
+| ¿Qué método/path activa esta operación? | Router |
+| ¿De dónde saco el `id`: params, query o body? | Controller |
+| ¿Qué status HTTP corresponde? | Controller |
+| ¿Qué regla decide si la operación está permitida? | Service |
+| ¿Cómo se normalizan/transforman datos por una regla del dominio? | Service |
+| ¿Cómo busco/guardo el dato en la fuente actual? | Repository |
+| ¿Qué tabla/colección/archivo/array contiene el dato? | Repository |
+
+No es una tabla matemática. Existen decisiones discutibles y arquitecturas alternativas.
+
+El objetivo es evitar dos señales de alerta:
+
+```text
+una capa necesita conocer detalles de todas las demás
+```
+
+o:
+
+```text
+para cambiar una regla simple hay que modificar muchos niveles
+```
+
+#### 53.8 El Controller no es “el lugar de todos los `if`”
+
+Como conoce la request, es tentador colocar cada validación en el Controller.
+
+No toda validación pertenece allí.
+
+Ejemplo de validación de frontera:
+
+```javascript
+const id = Number(req.params.id);
+
+if (!Number.isInteger(id)) {
+  return res.status(400).json({
+    error: "El ID debe ser entero",
+  });
+}
+```
+
+La pregunta es:
+
+```text
+¿la entrada puede convertirse en un valor válido para la aplicación?
+```
+
+Ejemplo de regla del dominio:
+
+```javascript
+if (alumno.correlativasPendientes.length > 0) {
+  // no puede inscribirse
+}
+```
+
+La pregunta es:
+
+```text
+¿el negocio permite realizar la operación?
+```
+
+La primera está fuertemente ligada al contrato HTTP.
+
+La segunda debe poder existir incluso si mañana la operación se invoca sin HTTP.
+
+#### 53.9 El Service no es “una carpeta para funciones”
+
+Una función no pertenece al Service simplemente porque:
+
+```text
+hace cálculos
+tiene varios if
+es larga
+```
+
+Pertenece allí si representa:
+
+```text
+reglas
+decisiones
+coordinación
+transformaciones propias del caso de uso
+```
+
+Por ejemplo:
+
+```javascript
+const ordenarPorCantidad = datos => {
+  return datos.sort((a, b) => a.cantidad - b.cantidad);
+};
+```
+
+podría ser una utilidad genérica.
+
+En cambio:
+
+```javascript
+const calcularPrecioFinal = pedido => {
+  if (pedido.cantidad >= 10) {
+    return pedido.precio * 0.9;
+  }
+
+  return pedido.precio;
+};
+```
+
+si el descuento por cantidad es una regla comercial, pertenece claramente al dominio/Service.
+
+La ubicación se decide por **responsabilidad**, no por la forma sintáctica de la función.
+
+#### 53.10 El Repository no es la base de datos
+
+El Repository es código de la aplicación.
+
+La base de datos es una dependencia externa o mecanismo de almacenamiento.
+
+```text
+Service
+→ Repository
+→ driver/cliente de datos
+→ Base de datos
+```
+
+En la práctica actual:
+
+```text
+Repository
+→ array en memoria
+```
+
+Más adelante:
+
+```text
+Repository
+→ driver SQL
+→ SQL Server
+```
+
+o:
+
+```text
+Repository
+→ driver/ODM
+→ MongoDB
+```
+
+El Repository traduce operaciones de la aplicación a operaciones de persistencia.
+
+Por ejemplo:
+
+```javascript
+frontendRepository.findById(id)
+```
+
+puede internamente significar:
+
+```text
+findIndex sobre un array
+```
+
+en memoria, y más adelante puede significar:
+
+```sql
+SELECT ...
+WHERE id = ?
+```
+
+mañana.
+
+Para la capa superior, la intención sigue siendo:
+
+```text
+buscar por ID
+```
+
+#### 53.11 Los nombres de las funciones forman contratos entre capas
+
+Cuando Controller invoca:
+
+```javascript
+frontendService.deleteById(id);
+```
+
+se establece un contrato:
+
+```text
+entrada
+→ id
+
+salida
+→ resultado de eliminación / ausencia / error
+```
+
+La capa superior no debería necesitar conocer la implementación interna.
+
+Eso permite cambiar:
+
+```javascript
+findIndex + splice
+```
+
+por:
+
+```sql
+DELETE FROM ...
+```
+
+sin cambiar la forma conceptual en que el Controller solicita la operación.
+
+Este principio es más importante que el nombre exacto de las carpetas.
+
+#### 53.12 Una capa pasamanos puede ser válida, pero debe tener una razón
+
+Ejemplo:
+
+```javascript
+exports.delete = id => {
+  return frontendRepository.delete(id);
+};
+```
+
+En la implementación actual no agrega comportamiento adicional.
+
+Hay tres posibilidades:
+
+1. **Se mantiene deliberadamente** porque la arquitectura establece que Controller nunca depende de Repository y se espera agregar reglas.
+2. **Se elimina** en una arquitectura más simple donde esa frontera no aporta valor.
+3. **Se convierte en un caso de uso** más rico cuando aparecen reglas.
+
+No existe una ley universal que obligue a crear un Service vacío.
+
+En el contexto del curso se conserva porque:
+
+```text
+se quiere practicar la separación completa
+se incorporará persistencia real
+aparecerán reglas/validaciones
+el proyecto crecerá
+cada endpoint debe recorrer la arquitectura
+```
+
+La explicación correcta no es:
+
+> “Siempre hay que tener Service.”
+
+sino:
+
+> “En esta arquitectura se usa Service para mantener separada la lógica de aplicación de HTTP y persistencia.”
+
 
 ### 54. Crear recursos con `POST`: del body al Repository
 
@@ -7841,5 +10416,1059 @@ historial de Git
 
 Los comentarios son útiles para explicar **por qué** existe una decisión no obvia; no deberían utilizarse como depósito de código muerto.
 
-**Fuentes oficiales de actualización técnica:** documentación de Node.js (`node:http`, `node:fs`, modo `--watch`, CommonJS), documentación de NPM (`package.json`, dependencias e instalación), documentación de Express 5.x (Request/Response API, routing, `express.Router`, `app.use`, `express.json` y middleware), especificaciones HTTP/JSON (RFC 9110 y RFC 8259), MDN para semántica de JavaScript/HTTP y OWASP para validación e inyección SQL. Las explicaciones de clase se conservaron como eje temático; los detalles actuales se normalizaron contra esas referencias.
+
+### 56. Completar CRUD: `DELETE` y `PUT`
+
+Con `Create` y `Read` ya implementados, las operaciones restantes permiten observar la arquitectura completa sobre acciones que **modifican** el estado.
+
+```text
+Create → POST
+Read   → GET
+Update → PUT / PATCH
+Delete → DELETE
+```
+
+La correspondencia es útil como mapa mental, pero CRUD y HTTP no son conceptos idénticos.
+
+HTTP define semántica de métodos sobre recursos; CRUD describe operaciones generales sobre datos.
+
+#### 56.1 Identificar un recurso para eliminarlo
+
+Para eliminar un elemento específico hace falta identificarlo.
+
+Un contrato habitual:
+
+```http
+DELETE /api/lenguajes/frontend/3
+```
+
+El `3` forma parte del path.
+
+En Express:
+
+```javascript
+router.delete("/:id", frontendController.deleteFrontendLanguage);
+```
+
+El Controller puede leer:
+
+```javascript
+req.params.id
+```
+
+La razón para utilizar un path param no es simplemente que los query params sean “opcionales”.
+
+La diferencia más precisa es:
+
+```text
+path parameter
+→ forma parte de la identidad/estructura de la URI que matchea esa ruta
+
+query parameter
+→ expresa parámetros adicionales sobre la operación/recurso
+```
+
+Si la ruta declarada es:
+
+```text
+/:id
+```
+
+una URL sin ese segmento no matchea esa ruta.
+
+Una API podría diseñar contratos diferentes, pero para una operación sobre un recurso individual:
+
+```text
+DELETE /recursos/:id
+```
+
+es una convención natural.
+
+#### 56.2 Los parámetros de ruta llegan como strings
+
+Aunque la URL sea:
+
+```text
+/lenguajes/3
+```
+
+Express entrega conceptualmente:
+
+```javascript
+req.params.id === "3";
+```
+
+Si los IDs de la fuente son números:
+
+```javascript
+lenguaje.id === 3;
+```
+
+entonces:
+
+```javascript
+lenguaje.id === req.params.id;
+```
+
+es:
+
+```javascript
+3 === "3" // false
+```
+
+La solución no debería ser debilitar la comparación:
+
+```javascript
+lenguaje.id == id;
+```
+
+solo para “hacerlo andar”.
+
+Conviene normalizar en la frontera:
+
+```javascript
+const id = Number(req.params.id);
+
+if (!Number.isInteger(id)) {
+  return res.status(400).json({
+    error: "ID inválido",
+  });
+}
+```
+
+Después el resto del sistema trabaja con un tipo consistente:
+
+```javascript
+lenguaje.id === id;
+```
+
+La regla general:
+
+```text
+dato externo
+→ parsear/normalizar una vez
+→ trabajar internamente con tipos previsibles
+```
+
+Esto evita distribuir conversiones por Repository, Service y Controller.
+
+#### 56.3 Encontrar la posición: `findIndex()`
+
+Para eliminar un elemento de un array mediante `splice`, interesa conocer su **índice**.
+
+```javascript
+const index = frontend.findIndex(
+  lenguaje => lenguaje.id === id
+);
+```
+
+`findIndex()` devuelve:
+
+```text
+0, 1, 2, ... → índice del primer elemento coincidente
+-1           → no encontró coincidencia
+```
+
+Por eso la condición correcta es:
+
+```javascript
+if (index >= 0) {
+  // encontrado
+}
+```
+
+No:
+
+```javascript
+if (index > 0) {
+```
+
+porque el índice `0` también es válido.
+
+Comparación conceptual:
+
+| Método | Resultado |
+|---|---|
+| `find(...)` | el primer elemento coincidente o `undefined` |
+| `findIndex(...)` | el índice del primer coincidente o `-1` |
+| `filter(...)` | un array con todas las coincidencias |
+
+Se elige según qué necesita la siguiente operación.
+
+Para leer un elemento:
+
+```text
+find
+```
+
+puede ser suficiente.
+
+Para modificar físicamente una posición de un array:
+
+```text
+findIndex
+```
+
+resulta especialmente útil.
+
+#### 56.4 Eliminar con `splice()`
+
+Con el índice:
+
+```javascript
+frontend.splice(index, 1);
+```
+
+significa:
+
+```text
+comenzar en index
+eliminar 1 elemento
+```
+
+`splice()` **muta el array original**.
+
+Además devuelve un array con los elementos eliminados:
+
+```javascript
+const eliminados = frontend.splice(index, 1);
+```
+
+Si `index` vale `2`:
+
+```text
+antes
+[A, B, C, D]
+
+splice(2, 1)
+
+después
+[A, B, D]
+
+retorno
+[C]
+```
+
+También puede insertar/reemplazar:
+
+```javascript
+array.splice(index, 1, nuevoValor);
+```
+
+Esto elimina un elemento y coloca otro en esa posición.
+
+Por eso `splice` puede utilizarse tanto para delete como para determinadas formas de reemplazo, aunque en la práctica de la clase el Update se implementa mediante asignación directa.
+
+#### 56.5 Repository de eliminación: operar sobre la fuente, no decidir HTTP
+
+Una versión pedagógica:
+
+```javascript
+exports.deleteFrontendLanguage = id => {
+  const index = frontend.findIndex(
+    lenguaje => lenguaje.id === id
+  );
+
+  if (index < 0) {
+    return null;
+  }
+
+  const [eliminado] = frontend.splice(index, 1);
+
+  return eliminado;
+};
+```
+
+Otra decisión de contrato podría retornar la colección actualizada.
+
+Lo importante es que Repository no haga:
+
+```javascript
+res.status(404)
+```
+
+porque no conoce HTTP.
+
+Su responsabilidad termina en expresar un resultado de datos:
+
+```text
+eliminado
+no encontrado
+error de persistencia
+```
+
+El Controller decide cómo traducirlo.
+
+#### 56.6 `DELETE` exitoso: el body de respuesta es una decisión de contrato
+
+Después de eliminar se puede responder de distintas maneras.
+
+Por ejemplo:
+
+```http
+204 No Content
+```
+
+si no hace falta enviar representación.
+
+O:
+
+```http
+200 OK
+Content-Type: application/json
+
+{
+  "id": 3,
+  "nombre": "CSS"
+}
+```
+
+si se quiere devolver el recurso eliminado.
+
+También podría devolverse una representación actualizada de la colección, aunque suele ser más costoso y acopla al cliente a una respuesta más grande.
+
+No existe una regla que obligue a “devolver todo el array” para demostrar que se borró.
+
+El status y la representación deben formar parte del contrato de la API.
+
+### 57. Actualización de recursos: reemplazo, modificación parcial y estado
+
+La operación Update introduce una distinción que suele confundirse al comienzo: **PUT y PATCH no significan simplemente dos formas equivalentes de “editar”**.
+
+#### 57.1 `PUT`: reemplazar la representación del recurso
+
+Semánticamente, `PUT` representa el reemplazo del estado del recurso objetivo por la representación enviada.
+
+Ejemplo:
+
+```http
+PUT /api/lenguajes/frontend/2
+Content-Type: application/json
+
+{
+  "id": 2,
+  "nombre": "JavaScript",
+  "turno": "noche",
+  "comision": "B",
+  "cantidadAlumnos": 51
+}
+```
+
+Si la implementación pedagógica hace:
+
+```javascript
+frontend[index] = lenguajeActualizado;
+```
+
+está modelando precisamente un reemplazo.
+
+Esto explica el riesgo observado en clase:
+
+```javascript
+frontend[index] = {
+  id: 51
+};
+```
+
+produce un objeto que solo tiene:
+
+```javascript
+{ id: 51 }
+```
+
+Las propiedades omitidas no se “conservan mágicamente”.
+
+La API debe decidir si exige una representación completa y validarla antes de reemplazar.
+
+#### 57.2 `PATCH`: aplicar una modificación parcial
+
+`PATCH` expresa una modificación parcial.
+
+Ejemplo conceptual:
+
+```http
+PATCH /api/lenguajes/frontend/2
+Content-Type: application/json
+
+{
+  "cantidadAlumnos": 51
+}
+```
+
+El objetivo no es sustituir todo el recurso, sino aplicar un conjunto de cambios.
+
+Una implementación simple sobre objetos podría usar:
+
+```javascript
+frontend[index] = {
+  ...frontend[index],
+  ...cambios
+};
+```
+
+pero una API real debe validar qué propiedades pueden modificarse y cómo interpretar cada operación.
+
+La diferencia **no** es:
+
+```text
+PUT = cambio permanente
+PATCH = cambio temporal
+```
+
+Ambos pueden modificar persistentemente un recurso.
+
+La diferencia está en la semántica de **reemplazo completo vs. modificación parcial**.
+
+#### 57.3 `PUT` es idempotente
+
+Una propiedad importante de `PUT` es la idempotencia.
+
+Si se envía repetidamente el mismo:
+
+```http
+PUT /recursos/2
+```
+
+con la misma representación, el estado final esperado sigue siendo el mismo.
+
+Esto es diferente de una operación como:
+
+```http
+POST /pedidos
+```
+
+que podría crear un nuevo pedido cada vez.
+
+La idempotencia describe el **efecto final de repetir la misma operación**, no significa que el servidor ejecute una sola vez ni que la respuesta sea idéntica en todos sus metadatos.
+
+#### 57.4 Update por capas
+
+El recorrido:
+
+```mermaid
+flowchart LR
+    R["PUT /:id"] --> C[Controller]
+    C --> S[Service]
+    S --> P[Repository]
+    P --> D[(Datos)]
+```
+
+Controller:
+
+```javascript
+exports.updateFrontendLanguage = (req, res) => {
+  const id = Number(req.params.id);
+  const actualizado = req.body;
+
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({
+      error: "ID inválido",
+    });
+  }
+
+  const resultado = frontendService.updateFrontendLanguage(
+    id,
+    actualizado
+  );
+
+  if (!resultado) {
+    return res.status(404).json({
+      error: `No se encontró el lenguaje con ID ${id}`,
+    });
+  }
+
+  return res.status(200).json(resultado);
+};
+```
+
+Service:
+
+```javascript
+exports.updateFrontendLanguage = (id, actualizado) => {
+  // reglas de negocio, normalización, validaciones de dominio
+  return frontendRepository.updateFrontendLanguage(
+    id,
+    actualizado
+  );
+};
+```
+
+Repository:
+
+```javascript
+exports.updateFrontendLanguage = (id, actualizado) => {
+  const index = frontend.findIndex(
+    lenguaje => lenguaje.id === id
+  );
+
+  if (index < 0) {
+    return null;
+  }
+
+  frontend[index] = actualizado;
+  return frontend[index];
+};
+```
+
+Cada capa responde una pregunta diferente:
+
+```text
+Router
+→ ¿qué operación HTTP?
+
+Controller
+→ ¿qué llegó y qué respuesta HTTP corresponde?
+
+Service
+→ ¿la actualización cumple las reglas?
+
+Repository
+→ ¿cómo modifico el dato en la fuente actual?
+```
+
+### 58. Handlers de Express como callbacks
+
+Una simplificación que aparece al final de la clase conecta routing con conceptos de funciones vistos mucho antes.
+
+Estas dos formas:
+
+```javascript
+router.delete("/:id", (req, res) => {
+  return frontendController.deleteFrontendLanguage(req, res);
+});
+```
+
+y:
+
+```javascript
+router.delete(
+  "/:id",
+  frontendController.deleteFrontendLanguage
+);
+```
+
+pueden ser equivalentes cuando la función del Controller ya tiene la firma adecuada.
+
+#### 58.1 No se invoca la función al registrarla
+
+En:
+
+```javascript
+router.delete(
+  "/:id",
+  frontendController.deleteFrontendLanguage
+);
+```
+
+no aparecen paréntesis:
+
+```javascript
+deleteFrontendLanguage
+```
+
+porque se está pasando la **referencia a la función**.
+
+Express la guarda como handler y la ejecutará cuando una request coincida con el método y la ruta.
+
+Esto vuelve a conectar:
+
+```text
+función de orden superior
+callback
+routing
+```
+
+La función `router.delete(...)` recibe otra función como argumento.
+
+#### 58.2 Express proporciona `req`, `res` y `next`
+
+Un route handler convencional:
+
+```javascript
+function handler(req, res, next) {
+  // ...
+}
+```
+
+no necesita que el código de registro construya esos objetos.
+
+Express ejecuta el handler durante el ciclo request-response y le proporciona los argumentos correspondientes.
+
+Por eso:
+
+```javascript
+router.get("/", controller.readAll);
+```
+
+funciona sin:
+
+```javascript
+router.get("/", (req, res) => {
+  controller.readAll(req, res);
+});
+```
+
+La segunda forma agrega una función de pasamanos que, si no hace nada más, es redundante.
+
+#### 58.3 Cuándo el wrapper sí puede tener sentido
+
+Puede utilizarse si realmente adapta la llamada:
+
+```javascript
+router.get("/", (req, res, next) => {
+  console.log("métrica específica de esta ruta");
+  return controller.readAll(req, res, next);
+});
+```
+
+Aunque muchas preocupaciones transversales se resuelven mejor mediante middleware.
+
+La regla útil:
+
+```text
+si la callback solo recibe y reenvía los mismos argumentos
+→ probablemente puede pasarse la referencia directamente
+```
+
+### 59. Seguridad del transporte: HTTP, HTTPS y ubicación de datos sensibles
+
+Durante una práctica local se ven requests como texto porque el cliente HTTP permite inspeccionarlas.
+
+Eso no significa que una API real deba concluir:
+
+```text
+"nunca enviar una contraseña en body"
+"nunca enviar un token en headers"
+```
+
+La cuestión central es el **canal de transporte** y el manejo posterior.
+
+#### 59.1 HTTP sin TLS no ofrece confidencialidad
+
+Con HTTP sin cifrado, un atacante con capacidad de observar el tráfico puede leer el contenido transmitido.
+
+Eso incluye:
+
+```text
+headers
+body
+paths
+query strings
+```
+
+Por eso una API que maneja autenticación o información sensible debe utilizar **HTTPS/TLS**.
+
+TLS proporciona, entre otras propiedades:
+
+```text
+confidencialidad
+integridad
+autenticación del servidor
+```
+
+#### 59.2 Con HTTPS, headers y body se protegen en tránsito
+
+Sobre HTTPS, los headers HTTP y el body viajan dentro del canal TLS protegido.
+
+Por eso es normal que:
+
+```text
+credenciales de login
+→ body de POST
+
+token de acceso
+→ Authorization header
+```
+
+No deben registrarse indiscriminadamente en logs ni almacenarse de forma insegura, pero su presencia en body/header no es en sí el error.
+
+#### 59.3 Evitar secretos en la URL
+
+Una recomendación distinta aplica a:
+
+```text
+path
+query string
+```
+
+Ejemplo a evitar:
+
+```text
+GET /login?password=1234
+```
+
+o:
+
+```text
+/api?token=secreto
+```
+
+Las URLs pueden quedar expuestas en:
+
+```text
+historial del navegador
+logs de servidores/proxies
+herramientas de observabilidad
+analytics
+copias/pegados
+referencias
+```
+
+Para información sensible, body o headers sobre HTTPS son ubicaciones más apropiadas según el tipo de dato.
+
+#### 59.4 JWT: firmado no significa cifrado
+
+Un JWT común contiene partes codificadas con Base64URL.
+
+Eso permite leer su payload sin poseer la clave de firma.
+
+La firma sirve principalmente para verificar:
+
+```text
+integridad
+autenticidad del token
+```
+
+no para ocultar automáticamente su contenido.
+
+Por eso no deben colocarse secretos innecesarios dentro del payload de un JWT.
+
+Además, el token mismo puede otorgar acceso aunque su contenido no sea secreto, por lo que debe protegerse contra robo.
+
+### 60. `localStorage`, persistencia del navegador y datos sensibles
+
+`localStorage` no es simplemente “una caché”.
+
+Es parte de Web Storage y permite almacenar pares clave/valor asociados a un origen.
+
+Su característica principal:
+
+```text
+localStorage
+→ persiste entre cierres/reaperturas del navegador
+
+sessionStorage
+→ dura aproximadamente la sesión de la pestaña
+```
+
+Esto lo hace útil para preferencias o estado cliente que pueda reconstruirse.
+
+Ejemplos razonables:
+
+```text
+tema oscuro/claro
+preferencias visuales
+filtros seleccionados
+borradores no sensibles
+cierto estado de interfaz
+```
+
+No debe confundirse con la persistencia de negocio del backend.
+
+Guardar el carrito en `localStorage`:
+
+```text
+persiste estado en ese navegador
+```
+
+Guardar un pedido en una base de datos:
+
+```text
+persiste el estado autoritativo del sistema
+```
+
+No son equivalentes.
+
+#### 60.1 El riesgo de secretos en Web Storage
+
+El contenido de Web Storage es accesible desde JavaScript ejecutándose en el mismo origen.
+
+Por eso una vulnerabilidad XSS puede exfiltrar esos valores.
+
+Como regla de seguridad, no debería usarse `localStorage` como almacén confiable de:
+
+```text
+contraseñas
+session IDs
+refresh tokens
+secretos
+datos que dependan de confidencialidad local
+```
+
+La estrategia concreta para sesiones/autenticación depende de la arquitectura, pero el criterio importante es no asumir que “persistente en el navegador” significa “seguro”.
+
+### 61. Archivos `.http`: reproducibilidad de pruebas y manejo de secretos
+
+Un archivo `.http` permite conservar requests de prueba como texto:
+
+```http
+POST http://127.0.0.1:3000/api/lenguajes/frontend HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": 5,
+  "nombre": "Astro"
+}
+```
+
+Tiene valor porque transforma una prueba manual en un artefacto reproducible.
+
+Puede documentar:
+
+```text
+método
+URL
+headers
+query params
+body
+casos exitosos
+casos de error
+```
+
+#### 61.1 La línea en blanco separa headers y body
+
+En HTTP/1.x, después de los headers existe una separación antes del contenido.
+
+Por eso:
+
+```http
+Content-Type: application/json
+{ "id": 5 }
+```
+
+no representa correctamente la estructura esperada por muchos clientes `.http`.
+
+Debe existir la separación:
+
+```http
+Content-Type: application/json
+
+{ "id": 5 }
+```
+
+#### 61.2 El archivo no es secreto por contener rutas
+
+La estructura de endpoints no debería considerarse una medida de seguridad.
+
+Una API debe seguir siendo segura incluso si un atacante conoce:
+
+```text
+métodos
+paths
+formatos generales
+```
+
+La seguridad debe depender de:
+
+```text
+autenticación
+autorización
+validación
+TLS
+controles de acceso
+protección de datos
+```
+
+No de ocultar la URL.
+
+Sin embargo, un `.http` sí puede convertirse en información sensible si contiene:
+
+```text
+tokens reales
+API keys
+cookies de sesión
+contraseñas
+datos privados
+hosts internos
+```
+
+En esos casos se usan:
+
+```text
+variables de entorno
+archivos locales ignorados
+valores ficticios
+gestión de secretos
+```
+
+y no se versionan credenciales reales.
+
+### 62. Código de diagnóstico y logging
+
+Los `console.log` utilizados durante el aprendizaje cumplen una función concreta:
+
+```text
+ver por qué capa pasó la request
+inspeccionar valores
+localizar dónde aparece undefined
+confirmar el retorno de una operación
+```
+
+Eso es distinto del logging de producción.
+
+#### 62.1 No imprimir indiscriminadamente objetos completos
+
+Un log como:
+
+```javascript
+console.log(req);
+```
+
+puede contener una enorme cantidad de información.
+
+Y un log como:
+
+```javascript
+console.log(req.headers);
+console.log(req.body);
+```
+
+puede terminar registrando:
+
+```text
+tokens
+cookies
+credenciales
+datos personales
+```
+
+Los logs también son datos y requieren diseño.
+
+#### 62.2 Logging estructurado
+
+En una aplicación real interesa registrar eventos útiles:
+
+```text
+timestamp
+nivel
+operación
+request/correlation id
+resultado
+duración
+error controlado
+```
+
+evitando secretos.
+
+Ejemplo conceptual:
+
+```javascript
+logger.info({
+  operation: "deleteLanguage",
+  languageId: id,
+  result: "success",
+});
+```
+
+Esto permite observabilidad sin convertir la consola en un volcado indiscriminado del estado interno.
+
+### 63. CRUD completo sobre memoria: qué se aprendió y qué falta
+
+Al finalizar esta etapa existe conceptualmente:
+
+```text
+POST   → Create
+GET    → Read
+PUT    → Update
+DELETE → Delete
+```
+
+y cada operación puede recorrer:
+
+```text
+Router
+→ Controller
+→ Service
+→ Repository
+→ array en memoria
+```
+
+Eso ya permite estudiar:
+
+```text
+routing
+contrato HTTP
+entrada desde params/query/body
+lógica de aplicación
+acceso a datos
+status codes
+serialización
+depuración
+separación de responsabilidades
+```
+
+Pero sigue faltando una propiedad fundamental:
+
+```text
+persistencia real
+```
+
+El array vive en la memoria del proceso.
+
+```text
+POST
+→ modifica RAM
+
+reiniciar Node
+→ se vuelve a ejecutar el módulo
+→ se reconstruye el array original
+→ se pierden los cambios de ejecución
+```
+
+Por eso el próximo paso natural no consiste en aprender “otro CRUD”, sino en sustituir:
+
+```text
+Repository
+→ array
+```
+
+por:
+
+```text
+Repository
+→ SQL
+```
+
+o:
+
+```text
+Repository
+→ MongoDB
+```
+
+La arquitectura cobra especial sentido en ese momento: **las capas superiores no deberían necesitar ser rediseñadas solamente porque cambió el mecanismo de persistencia**.
+
+## Referencias técnicas
+
+Las clases determinan el alcance temático. Para detalles normativos, semántica actual y correcciones técnicas se priorizan fuentes oficiales o primarias.
+
+### Git y GitHub
+
+- [Git — `gitignore` Documentation](https://git-scm.com/docs/gitignore)
+- [GitHub Docs — About SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/about-ssh)
+- [GitHub Docs — Generating a new SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+
+### JavaScript y TypeScript
+
+- [MDN — JavaScript execution model](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model)
+- [MDN — JavaScript data types and data structures](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Data_structures)
+- [MDN — Equality comparisons and sameness](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Equality_comparisons_and_sameness)
+- [MDN — Functions / passing arguments](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro)
+
+### Node.js y módulos
+
+- [Node.js — Introduction to Node.js](https://nodejs.org/en/learn/getting-started/introduction-to-nodejs)
+- [Node.js — Don't Block the Event Loop](https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop)
+- [Node.js — ECMAScript modules](https://nodejs.org/api/esm.html)
+- [Node.js — Packages / determining module system](https://nodejs.org/api/packages.html)
+- [Node.js — TypeScript](https://nodejs.org/api/typescript.html)
+
+### HTTP, Express y seguridad
+
+- [Express — Routing](https://expressjs.com/en/guide/routing.html)
+- [Express — API Reference](https://expressjs.com/en/api.html)
+- [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)
+- [RFC 8259 — JSON](https://www.rfc-editor.org/rfc/rfc8259)
+- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/)
 
