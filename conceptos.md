@@ -160,6 +160,9 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [38.1 Request/response](#381-requestresponse)
     - [39. HTTP y HTTPS](#39-http-y-https)
       - [39.1 Códigos de estado básicos](#391-códigos-de-estado-básicos)
+      - [39.2 Anatomía de una HTTP request](#392-anatomía-de-una-http-request)
+      - [39.3 Anatomía de una HTTP response](#393-anatomía-de-una-http-response)
+      - [39.4 Métodos HTTP y la operación que representan](#394-métodos-http-y-la-operación-que-representan)
     - [40. Dirección de un servicio: host, IP y puerto](#40-dirección-de-un-servicio-host-ip-y-puerto)
     - [41. URL, DNS, rutas y parámetros](#41-url-dns-rutas-y-parámetros)
       - [41.1 Parámetros de ruta (*path params*)](#411-parámetros-de-ruta-path-params)
@@ -177,6 +180,7 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
         - [Path parameter y criterio de búsqueda no son lo mismo](#path-parameter-y-criterio-de-búsqueda-no-son-lo-mismo)
       - [43.8 La respuesta HTTP como contrato](#438-la-respuesta-http-como-contrato)
         - [El navegador como cliente de prueba](#el-navegador-como-cliente-de-prueba)
+      - [43.9 Middleware: funciones dentro del ciclo request/response](#439-middleware-funciones-dentro-del-ciclo-requestresponse)
     - [44. Reinicio automático durante el desarrollo: Nodemon y `node --watch`](#44-reinicio-automático-durante-el-desarrollo-nodemon-y-node---watch)
       - [44.1 Nodemon](#441-nodemon)
       - [44.2 `node --watch`](#442-node---watch)
@@ -191,6 +195,18 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [47.2 Validar la existencia antes de ejecutar la operación dependiente](#472-validar-la-existencia-antes-de-ejecutar-la-operación-dependiente)
       - [47.3 Conectar la promesa con la respuesta HTTP](#473-conectar-la-promesa-con-la-respuesta-http)
       - [47.4 Puente conceptual completo](#474-puente-conceptual-completo)
+    - [48. APIs: interfaz entre sistemas](#48-apis-interfaz-entre-sistemas)
+      - [48.1 Endpoint, recurso y contrato](#481-endpoint-recurso-y-contrato)
+      - [48.2 Clasificación por exposición](#482-clasificación-por-exposición)
+      - [48.3 REST: estilo arquitectónico, no protocolo](#483-rest-estilo-arquitectónico-no-protocolo)
+      - [48.4 Otros estilos y tecnologías de API](#484-otros-estilos-y-tecnologías-de-api)
+      - [48.5 Clientes HTTP para probar una API](#485-clientes-http-para-probar-una-api)
+    - [49. De un servidor monolítico a una arquitectura por capas](#49-de-un-servidor-monolítico-a-una-arquitectura-por-capas)
+      - [49.1 Patrón de diseño vs. patrón de arquitectura](#491-patrón-de-diseño-vs-patrón-de-arquitectura)
+      - [49.2 MVC: Model — View — Controller](#492-mvc-model--view--controller)
+      - [49.3 Arquitectura utilizada en el backend: Router → Controller → Service → Repository](#493-arquitectura-utilizada-en-el-backend-router--controller--service--repository)
+      - [49.4 La regla de dependencias: no saltear capas](#494-la-regla-de-dependencias-no-saltear-capas)
+      - [49.5 Por qué separar el Repository de la lógica de negocio](#495-por-qué-separar-el-repository-de-la-lógica-de-negocio)
 
 ---
 
@@ -3977,13 +3993,159 @@ Los códigos de estado forman parte de la respuesta HTTP e indican el resultado 
 
 | Código | Nombre | Uso típico |
 |---:|---|---|
-| `200` | OK | Solicitud exitosa; por ejemplo, un `GET` que devuelve el recurso pedido |
+| `200` | OK | Solicitud procesada correctamente y, normalmente, con una representación en la respuesta |
 | `201` | Created | La solicitud creó exitosamente un recurso; suele aparecer tras un `POST` de creación |
+| `204` | No Content | La operación fue exitosa y no hace falta devolver contenido en el body |
 | `304` | Not Modified | Respuesta a una solicitud condicional que indica que la representación almacenada por el cliente sigue siendo válida; no equivale simplemente a “el navegador devolvió la caché” |
+| `400` | Bad Request | La solicitud no puede procesarse por un problema atribuible a su contenido o forma; no significa “recurso inexistente” |
 | `404` | Not Found | No existe un recurso/ruta que coincida con lo solicitado |
+| `405` | Method Not Allowed | El recurso existe, pero no admite el método HTTP utilizado |
 | `500` | Internal Server Error | Fallo inesperado del lado del servidor |
 
 > ⚠️ El código de estado debe describir el resultado real. Enviar contenido válido y simultáneamente responder `404` produce una respuesta semánticamente contradictoria, aunque técnicamente sea posible.
+
+Una distinción especialmente importante es **`400` vs. `404`**:
+
+```text
+400 Bad Request
+→ el servidor entiende el endpoint, pero la request tiene un problema de forma,
+  validación o datos que impide procesarla correctamente.
+
+404 Not Found
+→ el recurso o ruta identificada por la request no existe.
+```
+
+Por ejemplo, pedir `/peliculas/9999` cuando no existe esa película normalmente se representa con `404`; enviar a un endpoint un body inválido o un dato obligatorio ausente puede corresponder a `400`, según el contrato de la API.
+
+#### 39.2 Anatomía de una HTTP request
+
+La request no es solamente una URL. Conceptualmente contiene varias piezas que permiten al servidor interpretar qué se solicita y con qué información.
+
+En **HTTP/1.1**, una representación textual simplificada puede verse así:
+
+```http
+POST /api/peliculas?notificar=true HTTP/1.1
+Host: localhost:3000
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{"titulo":"Alien","stock":3}
+```
+
+Puede separarse en:
+
+```text
+HTTP request
+├── request line
+│   ├── método         → POST
+│   ├── request target → /api/peliculas?notificar=true
+│   └── versión        → HTTP/1.1
+├── headers
+├── línea vacía
+└── body / content opcional
+```
+
+La **request line** indica la operación y el destino. Los **headers** aportan metadatos de la solicitud: tipo de contenido, autorización, datos de caché, preferencias del cliente, cookies, etc. No todos aparecen en todas las requests.
+
+La línea vacía separa encabezados y contenido en la sintaxis de HTTP/1.x. HTTP/2 y HTTP/3 utilizan un framing diferente en la red, pero conservan la misma semántica general de método, destino, headers y contenido.
+
+El **body** no está presente en todas las solicitudes. En particular, el contenido de una request `GET` no tiene semántica general definida por HTTP y normalmente no se utiliza para enviar criterios de consulta. Para `GET`, los datos variables suelen viajar en el path o en la query string:
+
+```http
+GET /api/peliculas/42
+GET /api/peliculas?genero=ciencia-ficcion
+```
+
+En cambio, operaciones como `POST`, `PUT` o `PATCH` suelen transportar datos en el body:
+
+```json
+{
+  "titulo": "Alien",
+  "stock": 3
+}
+```
+
+Cuando el contenido es JSON, un header típico es:
+
+```http
+Content-Type: application/json
+```
+
+Ese header describe **cómo interpretar el body**; no cifra la información.
+
+#### 39.3 Anatomía de una HTTP response
+
+La response tiene una estructura paralela. Ejemplo conceptual HTTP/1.1:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: ...
+
+{"id":"42","titulo":"Alien"}
+```
+
+Sus partes principales son:
+
+```text
+HTTP response
+├── status line
+│   ├── versión HTTP
+│   ├── status code
+│   └── reason phrase / mensaje de estado
+├── headers
+├── línea vacía
+└── body / content opcional
+```
+
+El **status code** comunica el resultado general; los **headers** describen la respuesta y su representación; el **body** contiene los datos cuando corresponde.
+
+En Express, el mismo concepto aparece detrás de:
+
+```javascript
+return res
+  .status(200)
+  .json({ id: "42", titulo: "Alien" });
+```
+
+`res.status(200)` configura el estado y `res.json(...)` serializa el valor como JSON y envía la respuesta con un `Content-Type` apropiado.
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+
+    C->>S: request: método + target + headers + body?
+    S->>S: procesa la operación
+    S-->>C: response: status + headers + body?
+```
+
+#### 39.4 Métodos HTTP y la operación que representan
+
+El método HTTP expresa **qué semántica solicita el cliente sobre el recurso identificado por la URI**.
+
+| Método | Uso conceptual habitual | ¿Suele llevar body? |
+|---|---|---|
+| `GET` | obtener una representación del recurso | normalmente no |
+| `POST` | enviar datos para un procesamiento específico; frecuentemente crear un recurso subordinado | sí |
+| `PUT` | crear o reemplazar completamente la representación del recurso identificado | sí |
+| `PATCH` | aplicar una modificación parcial | sí |
+| `DELETE` | eliminar la asociación/recurso identificado | normalmente no es necesario |
+
+Un CRUD típico suele mapearse de forma aproximada así:
+
+```text
+Create → POST
+Read   → GET
+Update → PUT / PATCH
+Delete → DELETE
+```
+
+No debe interpretarse como una equivalencia mecánica: HTTP define semántica de métodos y una API decide cómo modelar sus recursos dentro de esas reglas.
+
+Una consecuencia práctica importante es que **`GET` debe utilizarse para lectura**, no para producir cambios de estado como inscribir un alumno o descontar stock. Esos cambios necesitan un método cuya semántica permita procesamiento/modificación.
+
+También conviene distinguir `PUT` de `PATCH`: `PUT` representa el reemplazo de la representación del recurso objetivo; `PATCH` existe para describir modificaciones parciales. En APIs reales, el contrato debe especificar exactamente qué campos admite cada operación.
 
 ### 40. Dirección de un servicio: host, IP y puerto
 
@@ -4028,6 +4190,14 @@ app.get("/usuarios/:id", (req, res) => {
 ```
 
 Una solicitud a `/usuarios/42` produce `req.params.id === "42"`.
+
+Los parámetros capturados desde la URL llegan como **texto**. Por eso, si el criterio de búsqueda utiliza identificadores numéricos, debe decidirse explícitamente si conviene convertir el parámetro o comparar contra strings:
+
+```javascript
+const id = Number(req.params.id);
+```
+
+o mantener ambos lados como texto. Evitar depender de `==` para “resolver” automáticamente la diferencia de tipos hace que el contrato sea más claro.
 
 #### 41.2 Parámetros de consulta (*query params*)
 
@@ -4637,6 +4807,78 @@ DevTools / navegador
 
 Un `console.log(...)` ejecutado dentro del handler aparece en la terminal del servidor, no en la consola JavaScript del cliente.
 
+#### 43.9 Middleware: funciones dentro del ciclo request/response
+
+Una aplicación Express puede pensarse como una **cadena de funciones middleware** que participan del ciclo request/response.
+
+Una función middleware recibe normalmente:
+
+```javascript
+(req, res, next) => {
+  // ...
+}
+```
+
+donde:
+
+- `req` representa la request;
+- `res` representa la response;
+- `next` es una función que transfiere el control al siguiente middleware compatible de la cadena.
+
+Ejemplo:
+
+```javascript
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+```
+
+Este middleware observa la solicitud y después continúa el flujo. También puede modificar `req` o `res` antes de delegar:
+
+```javascript
+app.use((req, res, next) => {
+  req.inicioProcesamiento = Date.now();
+  next();
+});
+```
+
+Otra posibilidad es **finalizar** directamente el ciclo:
+
+```javascript
+app.use((req, res, next) => {
+  if (!req.headers.authorization) {
+    return res.status(401).json({
+      error: "Falta autorización",
+    });
+  }
+
+  next();
+});
+```
+
+La regla central es:
+
+```text
+middleware
+├── termina la respuesta
+└── o llama a next()
+```
+
+Si no hace ninguna de las dos cosas, la request queda detenida y el cliente continúa esperando.
+
+```mermaid
+flowchart LR
+    C[Cliente] --> M1[Middleware 1]
+    M1 -->|next| M2[Middleware 2]
+    M2 -->|next| H[Handler de ruta]
+    H --> R[Response]
+    R --> C
+```
+
+No todo elemento que conceptualmente “está en el medio” entre cliente y servidor es automáticamente middleware de Express. En Express, *middleware* tiene un significado técnico concreto: una función incorporada a la cadena de procesamiento de la aplicación/router, con acceso a `req`, `res` y normalmente `next`.
+
+Los middlewares permiten implementar responsabilidades transversales —por ejemplo logging, autenticación, validación o parseo— sin repetir la misma lógica dentro de cada endpoint.
 
 ### 44. Reinicio automático durante el desarrollo: Nodemon y `node --watch`
 
@@ -5155,5 +5397,328 @@ flowchart LR
 
 La ruta administra el intercambio HTTP; `find` resuelve la búsqueda en memoria; la función coordinadora expresa el proceso asincrónico; y la respuesta HTTP comunica el resultado al cliente. Separar esas responsabilidades es el primer paso hacia una arquitectura con capas más definidas.
 
-**Fuentes oficiales de actualización técnica:** documentación de Node.js (`node:http`, `node:fs`, modo `--watch`, CommonJS) y documentación de Express 5.x (API, routing, respuestas y manejo de errores). Las explicaciones de clase se conservaron como eje temático; los detalles actuales se normalizaron contra esas referencias.
+### 48. APIs: interfaz entre sistemas
+
+Una **API** (*Application Programming Interface*, interfaz de programación de aplicaciones) define una forma controlada para que un software utilice datos o funcionalidades expuestos por otro software.
+
+La idea central no es que ambos sistemas conozcan su implementación interna, sino que compartan un **contrato de interacción**:
+
+```text
+Sistema consumidor
+        │
+        │ solicitud según contrato
+        ▼
+       API
+        │
+        │ coordina/accede al sistema interno
+        ▼
+Sistema proveedor
+```
+
+El consumidor necesita conocer **qué operaciones están disponibles, cómo solicitarlas y qué respuesta esperar**. No necesita conocer cómo el proveedor organiza su base de datos, sus clases internas o sus procesos.
+
+Esto permite reutilización y desacoplamiento. Por ejemplo, una misma API meteorológica podría ser consumida por una aplicación móvil, una página web, otro backend o una herramienta de análisis, aunque todos estén implementados con tecnologías distintas.
+
+#### 48.1 Endpoint, recurso y contrato
+
+En una API HTTP, un **endpoint** surge de combinar al menos un método HTTP con una ruta:
+
+```text
+GET /api/peliculas
+GET /api/peliculas/:id
+POST /api/peliculas
+```
+
+Estas operaciones no son equivalentes aunque compartan parte del path. El método aporta la semántica de la operación y la ruta identifica el recurso o colección sobre la que se trabaja.
+
+Un contrato de API normalmente define, entre otras cosas:
+
+```text
+método
++ path
++ parámetros
++ headers relevantes
++ body esperado
++ status codes posibles
++ forma de la respuesta
+```
+
+La API actúa entonces como una **frontera estable** entre sistemas.
+
+#### 48.2 Clasificación por exposición
+
+Una clasificación práctica utilizada en la materia distingue:
+
+| Tipo | Idea central |
+|---|---|
+| **Privada / interna** | se utiliza dentro de una organización y no se ofrece a consumidores externos |
+| **Pública / abierta a desarrolladores** | puede ser consumida por terceros bajo las condiciones publicadas |
+| **De socios (*partner*)** | se ofrece únicamente a organizaciones o integraciones autorizadas |
+| **Compuesta** | combina resultados u operaciones de múltiples APIs/servicios |
+
+Que una API sea pública **no implica que sea gratuita ni anónima**. Puede exigir registro, token, límites de uso o pago y seguir siendo públicamente accesible para desarrolladores que cumplan esas condiciones.
+
+Del mismo modo, usar autenticación no convierte automáticamente una API en “privada”: una API pública puede requerir credenciales para identificar al consumidor.
+
+#### 48.3 REST: estilo arquitectónico, no protocolo
+
+En documentación informal puede aparecer REST listado junto a “protocolos de API”, pero conviene separar niveles:
+
+- **HTTP** es un protocolo;
+- **REST** (*Representational State Transfer*) es un **estilo arquitectónico**;
+- una API **RESTful** intenta respetar las restricciones y principios de REST al modelar recursos e interacciones.
+
+REST aprovecha la interfaz uniforme de HTTP: recursos identificados mediante URI, operaciones expresadas mediante métodos HTTP y representaciones intercambiadas entre cliente y servidor.
+
+Ejemplo:
+
+```http
+GET /api/peliculas/42
+```
+
+no significa “ejecutar una función llamada `getPelicula42`” desde el punto de vista del protocolo. Expresa que el cliente solicita una representación actual del recurso identificado por esa URI.
+
+Una API puede usar HTTP sin ser necesariamente RESTful. “API HTTP” y “API REST” no son sinónimos perfectos.
+
+#### 48.4 Otros estilos y tecnologías de API
+
+REST no es la única forma de integrar sistemas. Entre las alternativas mencionadas aparecen:
+
+- **SOAP**, basado en mensajes y contratos formales, históricamente asociado a XML;
+- **GraphQL**, donde el cliente expresa una consulta sobre los datos que necesita;
+- **RPC** (*Remote Procedure Call*), orientado a invocar operaciones/procedimientos remotos.
+
+No hace falta tratarlos como intercambiables. Cada enfoque define una forma distinta de estructurar el contrato y la comunicación.
+
+#### 48.5 Clientes HTTP para probar una API
+
+Mientras el navegador resulta cómodo para probar `GET`, una API necesita ejercitar también métodos, headers y bodies que no son cómodos de construir escribiendo una URL.
+
+Un **cliente HTTP** permite especificar explícitamente:
+
+```text
+método
+URL
+query params
+headers
+authorization
+body
+```
+
+Herramientas gráficas como Postman cumplen este rol. También existen extensiones de editor, como REST Client para VS Code, que permiten guardar solicitudes en archivos de texto y ejecutarlas desde el proyecto.
+
+Ejemplo conceptual de una solicitud guardada:
+
+```http
+POST http://127.0.0.1:3000/api/peliculas
+Content-Type: application/json
+
+{
+  "titulo": "Alien",
+  "stock": 3
+}
+```
+
+Conservar estas requests junto al código ayuda a repetir pruebas y, pedagógicamente, obliga a ver la anatomía HTTP de forma explícita en vez de ocultarla detrás de una interfaz.
+
+### 49. De un servidor monolítico a una arquitectura por capas
+
+En los primeros ejemplos resulta razonable concentrar todo en `index.js`:
+
+```text
+ruta
+→ leer parámetros
+→ buscar datos
+→ aplicar reglas
+→ construir response
+```
+
+Ese enfoque permite aprender el flujo completo, pero a medida que el sistema crece mezcla demasiadas responsabilidades. El problema ya no es “cómo hacer un `app.get`”, sino **cómo organizar decenas de endpoints, reglas y fuentes de datos sin que cada archivo conozca todo**.
+
+La respuesta arquitectónica es introducir límites explícitos entre responsabilidades.
+
+#### 49.1 Patrón de diseño vs. patrón de arquitectura
+
+Ambos conceptos reutilizan soluciones conocidas, pero trabajan en escalas diferentes:
+
+| Concepto | Alcance | Ejemplos |
+|---|---|---|
+| **Patrón de diseño** | resuelve un problema recurrente dentro del diseño de componentes/objetos | Factory, Singleton, Adapter, Builder |
+| **Patrón de arquitectura** | organiza la estructura global de una aplicación y las relaciones/restricciones entre grandes componentes | MVC, MVVM, arquitecturas por capas |
+
+Un proyecto puede utilizar **varios patrones de diseño simultáneamente**. La arquitectura, en cambio, establece reglas estructurales más amplias sobre qué responsabilidades existen y cómo pueden comunicarse.
+
+Los patrones no son fragmentos de código para copiar ciegamente: son vocabulario y soluciones generales que deben adaptarse al problema concreto.
+
+#### 49.2 MVC: Model — View — Controller
+
+**MVC** separa una aplicación en tres responsabilidades principales:
+
+- **Model:** datos y lógica asociada al dominio; interactúa con la fuente de datos según la variante arquitectónica utilizada;
+- **View:** representación/interfaz con la que interactúa el usuario;
+- **Controller:** recibe/interpreta la interacción y coordina la operación entre vista y modelo.
+
+Una representación pedagógica del flujo es:
+
+```mermaid
+flowchart LR
+    U[Usuario] --> V[View]
+    V --> C[Controller]
+    C --> M[Model]
+    M --> D[(Fuente de datos)]
+    D --> M
+    M --> C
+    C --> V
+    V --> U
+```
+
+El valor de la separación aparece cuando cambia una pieza. Si la lógica de acceso a datos está encapsulada, reemplazar una fuente de datos no debería obligar a reescribir la interfaz completa.
+
+En una API backend pura, la “vista” tradicional no vive necesariamente dentro del mismo proyecto: puede ser un frontend web, una app móvil o incluso un cliente HTTP de pruebas. Por eso la arquitectura utilizada en el curso separa más explícitamente las responsabilidades del lado servidor.
+
+#### 49.3 Arquitectura utilizada en el backend: Router → Controller → Service → Repository
+
+La organización introducida para el proyecto backend divide el servidor en cuatro capas principales:
+
+```mermaid
+flowchart LR
+    CLIENT[Cliente] --> ROUTER[Router]
+    ROUTER --> CTRL[Controller]
+    CTRL --> SERVICE[Service]
+    SERVICE --> REPO[Repository]
+    REPO --> DATA[(Fuente de datos)]
+    DATA --> REPO
+    REPO --> SERVICE
+    SERVICE --> CTRL
+    CTRL --> CLIENT
+```
+
+**Router**
+
+Responsable del **enrutamiento**. Asocia método + path con la función del controller que debe atender esa operación.
+
+```javascript
+router.get("/peliculas/:id", peliculaController.obtenerPorId);
+```
+
+No debería contener la lógica de negocio ni acceder a la base de datos.
+
+**Controller**
+
+Es la frontera HTTP de la funcionalidad. Lee lo necesario de `req`, delega al service y traduce el resultado a una respuesta HTTP mediante `res`.
+
+```javascript
+async function obtenerPorId(req, res, next) {
+  // obtener input HTTP
+  // delegar al service
+  // construir response
+}
+```
+
+El controller no debería implementar consultas directas a la base de datos.
+
+**Service**
+
+Contiene la **lógica de negocio**: reglas, validaciones y coordinación de operaciones del dominio.
+
+```text
+¿se puede alquilar esta película?
+¿el alumno cumple la correlativa?
+¿hay stock suficiente?
+```
+
+El service trabaja con conceptos del dominio y delega la persistencia/recuperación al repository.
+
+**Repository**
+
+Encapsula el **acceso a la fuente de datos**. Es la capa que sabe si la información vive en un JSON local, SQL Server, MongoDB, otro servicio u otra fuente persistente.
+
+El resto de las capas no debería necesitar conocer ese detalle.
+
+#### 49.4 La regla de dependencias: no saltear capas
+
+La arquitectura impone una restricción deliberada:
+
+```text
+Router     → Controller
+Controller → Service
+Service    → Repository
+Repository → Fuente de datos
+```
+
+Evitar:
+
+```text
+Router     ───────────────→ Repository
+Controller ───────────────→ Base de datos
+Service   ────────────────→ Base de datos
+```
+
+Aunque un acceso directo pueda “funcionar”, rompe el desacoplamiento. El problema aparece más adelante: la lógica de negocio queda mezclada con detalles de infraestructura y cambiar una tecnología obliga a modificar capas que no deberían depender de ella.
+
+Puede pensarse como una cadena de conocimiento:
+
+```mermaid
+flowchart TD
+    R[Router] --> C[Controller]
+    C --> S[Service]
+    S --> P[Repository]
+    P --> D[(Datos)]
+
+    R -. no salta .-> P
+    C -. no salta .-> D
+    S -. no salta .-> D
+```
+
+La restricción no existe para complicar artificialmente el código. Hace explícito **quién es responsable de qué**.
+
+#### 49.5 Por qué separar el Repository de la lógica de negocio
+
+Supóngase que el primer prototipo obtiene alumnos desde un JSON:
+
+```text
+Service
+→ Repository JSON
+→ alumnos.json
+```
+
+Después el proyecto migra a SQL:
+
+```text
+Service
+→ Repository SQL
+→ base SQL
+```
+
+y más adelante a MongoDB:
+
+```text
+Service
+→ Repository Mongo
+→ MongoDB
+```
+
+Si el service depende de una **interfaz conceptual de acceso a datos** en vez de conocer directamente la tecnología, sus reglas de negocio pueden permanecer prácticamente iguales.
+
+Ese es el puente con todo lo construido antes:
+
+```text
+Servidor Express inicial
+ruta + datos + reglas + response en un mismo archivo
+                         │
+                         ▼
+crece la cantidad de responsabilidades
+                         │
+                         ▼
+separar HTTP, negocio y persistencia
+                         │
+                         ▼
+Router → Controller → Service → Repository
+```
+
+El objetivo no es generar carpetas por estética. Es reducir **acoplamiento**, mejorar mantenibilidad, facilitar pruebas y permitir reemplazar piezas con impacto localizado.
+
+> **Idea central de esta etapa:** una ruta ya no debe pensarse como “el lugar donde hago todo”. La ruta identifica la operación; el controller gestiona HTTP; el service decide según las reglas de negocio; el repository obtiene o persiste los datos.
+
+**Fuentes oficiales de actualización técnica:** documentación de Node.js (`node:http`, `node:fs`, modo `--watch`, CommonJS), documentación de Express 5.x (API, routing, respuestas y middleware) y especificación HTTP Semantics (RFC 9110). Las explicaciones de clase se conservaron como eje temático; los detalles actuales se normalizaron contra esas referencias.
 
