@@ -155,6 +155,10 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [27.1 Comandos más usados](#271-comandos-más-usados)
         - [Verificar el estado del proyecto desde `package.json`](#verificar-el-estado-del-proyecto-desde-packagejson)
       - [27.2 Scripts de NPM](#272-scripts-de-npm)
+        - [`npm start` y `npm run`](#npm-start-y-npm-run)
+        - [El script no cambia la herramienta que se ejecuta](#el-script-no-cambia-la-herramienta-que-se-ejecuta)
+        - [Scripts para distintos contextos](#scripts-para-distintos-contextos)
+        - [`main` y `scripts.start` no cumplen la misma función](#main-y-scriptsstart-no-cumplen-la-misma-función)
       - [27.3 Cómo leer la página de un paquete en npmjs.com](#273-cómo-leer-la-página-de-un-paquete-en-npmjscom)
     - [28. Módulos locales: crear y exportar código propio](#28-módulos-locales-crear-y-exportar-código-propio)
       - [28.1 Importar solo lo necesario, con el nombre que se quiera](#281-importar-solo-lo-necesario-con-el-nombre-que-se-quiera)
@@ -377,6 +381,8 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
     - [64. De memoria a SQL Server: persistencia real](#64-de-memoria-a-sql-server-persistencia-real)
       - [64.1 Persistencia cambia la duración y autoridad del estado](#641-persistencia-cambia-la-duración-y-autoridad-del-estado)
       - [64.2 Un esquema relacional distribuye la información entre tablas](#642-un-esquema-relacional-distribuye-la-información-entre-tablas)
+        - [Primary Key y Foreign Key resuelven problemas distintos](#primary-key-y-foreign-key-resuelven-problemas-distintos)
+        - [`IDENTITY` tampoco es una Foreign Key](#identity-tampoco-es-una-foreign-key)
       - [64.3 SQL Server es otro proceso con su propio endpoint de red](#643-sql-server-es-otro-proceso-con-su-propio-endpoint-de-red)
       - [64.4 Instancia, protocolo, host y puerto](#644-instancia-protocolo-host-y-puerto)
       - [64.5 Firewall, red local e Internet son fronteras diferentes](#645-firewall-red-local-e-internet-son-fronteras-diferentes)
@@ -384,6 +390,7 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [65.1 `mssql` no es un ORM](#651-mssql-no-es-un-orm)
       - [65.2 Dependencia de producción](#652-dependencia-de-producción)
       - [65.3 Separar conexión, configuración y consultas](#653-separar-conexión-configuración-y-consultas)
+        - [Centralizar queries: utilidad y límite](#centralizar-queries-utilidad-y-límite)
     - [66. Variables de entorno y configuración](#66-variables-de-entorno-y-configuración)
       - [66.1 `.env` es un mecanismo de desarrollo, no la definición de variable de entorno](#661-env-es-un-mecanismo-de-desarrollo-no-la-definición-de-variable-de-entorno)
       - [66.2 `process.env` entrega strings](#662-processenv-entrega-strings)
@@ -401,16 +408,48 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
     - [69. Primer Repository SQL: lectura completa](#69-primer-repository-sql-lectura-completa)
       - [69.1 El Service no debería saber qué query se ejecutó](#691-el-service-no-debería-saber-qué-query-se-ejecutó)
       - [69.2 No hace falta `USE` si la conexión ya selecciona la base](#692-no-hace-falta-use-si-la-conexión-ya-selecciona-la-base)
+      - [69.3 `JOIN`: devolver significado en lugar de IDs internos](#693-join-devolver-significado-en-lugar-de-ids-internos)
+        - [`JOIN` no “reemplaza” los IDs de la base](#join-no-reemplaza-los-ids-de-la-base)
+        - [Repository puede adaptar la forma de persistencia](#repository-puede-adaptar-la-forma-de-persistencia)
+      - [69.4 Consultas como valores reutilizables](#694-consultas-como-valores-reutilizables)
     - [70. Repository intercambiable: la arquitectura puesta a prueba](#70-repository-intercambiable-la-arquitectura-puesta-a-prueba)
       - [70.1 Qué demuestra realmente este cambio](#701-qué-demuestra-realmente-este-cambio)
       - [70.2 Contrato estable, implementación variable](#702-contrato-estable-implementación-variable)
       - [70.3 Esto se aproxima a depender de una abstracción](#703-esto-se-aproxima-a-depender-de-una-abstracción)
     - [71. Queries dinámicas y SQL injection](#71-queries-dinámicas-y-sql-injection)
+      - [71.1 Parámetro SQL: separar código de datos](#711-parámetro-sql-separar-código-de-datos)
+      - [71.2 Parametrizar no es lo mismo que validar negocio](#712-parametrizar-no-es-lo-mismo-que-validar-negocio)
+      - [71.3 `undefined` no debe interpretarse como “validación automática”](#713-undefined-no-debe-interpretarse-como-validación-automática)
+      - [71.4 Los tipos SQL siguen siendo importantes](#714-los-tipos-sql-siguen-siendo-importantes)
+      - [71.5 Parametrizar valores no parametriza identificadores](#715-parametrizar-valores-no-parametriza-identificadores)
+      - [71.6 Parametrizar protege la consulta, no vuelve confiable al usuario](#716-parametrizar-protege-la-consulta-no-vuelve-confiable-al-usuario)
     - [72. Depurar una conexión SQL por capas](#72-depurar-una-conexión-sql-por-capas)
       - [72.1 Error de tipo en configuración](#721-error-de-tipo-en-configuración)
       - [72.2 Login failed](#722-login-failed)
       - [72.3 Fallo de conexión host/puerto](#723-fallo-de-conexión-hostpuerto)
     - [73. Ejemplo integrado — `GET` desde HTTP hasta SQL Server](#73-ejemplo-integrado--get-desde-http-hasta-sql-server)
+    - [74. `INSERT` parametrizado: crear un recurso en SQL](#74-insert-parametrizado-crear-un-recurso-en-sql)
+      - [74.1 La query contiene placeholders; Repository aporta valores](#741-la-query-contiene-placeholders-repository-aporta-valores)
+      - [74.2 Destructuring: coincidencia exacta de propiedades](#742-destructuring-coincidencia-exacta-de-propiedades)
+      - [74.3 El contrato de entrada no debería depender accidentalmente del esquema SQL](#743-el-contrato-de-entrada-no-debería-depender-accidentalmente-del-esquema-sql)
+      - [74.4 El `INSERT` debe producir un resultado útil](#744-el-insert-debe-producir-un-resultado-útil)
+    - [75. Integridad de datos: tipos, `NOT NULL`, Foreign Keys e identidad](#75-integridad-de-datos-tipos-not-null-foreign-keys-e-identidad)
+      - [75.1 Tipo incompatible](#751-tipo-incompatible)
+      - [75.2 `NOT NULL`](#752-not-null)
+      - [75.3 Foreign Key](#753-foreign-key)
+      - [75.4 `IDENTITY`](#754-identity)
+      - [75.5 Las constraints son la última línea de integridad](#755-las-constraints-son-la-última-línea-de-integridad)
+    - [76. Feedback de creación: del Repository al cliente](#76-feedback-de-creación-del-repository-al-cliente)
+    - [77. `DELETE` SQL: identificar, eliminar y saber qué ocurrió](#77-delete-sql-identificar-eliminar-y-saber-qué-ocurrió)
+      - [77.1 `WHERE` es una condición crítica](#771-where-es-una-condición-crítica)
+      - [77.2 ¿Hace falta hacer `SELECT` antes de `DELETE`?](#772-hace-falta-hacer-select-antes-de-delete)
+      - [77.3 `DELETE ... OUTPUT DELETED.*`](#773-delete--output-deleted)
+      - [77.4 `rowsAffected` como alternativa](#774-rowsaffected-como-alternativa)
+      - [77.5 No usar excepciones para cualquier “no encontrado” sin definir el contrato](#775-no-usar-excepciones-para-cualquier-no-encontrado-sin-definir-el-contrato)
+    - [78. Depurar CRUD SQL leyendo la frontera que falló](#78-depurar-crud-sql-leyendo-la-frontera-que-falló)
+      - [78.1 El error ya contiene información de contexto](#781-el-error-ya-contiene-información-de-contexto)
+    - [79. Ejemplo integrado — `POST` parametrizado hasta SQL Server](#79-ejemplo-integrado--post-parametrizado-hasta-sql-server)
+    - [80. Estado de la persistencia SQL tras esta etapa](#80-estado-de-la-persistencia-sql-tras-esta-etapa)
   - [Referencias técnicas](#referencias-técnicas)
     - [Git y GitHub](#git-y-github)
     - [JavaScript y TypeScript](#javascript-y-typescript)
@@ -4274,18 +4313,196 @@ Por eso `node_modules` es regenerable, mientras que `package.json` forma parte d
 
 #### 27.2 Scripts de NPM
 
-Dentro de `package.json`, la propiedad `scripts` permite definir comandos cortos y reutilizables para tareas frecuentes del proyecto (compilar, correr tests, levantar el servidor, etc.), en vez de tener que escribir el comando completo cada vez.
+Dentro de `package.json`, la propiedad `scripts` permite asignar nombres estables a comandos que forman parte del ciclo de vida del proyecto.
 
 ```json
 {
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon index.js",
+    "test": "node --test"
   }
 }
 ```
 
-Se ejecutan con `npm run <nombre-del-script>` — con dos excepciones que tienen un atajo propio, sin necesidad de escribir `run`: `npm start` (ejecuta el script `start`) y `npm test` (ejecuta el script `test`). El **punto de entrada** de un paquete (qué archivo se ejecuta primero) se declara en la propiedad `main` de `package.json`; si no se declara explícitamente, por convención se asume `index.js`.
+El beneficio no es simplemente “escribir menos”.
+
+Un script crea una **interfaz de ejecución compartida por el proyecto**.
+
+En vez de que cada integrante recuerde:
+
+```text
+qué archivo era el entrypoint
+qué flags había que usar
+si se ejecutaba nodemon
+qué comando preparaba el build
+```
+
+el repositorio puede documentarlo como:
+
+```bash
+npm start
+npm run dev
+npm test
+```
+
+Así, quien trabaja con el proyecto necesita conocer el **propósito de la tarea**, no memorizar toda su implementación.
+
+##### `npm start` y `npm run`
+
+Un script personalizado se ejecuta con:
+
+```bash
+npm run dev
+```
+
+Para algunos nombres existen atajos. En particular:
+
+```bash
+npm start
+```
+
+ejecuta el comando guardado en:
+
+```json
+{
+  "scripts": {
+    "start": "..."
+  }
+}
+```
+
+Por ejemplo:
+
+```json
+{
+  "scripts": {
+    "start": "nodemon ./index.js"
+  }
+}
+```
+
+permite sustituir:
+
+```bash
+npx nodemon ./index.js
+```
+
+por:
+
+```bash
+npm start
+```
+
+La documentación de NPM define `npm start` precisamente como la ejecución del script `start`.
+
+##### El script no cambia la herramienta que se ejecuta
+
+Este script:
+
+```json
+{
+  "scripts": {
+    "start": "nodemon index.js"
+  }
+}
+```
+
+no convierte a NPM en servidor ni reemplaza a Nodemon.
+
+El recorrido conceptual es:
+
+```text
+npm
+→ lee package.json
+→ encuentra scripts.start
+→ ejecuta "nodemon index.js"
+→ nodemon inicia/reinicia Node
+→ Node ejecuta index.js
+```
+
+Cada herramienta conserva su responsabilidad.
+
+##### Scripts para distintos contextos
+
+Es habitual separar tareas:
+
+```json
+{
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "node --test"
+  }
+}
+```
+
+Esto distingue intención:
+
+```text
+start
+→ ejecutar la aplicación
+
+dev
+→ ejecutar con herramientas de desarrollo
+
+test
+→ ejecutar pruebas
+```
+
+En proyectos más grandes pueden aparecer scripts para:
+
+```text
+build
+lint
+format
+migrations
+seed
+typecheck
+```
+
+La ventaja es que automatización local, CI/CD y documentación pueden invocar la misma interfaz:
+
+```bash
+npm run build
+```
+
+sin duplicar el comando interno.
+
+##### `main` y `scripts.start` no cumplen la misma función
+
+La propiedad:
+
+```json
+{
+  "main": "index.js"
+}
+```
+
+describe el entrypoint principal del **paquete como módulo** para determinados mecanismos de resolución.
+
+No significa automáticamente que:
+
+```bash
+npm start
+```
+
+ejecute ese archivo.
+
+`npm start` consulta `scripts.start`. Si no existe, NPM posee un comportamiento por defecto específico que intenta `node server.js`; no toma `main` como sustituto general del script `start`.
+
+Por eso conviene separar:
+
+```text
+main
+→ entrypoint/export principal del paquete
+
+scripts
+→ comandos operativos del proyecto
+```
+
+**Referencia técnica:** documentación oficial de NPM sobre `npm start` y `package.json`.
+
 
 #### 27.3 Cómo leer la página de un paquete en npmjs.com
 
@@ -12233,6 +12450,105 @@ La API no tiene obligación de exponer exactamente las columnas de una tabla.
 
 Repository obtiene datos; Service puede aplicar reglas/transformaciones; Controller define la representación HTTP.
 
+
+##### Primary Key y Foreign Key resuelven problemas distintos
+
+Una **Primary Key** identifica de forma única una fila dentro de su tabla.
+
+```text
+lenguajes.id
+→ identifica al lenguaje
+```
+
+Una **Foreign Key** expresa que una columna debe referenciar un valor válido de otra tabla.
+
+```text
+lenguajes.idMateria
+→ referencia materias.id
+```
+
+Si existe:
+
+```text
+materias
+1 → Frontend
+2 → Backend
+```
+
+entonces intentar guardar:
+
+```text
+idMateria = 5
+```
+
+debe fallar mientras `5` no exista en la columna referenciada.
+
+La restricción protege la **integridad referencial**:
+
+> una fila no puede apuntar a una entidad relacionada inexistente.
+
+Esto es distinto de validar el tipo:
+
+```text
+5
+→ sí es un entero
+```
+
+pero:
+
+```text
+5
+→ puede seguir siendo una Foreign Key inválida
+```
+
+Por eso:
+
+```text
+tipo correcto
+≠ relación válida
+```
+
+##### `IDENTITY` tampoco es una Foreign Key
+
+Una columna propia puede estar configurada como:
+
+```sql
+id INT IDENTITY PRIMARY KEY
+```
+
+En ese caso SQL Server puede generar automáticamente el ID de la nueva fila.
+
+Por ejemplo:
+
+```sql
+INSERT INTO lenguajes (
+  idMateria,
+  nombre
+)
+VALUES (
+  @idMateria,
+  @nombre
+);
+```
+
+no necesita enviar el `id` propio si esa columna es `IDENTITY`.
+
+Pero eso **no elimina** la obligación de enviar una Foreign Key como `idMateria` cuando la relación la requiere.
+
+```text
+id
+→ identidad del lenguaje
+→ puede autogenerarse
+
+idMateria
+→ referencia a materias
+→ debe corresponder a una materia existente
+```
+
+Confundir ambas columnas produce un error conceptual frecuente: eliminar del `INSERT` una Foreign Key pensando que “la base la autoincrementa”.
+
+SQL Server documenta que una columna `IDENTITY` puede generar su valor automáticamente y que una Foreign Key rechaza valores no existentes en la columna referenciada.
+
 #### 64.3 SQL Server es otro proceso con su propio endpoint de red
 
 Cuando Node se conecta a SQL Server existen **dos servidores diferentes**:
@@ -12450,6 +12766,69 @@ cambia la estrategia de conexión
 cambia la consulta de lenguajes
 → repository/query
 ```
+
+
+##### Centralizar queries: utilidad y límite
+
+Una opción es mantener sentencias SQL en un módulo dedicado:
+
+```javascript
+module.exports = {
+  getFrontendLanguages: `
+    SELECT ...
+  `,
+
+  createFrontendLanguage: `
+    INSERT INTO ...
+  `,
+};
+```
+
+y en Repository:
+
+```javascript
+const queries =
+  require("../database/queries");
+
+const result = await pool
+  .request()
+  .query(
+    queries.getFrontendLanguages
+  );
+```
+
+Esto puede mejorar:
+
+```text
+legibilidad del Repository
+localización de SQL
+reutilización de una sentencia
+revisión de cambios de consultas
+```
+
+pero tampoco es una regla universal.
+
+Una query muy pequeña y usada por un solo Repository puede resultar más fácil de entender si permanece cerca del código que la ejecuta.
+
+El criterio no debería ser:
+
+> “toda query debe vivir obligatoriamente en `queries.js`”.
+
+Sino:
+
+> **separar SQL cuando la separación mejora cohesión, navegación o reutilización sin ocultar innecesariamente el comportamiento.**
+
+A medida que una aplicación crece, también pueden aparecer otras estrategias:
+
+```text
+queries por feature
+query builders
+stored procedures
+ORM
+data mappers
+```
+
+La carpeta es una decisión organizativa; la responsabilidad sigue siendo encapsular acceso a datos.
 
 ### 66. Variables de entorno y configuración
 
@@ -12966,6 +13345,143 @@ producción
 
 sin hardcodear el nombre dentro de cada query.
 
+
+#### 69.3 `JOIN`: devolver significado en lugar de IDs internos
+
+Un primer `SELECT` puede devolver:
+
+```text
+idMateria = 1
+idTurno = 2
+idComision = 3
+```
+
+Eso refleja la estructura relacional interna, pero no siempre es la representación más útil para una API.
+
+Mediante `JOIN` se pueden proyectar datos relacionados:
+
+```sql
+SELECT
+  l.id,
+  l.nombre,
+  m.nombre AS materia,
+  t.nombre AS turno,
+  c.nombre AS comision,
+  l.cantidadAlumnos
+FROM lenguajes AS l
+JOIN materias AS m
+  ON m.id = l.idMateria
+JOIN turnos AS t
+  ON t.id = l.idTurno
+JOIN comisiones AS c
+  ON c.id = l.idComision;
+```
+
+El resultado puede verse así:
+
+```javascript
+{
+  id: 7,
+  nombre: "JavaScript",
+  materia: "Frontend",
+  turno: "Noche",
+  comision: "B",
+  cantidadAlumnos: 28
+}
+```
+
+Esto introduce una idea importante:
+
+> **la forma normalizada de almacenamiento y la forma conveniente de lectura no tienen por qué ser iguales.**
+
+La base puede almacenar identificadores para preservar relaciones y evitar duplicación; una query puede proyectar nombres descriptivos para consumo.
+
+##### `JOIN` no “reemplaza” los IDs de la base
+
+La tabla sigue almacenando:
+
+```text
+idMateria
+idTurno
+idComision
+```
+
+El `SELECT` construye otra representación en el resultado.
+
+No modifica físicamente las columnas.
+
+Esto permite que:
+
+```text
+persistencia
+→ use claves y relaciones
+
+lectura
+→ entregue información semánticamente útil
+```
+
+##### Repository puede adaptar la forma de persistencia
+
+Si la API necesita una estructura distinta de la tabla, Repository puede actuar como adaptador.
+
+No obstante, si la transformación expresa una **regla de negocio** y no una adaptación técnica de persistencia, debe permanecer en Service.
+
+La pregunta útil es:
+
+```text
+¿estoy traduciendo estructura SQL a estructura de datos?
+→ Repository
+
+¿estoy tomando una decisión del dominio?
+→ Service
+```
+
+#### 69.4 Consultas como valores reutilizables
+
+Una sentencia SQL guardada en un objeto:
+
+```javascript
+const queries = {
+  getFrontendLanguages: `
+    SELECT ...
+  `,
+};
+```
+
+es simplemente un string asociado a una propiedad.
+
+```javascript
+queries.getFrontendLanguages
+```
+
+devuelve el texto que luego recibe:
+
+```javascript
+request.query(...);
+```
+
+Esto conecta conceptos anteriores:
+
+```text
+objetos
++ propiedades
++ strings
++ módulos CommonJS
++ SQL
+```
+
+El módulo no “ejecuta” la query por exportarla.
+
+La ejecución ocurre recién cuando Repository la entrega al cliente SQL:
+
+```javascript
+await pool
+  .request()
+  .query(
+    queries.getFrontendLanguages
+  );
+```
+
 ### 70. Repository intercambiable: la arquitectura puesta a prueba
 
 Considérese dos implementaciones.
@@ -13125,7 +13641,7 @@ await pool.request().query(
 
 no incorpora entrada del usuario.
 
-El problema aparece al construir SQL concatenando valores externos:
+El problema aparece cuando la estructura SQL se arma concatenando valores externos:
 
 ```javascript
 const id = req.params.id;
@@ -13135,7 +13651,7 @@ const query =
    WHERE id = ${id}`;
 ```
 
-Con strings, el riesgo es todavía más evidente:
+Con strings:
 
 ```javascript
 const nombre = req.query.nombre;
@@ -13145,17 +13661,21 @@ const query =
    WHERE nombre = '${nombre}'`;
 ```
 
-No debe confiarse en que:
+la entrada puede modificar la sintaxis que recibe el motor.
 
-```text
-el frontend valida
-el usuario "no va a mandar eso"
-se reemplazaron algunos caracteres
+La defensa principal para **valores** es parametrizar.
+
+#### 71.1 Parámetro SQL: separar código de datos
+
+Consulta:
+
+```sql
+SELECT *
+FROM lenguajes
+WHERE id = @id;
 ```
 
-La defensa principal para valores es usar parámetros.
-
-Con `mssql`:
+Código:
 
 ```javascript
 const result = await pool
@@ -13165,24 +13685,236 @@ const result = await pool
     sql.Int,
     id
   )
-  .query(`
-    SELECT *
-    FROM lenguajes
-    WHERE id = @id
-  `);
+  .query(
+    queries.getLanguageById
+  );
 ```
 
-Esto separa:
+Las tres piezas de `.input(...)` son:
 
 ```text
-estructura SQL
-≠
-valor aportado por el usuario
+"id"
+→ nombre del parámetro
+→ se usa como @id en T-SQL
+
+sql.Int
+→ tipo SQL esperado
+
+id
+→ valor JavaScript que se vincula al parámetro
 ```
 
-La librería también ofrece *tagged templates* parametrizados.
+En `mssql`, el nombre se pasa **sin el `@`**:
 
-Los identificadores dinámicos —por ejemplo nombres de columnas o tablas— requieren estrategias diferentes; no deben tratarse como si fueran parámetros de valor comunes.
+```javascript
+.input("id", ...)
+```
+
+mientras la query utiliza:
+
+```sql
+@id
+```
+
+La documentación del paquete recomienda parámetros o tagged template literals para valores externos y proporciona protección contra SQL injection en ese uso.
+
+#### 71.2 Parametrizar no es lo mismo que validar negocio
+
+Supóngase:
+
+```javascript
+.input(
+  "cantidadAlumnos",
+  sql.Int,
+  cantidadAlumnos
+)
+```
+
+Esto establece cómo se envía el valor a SQL Server y evita concatenarlo dentro del código SQL.
+
+No comprueba automáticamente una regla como:
+
+```text
+cantidadAlumnos debe estar entre 1 y 40
+```
+
+Esa es una regla de la aplicación.
+
+Tampoco comprueba por sí sola:
+
+```text
+idMateria debe representar una materia habilitada para inscripción
+```
+
+aunque la base pueda exigir que el ID referenciado exista mediante una Foreign Key.
+
+Por eso existen controles distintos:
+
+```text
+Controller
+→ forma/parseo de la entrada HTTP
+
+Service
+→ reglas de negocio
+
+mssql parameters
+→ binding seguro de valores + tipos SQL
+
+SQL constraints
+→ integridad persistida
+```
+
+Se refuerzan mutuamente; ninguno reemplaza a todos los demás.
+
+#### 71.3 `undefined` no debe interpretarse como “validación automática”
+
+La documentación actual de `mssql` establece que los valores:
+
+```text
+undefined
+NaN
+```
+
+pasados como inputs son convertidos a:
+
+```text
+NULL
+```
+
+Por lo tanto:
+
+```javascript
+.input(
+  "idMateria",
+  sql.Int,
+  undefined
+)
+```
+
+no debe entenderse simplemente como:
+
+> “el driver lo rechazará porque `undefined` no es `Int`”.
+
+Puede convertirse en `NULL` y luego:
+
+```text
+columna NOT NULL
+→ SQL Server rechaza
+
+columna nullable
+→ podría aceptarse
+```
+
+Eso vuelve importante validar campos requeridos **antes** de depender del error de la base.
+
+Ejemplo:
+
+```javascript
+if (
+  !Number.isInteger(idMateria)
+) {
+  throw new ValidationError(
+    "idMateria es obligatorio"
+  );
+}
+```
+
+#### 71.4 Los tipos SQL siguen siendo importantes
+
+Aunque parametrizar ya separa código y datos, declarar tipos ayuda a expresar el contrato con SQL Server.
+
+Ejemplos:
+
+```javascript
+sql.Int
+sql.VarChar(100)
+sql.NVarChar(100)
+sql.DateTime2
+sql.Bit
+```
+
+Un ID entero:
+
+```javascript
+.input(
+  "idMateria",
+  sql.Int,
+  idMateria
+)
+```
+
+no debería recibir arbitrariamente:
+
+```text
+"frontend"
+```
+
+La librería puede reportar un error de parámetro/tipo.
+
+Eso es diferente de una Foreign Key inválida:
+
+```text
+valor 999
+→ sí es Int
+→ pero puede no existir en materias
+```
+
+#### 71.5 Parametrizar valores no parametriza identificadores
+
+Esto funciona:
+
+```sql
+WHERE id = @id
+```
+
+porque `@id` representa un **valor**.
+
+No debe suponerse que el mismo mecanismo sirve para parametrizar directamente:
+
+```text
+nombre de tabla
+nombre de columna
+ORDER BY dinámico
+```
+
+Esos elementos forman parte de la estructura de la sentencia.
+
+Si una columna depende de entrada externa, debe mapearse contra una allowlist:
+
+```javascript
+const columns = {
+  nombre: "nombre",
+  cantidad: "cantidadAlumnos",
+};
+
+const column =
+  columns[req.query.sortBy];
+
+if (!column) {
+  throw new Error(
+    "Columna de orden inválida"
+  );
+}
+```
+
+y recién después construir esa parte estructural.
+
+#### 71.6 Parametrizar protege la consulta, no vuelve confiable al usuario
+
+Aunque la query sea inmune a inyección mediante los parámetros:
+
+```text
+la entrada todavía puede ser inválida
+la operación puede estar prohibida
+el usuario puede carecer de permisos
+la foreign key puede no existir
+una regla de negocio puede fallar
+```
+
+Seguridad y corrección requieren varias capas de control.
+
+**Referencia técnica:** documentación oficial de `mssql` para `Request.input`, tipos y SQL injection.
+
 
 ### 72. Depurar una conexión SQL por capas
 
@@ -13329,6 +14061,825 @@ sobre SQL, manteniendo el mismo principio:
 
 > **el Repository cambia la tecnología de persistencia; las capas superiores conservan su responsabilidad.**
 
+
+### 74. `INSERT` parametrizado: crear un recurso en SQL
+
+Pasar de:
+
+```javascript
+frontend.push(language);
+```
+
+a SQL exige traducir la intención:
+
+```text
+crear un lenguaje
+```
+
+a una operación persistente:
+
+```sql
+INSERT INTO ...
+```
+
+#### 74.1 La query contiene placeholders; Repository aporta valores
+
+Una query parametrizada puede definirse así:
+
+```javascript
+const queries = {
+  createFrontendLanguage: `
+    INSERT INTO lenguajes (
+      idMateria,
+      nombre,
+      idTurno,
+      idComision,
+      cantidadAlumnos
+    )
+    VALUES (
+      @idMateria,
+      @nombre,
+      @idTurno,
+      @idComision,
+      @cantidadAlumnos
+    );
+  `,
+};
+```
+
+Repository recibe un objeto de aplicación:
+
+```javascript
+{
+  idMateria: 1,
+  nombre: "TypeScript",
+  idTurno: 2,
+  idComision: 1,
+  cantidadAlumnos: 25
+}
+```
+
+y lo vincula:
+
+```javascript
+const request = pool
+  .request()
+  .input(
+    "idMateria",
+    sql.Int,
+    idMateria
+  )
+  .input(
+    "nombre",
+    sql.NVarChar(100),
+    nombre
+  )
+  .input(
+    "idTurno",
+    sql.Int,
+    idTurno
+  )
+  .input(
+    "idComision",
+    sql.Int,
+    idComision
+  )
+  .input(
+    "cantidadAlumnos",
+    sql.Int,
+    cantidadAlumnos
+  );
+
+const result = await request.query(
+  queries.createFrontendLanguage
+);
+```
+
+El objetivo no es “armar el SQL con JavaScript”.
+
+El SQL mantiene su estructura y los valores viajan por canales de parámetros.
+
+#### 74.2 Destructuring: coincidencia exacta de propiedades
+
+Si:
+
+```javascript
+const {
+  idMateria,
+  nombre,
+  idTurno,
+} = language;
+```
+
+JavaScript busca propiedades con esos nombres.
+
+```javascript
+const language = {
+  materiaId: 1
+};
+```
+
+no alimenta:
+
+```javascript
+idMateria
+```
+
+porque son identificadores distintos.
+
+El resultado:
+
+```javascript
+idMateria === undefined;
+```
+
+También importa el case:
+
+```javascript
+cantidadAlumnos
+```
+
+y:
+
+```javascript
+cantidadalumnos
+```
+
+son propiedades diferentes.
+
+Este error ocurre **antes de SQL**.
+
+El recorrido diagnóstico:
+
+```text
+body HTTP
+→ objeto language
+→ destructuring
+→ inputs SQL
+→ constraints DB
+```
+
+permite localizar en qué frontera desaparece un valor.
+
+#### 74.3 El contrato de entrada no debería depender accidentalmente del esquema SQL
+
+Una solución rápida puede exigir que el body use exactamente:
+
+```text
+idMateria
+idTurno
+idComision
+```
+
+porque esos son los nombres del Repository.
+
+Pero no es obligatorio acoplar el contrato HTTP a las columnas.
+
+Controller o Service pueden adaptar:
+
+```javascript
+const nuevo = {
+  idMateria:
+    req.body.materiaId,
+
+  idTurno:
+    req.body.turnoId,
+};
+```
+
+o mediante un mapper explícito.
+
+La ventaja:
+
+```text
+API pública
+≠ nombres internos de persistencia
+```
+
+Esto permite cambiar columnas sin necesariamente romper clientes.
+
+#### 74.4 El `INSERT` debe producir un resultado útil
+
+Después de crear un recurso, Controller necesita saber:
+
+```text
+¿se creó?
+¿qué ID recibió?
+¿qué representación devolver?
+```
+
+Un `INSERT` que no devuelve datos obliga a decidir cómo obtener esa información.
+
+SQL Server ofrece `OUTPUT INSERTED...`:
+
+```sql
+INSERT INTO lenguajes (
+  idMateria,
+  nombre,
+  idTurno,
+  idComision,
+  cantidadAlumnos
+)
+OUTPUT INSERTED.*
+VALUES (
+  @idMateria,
+  @nombre,
+  @idTurno,
+  @idComision,
+  @cantidadAlumnos
+);
+```
+
+Entonces:
+
+```javascript
+const result = await request.query(
+  queries.createFrontendLanguage
+);
+
+return result.recordset[0];
+```
+
+Repository puede devolver directamente la fila creada.
+
+Controller puede traducirla:
+
+```http
+201 Created
+```
+
+con una representación útil.
+
+Esta estrategia evita un `INSERT` seguido de un `SELECT` separado únicamente para recuperar el registro recién creado.
+
+### 75. Integridad de datos: tipos, `NOT NULL`, Foreign Keys e identidad
+
+Durante un `INSERT` pueden fallar distintos controles.
+
+Conviene distinguirlos porque indican problemas diferentes.
+
+#### 75.1 Tipo incompatible
+
+Ejemplo:
+
+```text
+idTurno = "noche"
+```
+
+cuando el parámetro está declarado:
+
+```javascript
+sql.Int
+```
+
+puede producir un error de parámetro/conversión.
+
+Problema:
+
+```text
+forma del valor
+```
+
+#### 75.2 `NOT NULL`
+
+Si la columna:
+
+```sql
+idMateria INT NOT NULL
+```
+
+recibe `NULL`, SQL Server rechaza la fila.
+
+Problema:
+
+```text
+ausencia de un valor obligatorio
+```
+
+#### 75.3 Foreign Key
+
+Si:
+
+```text
+idMateria = 5
+```
+
+es un entero válido pero solo existen materias:
+
+```text
+1
+2
+```
+
+la Foreign Key rechaza el `INSERT`.
+
+Problema:
+
+```text
+relación inexistente
+```
+
+#### 75.4 `IDENTITY`
+
+Si:
+
+```sql
+id INT IDENTITY PRIMARY KEY
+```
+
+SQL Server puede generar el ID propio del lenguaje.
+
+No debe confundirse con:
+
+```text
+idMateria
+idTurno
+idComision
+```
+
+que representan referencias a otras entidades.
+
+La base puede autogenerar:
+
+```text
+id del nuevo lenguaje
+```
+
+y simultáneamente exigir:
+
+```text
+Foreign Keys válidas
+```
+
+#### 75.5 Las constraints son la última línea de integridad
+
+Aunque Controller y Service validen:
+
+```text
+una segunda aplicación podría escribir en DB
+un bug podría saltear una validación
+dos requests podrían competir
+```
+
+Las restricciones de base mantienen invariantes cerca del dato.
+
+Eso no vuelve innecesarias las validaciones de aplicación.
+
+Las capas responden preguntas diferentes:
+
+```text
+Controller
+→ ¿la entrada tiene forma utilizable?
+
+Service
+→ ¿la operación es válida para el negocio?
+
+DB constraints
+→ ¿el estado persistido respeta invariantes estructurales?
+```
+
+### 76. Feedback de creación: del Repository al cliente
+
+Un `POST` no termina conceptualmente cuando SQL ejecuta el `INSERT`.
+
+Todavía falta cerrar el flujo:
+
+```text
+DB
+→ Repository
+→ Service
+→ Controller
+→ HTTP Response
+```
+
+Si Repository solamente hace:
+
+```javascript
+await request.query(...);
+```
+
+pero no devuelve nada, Service recibe:
+
+```javascript
+undefined
+```
+
+y Controller carece de información para construir una respuesta rica.
+
+Por eso conviene diseñar explícitamente el contrato.
+
+Ejemplo:
+
+```javascript
+// Repository
+return creado;
+```
+
+```javascript
+// Service
+return creado;
+```
+
+```javascript
+// Controller
+return res
+  .status(201)
+  .json(creado);
+```
+
+La respuesta no debería depender de `console.log`.
+
+```text
+log
+→ observabilidad interna
+
+HTTP response
+→ contrato con el cliente
+```
+
+Son canales distintos.
+
+### 77. `DELETE` SQL: identificar, eliminar y saber qué ocurrió
+
+Una operación típica:
+
+```sql
+DELETE FROM lenguajes
+WHERE id = @id;
+```
+
+debe parametrizar el ID:
+
+```javascript
+await pool
+  .request()
+  .input(
+    "id",
+    sql.Int,
+    id
+  )
+  .query(
+    queries.deleteLanguageById
+  );
+```
+
+#### 77.1 `WHERE` es una condición crítica
+
+Sin:
+
+```sql
+WHERE id = @id
+```
+
+una sentencia:
+
+```sql
+DELETE FROM lenguajes;
+```
+
+elimina todas las filas de la tabla.
+
+En CRUD, la identificación del recurso debe conservarse desde:
+
+```text
+DELETE /lenguajes/:id
+```
+
+hasta:
+
+```sql
+WHERE id = @id
+```
+
+Esta continuidad conecta el contrato HTTP con la operación persistente.
+
+#### 77.2 ¿Hace falta hacer `SELECT` antes de `DELETE`?
+
+Una primera estrategia pedagógica es:
+
+```text
+SELECT por ID
+→ si existe
+→ DELETE
+→ devolver el objeto encontrado
+```
+
+Funciona como ejercicio para visualizar ambos pasos.
+
+Pero introduce dos problemas.
+
+Primero, ejecuta dos round trips:
+
+```text
+Node → SQL: SELECT
+Node → SQL: DELETE
+```
+
+Segundo, existe una ventana entre operaciones:
+
+```text
+SELECT encuentra fila
+↓
+otra operación modifica/elimina
+↓
+DELETE
+```
+
+Es un caso de **check-then-act**.
+
+La verificación y la acción no forman una única operación atómica.
+
+#### 77.3 `DELETE ... OUTPUT DELETED.*`
+
+SQL Server permite eliminar y devolver las filas afectadas en una misma sentencia:
+
+```sql
+DELETE FROM lenguajes
+OUTPUT DELETED.*
+WHERE id = @id;
+```
+
+Entonces:
+
+```javascript
+const result = await pool
+  .request()
+  .input(
+    "id",
+    sql.Int,
+    id
+  )
+  .query(
+    queries.deleteLanguageById
+  );
+
+const eliminado =
+  result.recordset[0] ?? null;
+
+return eliminado;
+```
+
+Si no coincide ninguna fila:
+
+```text
+recordset vacío
+→ recurso no encontrado
+```
+
+Si coincide:
+
+```text
+la misma operación
+→ elimina
+→ devuelve la fila eliminada
+```
+
+Esto evita el `SELECT` previo solamente para poder devolver el recurso.
+
+Microsoft documenta `OUTPUT DELETED.*` como mecanismo para obtener filas eliminadas.
+
+#### 77.4 `rowsAffected` como alternativa
+
+Si no hace falta devolver el objeto:
+
+```javascript
+const result =
+  await request.query(
+    queries.deleteLanguageById
+  );
+
+const deleted =
+  result.rowsAffected[0] > 0;
+```
+
+permite distinguir:
+
+```text
+0 filas
+→ no encontró
+
+1 fila
+→ eliminó
+```
+
+El contrato del Repository puede ser:
+
+```text
+boolean
+fila eliminada
+cantidad afectada
+```
+
+La elección debe ser consistente con lo que Service/Controller necesitan.
+
+#### 77.5 No usar excepciones para cualquier “no encontrado” sin definir el contrato
+
+“No existe el ID” puede modelarse como:
+
+```text
+null
+undefined
+resultado discriminado
+error de dominio
+```
+
+No existe una única forma obligatoria.
+
+Lo importante es distinguir:
+
+```text
+no encontrado
+→ resultado esperado posible del caso de uso
+
+falló la conexión
+→ error de infraestructura inesperado
+```
+
+Si ambos se representan con el mismo `Error` genérico, Controller pierde información para decidir entre:
+
+```http
+404 Not Found
+```
+
+y:
+
+```http
+500 Internal Server Error
+```
+
+Una arquitectura más clara puede utilizar:
+
+```javascript
+return null;
+```
+
+para ausencia, o un tipo:
+
+```javascript
+throw new NotFoundError(...);
+```
+
+si el proyecto adopta errores de dominio explícitos.
+
+### 78. Depurar CRUD SQL leyendo la frontera que falló
+
+La clase muestra varios errores consecutivos:
+
+```text
+propiedad mal nombrada
+→ undefined
+
+undefined / NULL
+→ NOT NULL
+
+Int inválido
+→ error de parámetro
+
+Foreign Key inexistente
+→ conflicto referencial
+
+ruta o query incorrecta
+→ resultado inesperado
+```
+
+Aunque todos puedan terminar como “falló el POST”, pertenecen a capas distintas.
+
+Una estrategia sistemática:
+
+```text
+1. ¿La request llegó al Controller?
+2. ¿El Controller extrajo los campos esperados?
+3. ¿Service recibió el objeto correcto?
+4. ¿Repository desestructuró las propiedades correctas?
+5. ¿Los parámetros tienen tipo válido?
+6. ¿La DB acepta las constraints?
+7. ¿La query afectó la cantidad esperada?
+8. ¿Repository retornó algo útil?
+9. ¿Controller lo transformó en response?
+```
+
+Esto es mejor que agregar logs en todos los archivos sin hipótesis.
+
+#### 78.1 El error ya contiene información de contexto
+
+Mensajes como:
+
+```text
+violación de Foreign Key
+columna no acepta NULL
+login failed
+invalid number
+```
+
+indican qué contrato se rompió.
+
+Antes de modificar código conviene clasificar:
+
+```text
+HTTP
+aplicación
+driver
+SQL
+integridad
+red
+```
+
+y recién después inspeccionar la capa correspondiente.
+
+### 79. Ejemplo integrado — `POST` parametrizado hasta SQL Server
+
+Request:
+
+```http
+POST /api/lenguajes/frontend
+Content-Type: application/json
+
+{
+  "idMateria": 1,
+  "nombre": "TypeScript",
+  "idTurno": 2,
+  "idComision": 1,
+  "cantidadAlumnos": 25
+}
+```
+
+Flujo:
+
+```mermaid
+sequenceDiagram
+    participant CL as Cliente
+    participant C as Controller
+    participant S as Service
+    participant R as SQL Repository
+    participant DB as SQL Server
+
+    CL->>C: POST + JSON
+    C->>S: create(datos)
+    S->>R: create(datos)
+    R->>R: destructuring + parámetros
+    R->>DB: INSERT parametrizado
+    DB->>DB: tipos + NOT NULL + FK
+    DB-->>R: fila creada
+    R-->>S: objeto creado
+    S-->>C: objeto creado
+    C-->>CL: 201 + JSON
+```
+
+Responsabilidades:
+
+```text
+Controller
+→ interpretar HTTP
+
+Service
+→ aplicar reglas del caso de uso
+
+Repository
+→ bindear parámetros y ejecutar SQL
+
+SQL Server
+→ hacer persistente el estado y aplicar constraints
+```
+
+La misma operación contiene validaciones en varios niveles, pero cada una protege una propiedad distinta del sistema.
+
+### 80. Estado de la persistencia SQL tras esta etapa
+
+Al finalizar este bloque queda conceptualmente cubierto:
+
+```text
+GET
+→ implementado sobre SQL
+
+POST / CREATE
+→ implementado mediante INSERT parametrizado
+
+DELETE
+→ diseño iniciado y query planteada
+
+UPDATE
+→ pendiente de implementación SQL
+```
+
+La arquitectura ya permite comprobar:
+
+```text
+HTTP contract
+→ permanece
+
+Service
+→ conserva reglas
+
+Repository
+→ cambia de memoria a SQL
+
+SQL
+→ introduce constraints, relaciones y persistencia
+```
+
+El siguiente desarrollo debe completar las operaciones restantes manteniendo el mismo criterio: **no copiar mecánicamente el CRUD de arrays, sino traducir cada intención a operaciones persistentes y diseñar claramente qué devuelve cada Repository.**
+
+
 ## Referencias técnicas
 
 Las clases determinan el alcance temático. Para detalles normativos, semántica actual y correcciones técnicas se priorizan fuentes oficiales o primarias.
@@ -13349,6 +14900,8 @@ Las clases determinan el alcance temático. Para detalles normativos, semántica
 
 ### Node.js y módulos
 
+- [npm — `npm start`](https://docs.npmjs.com/cli/start.html)
+
 - [Node.js — Introduction to Node.js](https://nodejs.org/en/learn/getting-started/introduction-to-nodejs)
 - [Node.js — Don't Block the Event Loop](https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop)
 - [Node.js — ECMAScript modules](https://nodejs.org/api/esm.html)
@@ -13357,6 +14910,11 @@ Las clases determinan el alcance temático. Para detalles normativos, semántica
 
 
 ### SQL Server, `mssql` y configuración
+
+- [Microsoft Learn — Primary and foreign key constraints](https://learn.microsoft.com/sql/relational-databases/tables/primary-and-foreign-key-constraints)
+- [Microsoft Learn — INSERT (Transact-SQL)](https://learn.microsoft.com/sql/t-sql/statements/insert-transact-sql)
+- [Microsoft Learn — DELETE (Transact-SQL)](https://learn.microsoft.com/sql/t-sql/statements/delete-transact-sql)
+- [Microsoft Learn — OUTPUT clause](https://learn.microsoft.com/sql/t-sql/queries/output-clause-transact-sql)
 
 - [Microsoft Learn — SQL Server Configuration Manager](https://learn.microsoft.com/sql/relational-databases/sql-server-configuration-manager)
 - [Microsoft Learn — Enable TCP/IP connections](https://learn.microsoft.com/sql/relational-databases/lesson-2-connecting-from-another-computer)
