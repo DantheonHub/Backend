@@ -163,6 +163,7 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [39.2 Anatomía de una HTTP request](#392-anatomía-de-una-http-request)
       - [39.3 Anatomía de una HTTP response](#393-anatomía-de-una-http-response)
       - [39.4 Métodos HTTP y la operación que representan](#394-métodos-http-y-la-operación-que-representan)
+        - [Identificar el recurso y enviar datos son problemas distintos](#identificar-el-recurso-y-enviar-datos-son-problemas-distintos)
     - [40. Dirección de un servicio: host, IP y puerto](#40-dirección-de-un-servicio-host-ip-y-puerto)
     - [41. URL, DNS, rutas y parámetros](#41-url-dns-rutas-y-parámetros)
       - [41.1 Parámetros de ruta (*path params*)](#411-parámetros-de-ruta-path-params)
@@ -207,6 +208,25 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [49.3 Arquitectura utilizada en el backend: Router → Controller → Service → Repository](#493-arquitectura-utilizada-en-el-backend-router--controller--service--repository)
       - [49.4 La regla de dependencias: no saltear capas](#494-la-regla-de-dependencias-no-saltear-capas)
       - [49.5 Por qué separar el Repository de la lógica de negocio](#495-por-qué-separar-el-repository-de-la-lógica-de-negocio)
+      - [49.6 Lógica de negocio, validación de entrada y frontera HTTP](#496-lógica-de-negocio-validación-de-entrada-y-frontera-http)
+    - [50. Routing modular con `express.Router`](#50-routing-modular-con-expressrouter)
+      - [50.1 Un `Router` es un componente de routing montable](#501-un-router-es-un-componente-de-routing-montable)
+      - [50.2 `app.use(prefijo, router)`: montar un router](#502-appuseprefijo-router-montar-un-router)
+      - [50.3 La ruta efectiva se compone por prefijo + ruta local](#503-la-ruta-efectiva-se-compone-por-prefijo--ruta-local)
+      - [50.4 La `/` de un router es la raíz de ese router, no necesariamente la del servidor](#504-la--de-un-router-es-la-raíz-de-ese-router-no-necesariamente-la-del-servidor)
+      - [50.5 `app.use` y `router.get` cumplen funciones diferentes](#505-appuse-y-routerget-cumplen-funciones-diferentes)
+      - [50.6 El servidor principal se convierte en punto de composición](#506-el-servidor-principal-se-convierte-en-punto-de-composición)
+      - [50.7 Un módulo de router no necesita crear otra aplicación Express](#507-un-módulo-de-router-no-necesita-crear-otra-aplicación-express)
+      - [50.8 Exportar e importar routers con CommonJS](#508-exportar-e-importar-routers-con-commonjs)
+      - [50.9 Refactorizar no significa cambiar el contrato externo](#509-refactorizar-no-significa-cambiar-el-contrato-externo)
+      - [50.10 Mover código cambia las rutas relativas de `require`](#5010-mover-código-cambia-las-rutas-relativas-de-require)
+      - [50.11 El orden de las rutas importa cuando varias pueden coincidir](#5011-el-orden-de-las-rutas-importa-cuando-varias-pueden-coincidir)
+      - [50.12 Rutas duplicadas y ambigüedad](#5012-rutas-duplicadas-y-ambigüedad)
+      - [50.13 Elegir agrupaciones de routers por cohesión, no solo por texto repetido](#5013-elegir-agrupaciones-de-routers-por-cohesión-no-solo-por-texto-repetido)
+      - [50.14 Del Router al Controller: el siguiente límite arquitectónico](#5014-del-router-al-controller-el-siguiente-límite-arquitectónico)
+      - [50.15 Diagnóstico práctico después de modularizar](#5015-diagnóstico-práctico-después-de-modularizar)
+      - [50.16 `node_modules` es reconstruible: el manifiesto es la fuente](#5016-node_modules-es-reconstruible-el-manifiesto-es-la-fuente)
+    - [51. Ejemplo integrado — Servidor modularizado por routers](#51-ejemplo-integrado--servidor-modularizado-por-routers)
 
 ---
 
@@ -4147,6 +4167,69 @@ Una consecuencia práctica importante es que **`GET` debe utilizarse para lectur
 
 También conviene distinguir `PUT` de `PATCH`: `PUT` representa el reemplazo de la representación del recurso objetivo; `PATCH` existe para describir modificaciones parciales. En APIs reales, el contrato debe especificar exactamente qué campos admite cada operación.
 
+
+##### Identificar el recurso y enviar datos son problemas distintos
+
+Al diseñar un endpoint conviene separar dos preguntas:
+
+1. **¿sobre qué recurso se quiere operar?**
+2. **¿qué datos necesita la operación?**
+
+La identificación del recurso suele aparecer en la **URI**, muchas veces mediante un parámetro de ruta:
+
+```http
+GET /api/productos/42
+PUT /api/productos/42
+PATCH /api/productos/42
+DELETE /api/productos/42
+```
+
+En los cuatro casos, `42` identifica el recurso objetivo. El método HTTP expresa qué tipo de operación se solicita sobre ese recurso.
+
+En cambio, cuando una operación necesita datos adicionales, estos suelen viajar en el **body**:
+
+```http
+PUT /api/productos/42
+Content-Type: application/json
+
+{
+  "nombre": "Teclado mecánico",
+  "precio": 85000
+}
+```
+
+Por lo tanto, un `PUT` o `PATCH` puede combinar:
+
+```text
+path parameter
+→ identifica el recurso
+
+body
+→ describe los datos que se desean aplicar
+```
+
+`DELETE` frecuentemente necesita identificar el recurso pero no requiere un body:
+
+```http
+DELETE /api/productos/42
+```
+
+y un `POST` de creación suele enviarse contra la colección:
+
+```http
+POST /api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Mouse",
+  "precio": 30000
+}
+```
+
+No se trata de una obligación sintáctica universal del protocolo. La API define su contrato. La idea importante es que **ruta, método y body cumplen responsabilidades diferentes** y no deben confundirse.
+
+Esto explica por qué la pregunta “¿`PUT` necesita parámetro y body?” no tiene una respuesta absoluta. En un CRUD habitual es común que el parámetro identifique qué recurso actualizar y que el body contenga el nuevo estado, pero el diseño concreto depende del recurso y del contrato de la API.
+
 ### 40. Dirección de un servicio: host, IP y puerto
 
 Para establecer una conexión de red hay que identificar dónde escucha el servicio. En el desarrollo local aparecen tres conceptos fundamentales:
@@ -5720,5 +5803,939 @@ El objetivo no es generar carpetas por estética. Es reducir **acoplamiento**, m
 
 > **Idea central de esta etapa:** una ruta ya no debe pensarse como “el lugar donde hago todo”. La ruta identifica la operación; el controller gestiona HTTP; el service decide según las reglas de negocio; el repository obtiene o persiste los datos.
 
-**Fuentes oficiales de actualización técnica:** documentación de Node.js (`node:http`, `node:fs`, modo `--watch`, CommonJS), documentación de Express 5.x (API, routing, respuestas y middleware) y especificación HTTP Semantics (RFC 9110). Las explicaciones de clase se conservaron como eje temático; los detalles actuales se normalizaron contra esas referencias.
+
+#### 49.6 Lógica de negocio, validación de entrada y frontera HTTP
+
+Una de las dificultades al empezar a trabajar por capas es decidir **qué significa realmente “lógica de negocio”**. No equivale a “todo el código que hace cálculos” ni a “todas las funciones de JavaScript”.
+
+La lógica de negocio está formada por reglas que existen porque **el dominio concreto de la aplicación funciona de determinada manera**.
+
+Ejemplos:
+
+```text
+Farmacia
+→ una receta puede tener una vigencia determinada
+
+Sistema académico
+→ una materia puede exigir correlativas aprobadas
+
+Comercio
+→ comprar cierta cantidad puede habilitar un descuento
+
+Sistema bancario
+→ una transferencia debe cumplir reglas particulares del producto/cuenta
+```
+
+Estas reglas seguirían siendo necesarias aunque la aplicación cambiara Express por otro framework o SQL por otra base de datos. Por eso pertenecen al dominio y encajan naturalmente en el **Service**.
+
+```javascript
+function puedeInscribirse(alumno, materia) {
+  // regla propia del sistema académico
+}
+```
+
+En cambio, existen comprobaciones que pertenecen a la **frontera HTTP**:
+
+```text
+¿vino el parámetro requerido?
+¿el body tiene la forma esperada?
+¿el identificador puede interpretarse correctamente?
+¿la request contiene información básica suficiente para continuar?
+```
+
+Estas validaciones pueden realizarse en el controller para rechazar temprano una request que ya se sabe inválida:
+
+```javascript
+function crearProducto(req, res) {
+  if (!req.body?.nombre) {
+    return res.status(400).json({
+      error: "El nombre es obligatorio",
+    });
+  }
+
+  // luego se delega al service
+}
+```
+
+La separación útil no es:
+
+```text
+Controller = sin lógica
+Service    = toda la lógica
+```
+
+sino:
+
+```text
+Controller
+→ decisiones relacionadas con HTTP y con la entrada/salida de la operación
+
+Service
+→ decisiones relacionadas con las reglas del dominio
+```
+
+Algunas validaciones pueden necesitar criterio arquitectónico. Por ejemplo, verificar que un campo obligatorio esté presente puede resolverse en la frontera HTTP; determinar si un alumno puede cursar una materia por su régimen de correlativas es una regla del dominio y debe permanecer en el service.
+
+Esta distinción evita dos extremos:
+
+- un controller gigantesco que termina implementando el negocio;
+- un controller completamente pasivo que envía cualquier request inválida hacia capas más profundas sin necesidad.
+
+Puede pensarse como un filtro progresivo:
+
+```mermaid
+flowchart LR
+    R[Request] --> C[Controller]
+    C --> V{¿Entrada HTTP válida?}
+    V -- No --> E[Respuesta 4xx]
+    V -- Sí --> S[Service]
+    S --> B{¿Cumple reglas de negocio?}
+    B -- No --> D[Error de dominio]
+    B -- Sí --> P[Repository]
+```
+
+La frontera exacta puede variar entre proyectos. Lo importante es que cada decisión tenga una **responsabilidad identificable** y no se coloque en una capa solo porque “hay que ponerla en algún lado”.
+
+### 50. Routing modular con `express.Router`
+
+Cuando un servidor tiene pocas rutas, escribir todo directamente sobre `app` resulta comprensible:
+
+```javascript
+app.get("/api/lenguajes/frontend", handlerFrontend);
+app.get("/api/lenguajes/frontend/:lenguaje", handlerFrontendPorLenguaje);
+
+app.get("/api/lenguajes/backend", handlerBackend);
+app.get("/api/lenguajes/backend/:lenguaje", handlerBackendPorLenguaje);
+```
+
+El problema aparece cuando aumenta la cantidad de endpoints. El archivo principal empieza a acumular:
+
+```text
+configuración del servidor
++ imports de datos
++ rutas
++ handlers
++ reglas
++ respuestas
+```
+
+La arquitectura por capas introducida anteriormente plantea una primera extracción: **sacar del archivo principal la responsabilidad de routing**.
+
+Express proporciona `express.Router()` precisamente para construir grupos de rutas modulares.
+
+#### 50.1 Un `Router` es un componente de routing montable
+
+Una instancia de router posee métodos equivalentes a los utilizados sobre `app`:
+
+```javascript
+const express = require("express");
+
+const router = express.Router();
+
+router.get("/", handler);
+router.get("/:id", handlerPorId);
+router.post("/", handlerCrear);
+```
+
+Conceptualmente:
+
+```text
+app
+→ representa la aplicación Express principal
+
+router
+→ representa un subsistema de rutas que puede montarse dentro de la aplicación
+```
+
+El router no necesita abrir un puerto ni crear otro servidor. No reemplaza a `app`.
+
+```javascript
+const app = express();       // aplicación principal
+const router = express.Router(); // router modular
+```
+
+Son objetos con responsabilidades distintas.
+
+La aplicación principal conserva, entre otras cosas, la composición general del servidor:
+
+```text
+crear aplicación
+→ registrar middleware global
+→ montar routers
+→ iniciar listen
+```
+
+Cada router concentra las rutas de un área determinada:
+
+```text
+router de frontend
+router de backend
+router de usuarios
+router de productos
+...
+```
+
+Por eso el archivo principal puede pasar de contener decenas de handlers a expresar principalmente **cómo está compuesta la aplicación**.
+
+#### 50.2 `app.use(prefijo, router)`: montar un router
+
+El vínculo entre la aplicación y un router se realiza con `app.use`:
+
+```javascript
+app.use("/api/lenguajes/frontend", frontendRouter);
+```
+
+Esto significa que las rutas registradas dentro de `frontendRouter` quedan montadas debajo de ese prefijo.
+
+Si el router contiene:
+
+```javascript
+frontendRouter.get("/", handlerTodos);
+frontendRouter.get("/:lenguaje", handlerPorLenguaje);
+```
+
+las rutas efectivas son:
+
+```text
+prefijo de montaje                  ruta local del router
+/api/lenguajes/frontend      +      /
+/api/lenguajes/frontend      +      /:lenguaje
+```
+
+Resultado:
+
+```text
+GET /api/lenguajes/frontend
+GET /api/lenguajes/frontend/:lenguaje
+```
+
+Esta composición es una de las ideas más importantes de `Router`.
+
+No debe pensarse que `express.Router()` “recuerda” por sí mismo `/api/lenguajes/frontend`. El router se crea sin ese prefijo:
+
+```javascript
+const frontendRouter = express.Router();
+```
+
+y el prefijo aparece cuando la aplicación lo **monta**:
+
+```javascript
+app.use("/api/lenguajes/frontend", frontendRouter);
+```
+
+Por eso dentro del módulo se escriben rutas **relativas al punto de montaje**.
+
+#### 50.3 La ruta efectiva se compone por prefijo + ruta local
+
+Supóngase:
+
+```javascript
+app.use("/api/lenguajes/frontend", frontendRouter);
+```
+
+y dentro del router:
+
+```javascript
+frontendRouter.get("/", ...);
+frontendRouter.get("/:lenguaje", ...);
+frontendRouter.get("/despedida", ...);
+```
+
+La tabla resultante es:
+
+| Ruta local | Ruta HTTP efectiva |
+|---|---|
+| `/` | `/api/lenguajes/frontend` |
+| `/:lenguaje` | `/api/lenguajes/frontend/:lenguaje` |
+| `/despedida` | `/api/lenguajes/frontend/despedida` |
+
+Un error frecuente durante una refactorización es repetir dentro del router el prefijo que ya está en `app.use`:
+
+```javascript
+app.use("/api/lenguajes/frontend", frontendRouter);
+
+// ❌ repite el prefijo
+frontendRouter.get("/api/lenguajes/frontend/:lenguaje", handler);
+```
+
+Eso no crea la ruta esperada. Conceptualmente termina componiendo:
+
+```text
+/api/lenguajes/frontend
++
+/api/lenguajes/frontend/:lenguaje
+```
+
+Es decir, una ruta redundante.
+
+La versión correcta es:
+
+```javascript
+frontendRouter.get("/:lenguaje", handler);
+```
+
+La regla mental puede resumirse como:
+
+```text
+URL pública
+=
+mount path de app.use(...)
++
+path declarado dentro del router
+```
+
+#### 50.4 La `/` de un router es la raíz de ese router, no necesariamente la del servidor
+
+En:
+
+```javascript
+app.use("/api", apiRouter);
+```
+
+esta ruta:
+
+```javascript
+apiRouter.get("/", handler);
+```
+
+corresponde a:
+
+```text
+GET /api
+```
+
+no a:
+
+```text
+GET /
+```
+
+La `/` es relativa al lugar donde fue montado el router.
+
+Lo mismo ocurre si se monta:
+
+```javascript
+app.use("/api/lenguajes/backend", backendRouter);
+```
+
+Entonces:
+
+```javascript
+backendRouter.get("/", handler);
+```
+
+atiende la raíz **de ese router**:
+
+```text
+GET /api/lenguajes/backend
+```
+
+Este cambio de perspectiva permite leer un archivo de router sin repetir constantemente toda la URL pública.
+
+#### 50.5 `app.use` y `router.get` cumplen funciones diferentes
+
+No son variantes intercambiables.
+
+```javascript
+app.use("/api/lenguajes/frontend", frontendRouter);
+```
+
+monta un middleware/router bajo un prefijo.
+
+En cambio:
+
+```javascript
+frontendRouter.get("/:lenguaje", handler);
+```
+
+registra una operación específicamente para el método HTTP `GET` y para ese path local.
+
+El flujo queda:
+
+```mermaid
+flowchart LR
+    C[Cliente] --> A[Aplicación Express]
+    A --> U["app.use('/api/lenguajes/frontend', frontendRouter)"]
+    U --> R[frontendRouter]
+    R --> G["router.get('/:lenguaje', handler)"]
+    G --> H[Handler]
+```
+
+`app.use` decide **qué subsistema recibe una familia de requests**. Los métodos `get`, `post`, `put`, `patch`, `delete`, etc. deciden **qué handler atiende cada operación concreta dentro de ese subsistema**.
+
+#### 50.6 El servidor principal se convierte en punto de composición
+
+Antes de modularizar:
+
+```javascript
+const app = express();
+
+app.get("/api/lenguajes/frontend", ...);
+app.get("/api/lenguajes/frontend/:lenguaje", ...);
+app.get("/api/lenguajes/backend", ...);
+app.get("/api/lenguajes/backend/:lenguaje", ...);
+
+app.listen(PORT, HOST);
+```
+
+Después:
+
+```javascript
+const express = require("express");
+const frontendRouter = require("./routers/frontendRouter");
+const backendRouter = require("./routers/backendRouter");
+
+const app = express();
+
+app.use("/api/lenguajes/frontend", frontendRouter);
+app.use("/api/lenguajes/backend", backendRouter);
+
+app.listen(PORT, HOST);
+```
+
+El segundo archivo no tiene menos funcionalidad. Tiene **menos responsabilidades**.
+
+La lógica de routing específica vive en sus módulos y el archivo principal se concentra en ensamblar la aplicación.
+
+Una estructura posible:
+
+```text
+proyecto/
+├── index.js
+├── routers/
+│   ├── frontendRouter.js
+│   ├── backendRouter.js
+│   └── principalRouter.js
+├── controllers/
+│   ├── frontendController.js
+│   └── backendController.js
+└── src/
+    └── lenguajes.js
+```
+
+En esta etapa del desarrollo ya se implementó concretamente la **capa Router**. La existencia de la carpeta `controllers/` prepara el paso siguiente, pero crear la carpeta por sí solo todavía no separa la lógica del controller.
+
+#### 50.7 Un módulo de router no necesita crear otra aplicación Express
+
+Dentro de un router es necesario acceder a Express para crear el objeto:
+
+```javascript
+const express = require("express");
+const frontendRouter = express.Router();
+```
+
+pero no hace falta:
+
+```javascript
+const app = express();
+```
+
+El `app` principal ya existe en el archivo de arranque.
+
+Crear otra aplicación dentro de cada router confundiría dos responsabilidades:
+
+```text
+aplicación principal
+vs.
+módulo de routing
+```
+
+El router solo necesita:
+
+```text
+Express
+→ crear Router
+→ registrar rutas
+→ exportar Router
+```
+
+#### 50.8 Exportar e importar routers con CommonJS
+
+Un router es otro valor JavaScript y puede modularizarse con el mismo mecanismo ya estudiado.
+
+Archivo `frontendRouter.js`:
+
+```javascript
+const express = require("express");
+
+const frontendRouter = express.Router();
+
+frontendRouter.get("/", (req, res) => {
+  return res.status(200).json({
+    mensaje: "Frontend",
+  });
+});
+
+module.exports = frontendRouter;
+```
+
+Archivo principal:
+
+```javascript
+const frontendRouter = require("./routers/frontendRouter");
+```
+
+La forma de importar depende, nuevamente, de la **forma del export**.
+
+Export directo:
+
+```javascript
+module.exports = frontendRouter;
+```
+
+Import:
+
+```javascript
+const frontendRouter = require("./routers/frontendRouter");
+```
+
+Export dentro de un objeto:
+
+```javascript
+module.exports = { frontendRouter };
+```
+
+Import con destructuring:
+
+```javascript
+const { frontendRouter } = require("./routers/frontendRouter");
+```
+
+No es una regla especial de Express. Es exactamente la semántica CommonJS desarrollada en la sección 28 aplicada ahora a componentes arquitectónicos.
+
+#### 50.9 Refactorizar no significa cambiar el contrato externo
+
+Una refactorización busca modificar la organización interna sin cambiar innecesariamente el comportamiento observable.
+
+Antes:
+
+```javascript
+app.get("/api/lenguajes/frontend/:lenguaje", handler);
+```
+
+Después:
+
+```javascript
+app.use("/api/lenguajes/frontend", frontendRouter);
+
+// frontendRouter.js
+frontendRouter.get("/:lenguaje", handler);
+```
+
+Para el cliente, la URL puede seguir siendo:
+
+```http
+GET /api/lenguajes/frontend/javascript
+```
+
+El cambio está adentro:
+
+```text
+antes
+request → app.get → handler
+
+después
+request → app.use → Router → router.get → handler
+```
+
+Esta es una razón importante para modularizar gradualmente y probar después de cada movimiento: si el endpoint público deja de responder, el problema está en la reorganización y no necesariamente en la lógica original.
+
+#### 50.10 Mover código cambia las rutas relativas de `require`
+
+Los paths relativos de CommonJS se resuelven desde el archivo que realiza el `require`.
+
+Supóngase:
+
+```text
+proyecto/
+├── index.js
+├── routers/
+│   └── principalRouter.js
+└── src/
+    └── lenguajes.js
+```
+
+Desde `index.js`:
+
+```javascript
+require("./src/lenguajes");
+```
+
+Desde `routers/principalRouter.js`, la misma ruta no funciona porque `src` ya no está dentro de `routers`.
+
+Hay que subir un nivel:
+
+```javascript
+require("../src/lenguajes");
+```
+
+Puede visualizarse:
+
+```text
+routers/principalRouter.js
+       │
+       ├─ ..        → volver a proyecto/
+       │
+       └─ src/      → entrar a src/
+```
+
+Por eso mover un archivo entre carpetas puede romper imports aunque el módulo de destino no haya cambiado.
+
+El error típico:
+
+```text
+Cannot find module ...
+```
+
+no significa necesariamente que el paquete o archivo no exista. Puede significar que el **path relativo dejó de ser correcto desde la nueva ubicación**.
+
+#### 50.11 El orden de las rutas importa cuando varias pueden coincidir
+
+Considérese este router:
+
+```javascript
+router.get("/:lenguaje", handlerLenguaje);
+
+router.get("/despedida", (req, res) => {
+  return res.status(200).send("Buenas noches");
+});
+```
+
+Una request:
+
+```http
+GET /despedida
+```
+
+también coincide con:
+
+```text
+/:lenguaje
+```
+
+porque `despedida` puede ser capturado como el valor del parámetro `lenguaje`.
+
+Si la ruta parametrizada fue registrada primero y su handler termina la respuesta, la ruta literal posterior no llega a ejecutarse.
+
+Por eso conviene registrar primero las rutas **más específicas**:
+
+```javascript
+router.get("/despedida", handlerDespedida);
+router.get("/:lenguaje", handlerLenguaje);
+```
+
+Regla práctica:
+
+```text
+rutas literales/específicas
+antes que
+rutas dinámicas/genéricas
+```
+
+Ejemplo:
+
+```text
+✅ /despedida
+✅ /estadisticas
+✅ /populares
+↓
+✅ /:lenguaje
+```
+
+Esto no sucede porque JavaScript sea interpretado. La causa relevante es que **Express procesa los handlers/rutas registrados en orden y una ruta parametrizada puede coincidir con muchos valores distintos**.
+
+La frase “la primera ruta gana” también necesita precisión: un handler puede ceder el control mediante `next()` o `next("route")` según el caso. Lo que vuelve inaccesible a una ruta posterior es que una coincidencia anterior procese la request y termine el ciclo sin continuar.
+
+#### 50.12 Rutas duplicadas y ambigüedad
+
+Registrar dos handlers con el mismo método y el mismo path crea una configuración difícil de razonar:
+
+```javascript
+router.get("/home", handlerA);
+router.get("/home", handlerB);
+```
+
+Si `handlerA` responde y no continúa, `handlerB` no será alcanzado.
+
+Aunque sea técnicamente posible construir cadenas de handlers deliberadamente, dos endpoints “distintos” no deberían depender accidentalmente del mismo método + path.
+
+Un contrato de API necesita que cada endpoint tenga una intención clara:
+
+```text
+GET /api
+GET /api/home
+GET /api/lenguajes
+```
+
+La unicidad conceptual del endpoint reduce errores de mantenimiento y hace más evidente qué operación está atendiendo cada handler.
+
+#### 50.13 Elegir agrupaciones de routers por cohesión, no solo por texto repetido
+
+Durante una primera refactorización, detectar prefijos repetidos es una buena pista:
+
+```text
+/api/lenguajes/frontend
+/api/lenguajes/frontend/:lenguaje
+
+/api/lenguajes/backend
+/api/lenguajes/backend/:lenguaje
+```
+
+Esto sugiere:
+
+```text
+frontendRouter
+backendRouter
+```
+
+Pero “buscar texto repetido en la URL” es una heurística inicial, no la definición completa de un router.
+
+A medida que el proyecto crece, el criterio más importante es la **cohesión funcional**:
+
+```text
+un router
+→ agrupa endpoints pertenecientes a una misma responsabilidad/recurso
+```
+
+Por ejemplo:
+
+```text
+/users
+/products
+/orders
+```
+
+suele resultar más mantenible que dividir routers únicamente porque dos paths comparten accidentalmente una palabra.
+
+La URL y la arquitectura se relacionan, pero no son exactamente lo mismo.
+
+#### 50.14 Del Router al Controller: el siguiente límite arquitectónico
+
+Al terminar esta refactorización, todavía puede quedar código como:
+
+```javascript
+frontendRouter.get("/:lenguaje", (req, res) => {
+  const lenguaje = req.params.lenguaje;
+
+  const resultado = infoLenguajes.frontend.filter(/* ... */);
+
+  if (!resultado.length) {
+    return res.status(404).json({ error: "No encontrado" });
+  }
+
+  return res.status(200).json(resultado);
+});
+```
+
+La ruta ya está en su archivo correcto, pero sigue haciendo varias cosas:
+
+```text
+routing
++ leer request
++ buscar datos
++ decidir respuesta
+```
+
+El siguiente paso arquitectónico consiste en separar el **handler HTTP** en un controller:
+
+```javascript
+router.get("/:lenguaje", frontendController.buscarPorLenguaje);
+```
+
+y hacer que el router se limite a la asociación:
+
+```text
+método + path
+→ función del controller
+```
+
+Ese cambio completa el puente conceptual:
+
+```mermaid
+flowchart LR
+    MONO[index.js monolítico] --> R[Router extraído]
+    R --> C[Controller]
+    C --> S[Service]
+    S --> P[Repository]
+```
+
+La clase actual implementa el primer movimiento real de esa transición: **el routing deja de pertenecer al archivo principal y se convierte en una capa modular**.
+
+#### 50.15 Diagnóstico práctico después de modularizar
+
+Después de mover rutas entre archivos, conviene comprobar el sistema de afuera hacia adentro:
+
+```text
+1. ¿el proceso del servidor está corriendo?
+2. ¿host y puerto son los correctos?
+3. ¿el router está importado?
+4. ¿app.use monta el router en el prefijo correcto?
+5. ¿la ruta local del router está escrita respecto de ese prefijo?
+6. ¿el método HTTP coincide?
+7. ¿una ruta anterior está capturando la request?
+8. ¿los require relativos siguen apuntando al archivo correcto?
+9. ¿el handler termina con una respuesta?
+```
+
+Un `Cannot GET /...` sigue siendo información diagnóstica: Express fue alcanzado, pero no encontró una ruta `GET` que terminara atendiendo esa URL.
+
+Un error:
+
+```text
+Cannot find module ...
+```
+
+apunta en cambio a resolución de módulos/imports y debe investigarse desde la ubicación del archivo que ejecuta `require`.
+
+Separar mentalmente estos niveles evita mezclar:
+
+```text
+problema de servidor
+problema de routing
+problema de módulos
+problema de datos
+problema de lógica
+```
+
+#### 50.16 `node_modules` es reconstruible: el manifiesto es la fuente
+
+Durante la práctica se eliminó `node_modules` pero se conservó `package.json`. No hace falta reinstalar cada paquete manualmente.
+
+```bash
+npm install
+```
+
+lee las dependencias declaradas y reconstruye el árbol instalado localmente.
+
+Este caso muestra en la práctica por qué:
+
+```text
+package.json
+→ describe las dependencias requeridas
+
+package-lock.json
+→ fija con mayor precisión el árbol/versiones resueltas
+
+node_modules/
+→ materialización local regenerable de esas dependencias
+```
+
+Por eso `node_modules` normalmente no se versiona en Git, mientras que `package.json` y `package-lock.json` sí forman parte del proyecto.
+
+### 51. Ejemplo integrado — Servidor modularizado por routers
+
+Una versión simplificada de la estructura alcanzada puede representarse así:
+
+```text
+proyecto/
+├── index.js
+├── routers/
+│   ├── principalRouter.js
+│   ├── frontendRouter.js
+│   └── backendRouter.js
+└── src/
+    └── lenguajes.js
+```
+
+`index.js`:
+
+```javascript
+const express = require("express");
+
+const principalRouter = require("./routers/principalRouter");
+const frontendRouter = require("./routers/frontendRouter");
+const backendRouter = require("./routers/backendRouter");
+
+const app = express();
+
+app.use("/api", principalRouter);
+app.use("/api/lenguajes/frontend", frontendRouter);
+app.use("/api/lenguajes/backend", backendRouter);
+
+app.listen(3000, "127.0.0.1", () => {
+  console.log("Servidor iniciado");
+});
+```
+
+`routers/frontendRouter.js`:
+
+```javascript
+const express = require("express");
+const { infoLenguajes } = require("../src/lenguajes");
+
+const frontendRouter = express.Router();
+
+frontendRouter.get("/", (req, res) => {
+  return res.status(200).json(infoLenguajes.frontend);
+});
+
+frontendRouter.get("/despedida", (req, res) => {
+  return res.status(200).send("Buenas noches");
+});
+
+frontendRouter.get("/:lenguaje", (req, res) => {
+  const lenguajeBuscado = req.params.lenguaje.toLocaleLowerCase();
+
+  const resultados = infoLenguajes.frontend.filter(
+    lenguaje =>
+      lenguaje.nombre.toLocaleLowerCase() === lenguajeBuscado
+  );
+
+  if (!resultados.length) {
+    return res.status(404).json({
+      error: "Lenguaje no encontrado",
+    });
+  }
+
+  return res.status(200).json(resultados);
+});
+
+module.exports = frontendRouter;
+```
+
+La ruta estática `/despedida` aparece antes de `/:lenguaje` para que no sea absorbida por el parámetro dinámico.
+
+El recorrido de una request:
+
+```http
+GET /api/lenguajes/frontend/javascript
+```
+
+queda:
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant A as app / index.js
+    participant R as frontendRouter
+    participant H as handler
+    participant D as infoLenguajes
+
+    C->>A: GET /api/lenguajes/frontend/javascript
+    A->>R: coincide app.use("/api/lenguajes/frontend", ...)
+    R->>H: coincide GET "/:lenguaje"
+    H->>D: filtrar "javascript"
+    D-->>H: coincidencias
+    H-->>C: HTTP 200 + JSON
+```
+
+La ganancia pedagógica de este ejemplo no es simplemente “tener más archivos”. Permite ver cómo conceptos aprendidos por separado empiezan a formar un sistema:
+
+```text
+CommonJS
++ rutas relativas
++ objetos y arrays
++ filter
++ request/response
++ path params
++ routing
++ HTTP
++ separación de responsabilidades
+=
+primer backend modular
+```
+
+El paso posterior será retirar del router la lógica que todavía no le corresponde y delegarla al **Controller**, avanzando gradualmente hacia la arquitectura `Router → Controller → Service → Repository`.
+
+**Fuentes oficiales de actualización técnica:** documentación de Node.js (`node:http`, `node:fs`, modo `--watch`, CommonJS), documentación de NPM (`package.json`, dependencias e instalación), documentación de Express 5.x (API, routing, `express.Router`, `app.use`, respuestas y middleware) y especificación HTTP Semantics (RFC 9110). Las explicaciones de clase se conservaron como eje temático; los detalles actuales se normalizaron contra esas referencias.
 
