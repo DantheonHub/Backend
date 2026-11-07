@@ -166,6 +166,7 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [28.6 Diagnóstico de importaciones y exportaciones](#286-diagnóstico-de-importaciones-y-exportaciones)
         - [La extensión `.js`](#la-extensión-js)
         - [Una comprobación simple antes de buscar errores más profundos](#una-comprobación-simple-antes-de-buscar-errores-más-profundos)
+      - [28.7 Cache de módulos CommonJS: por qué varios `require()` suelen ver el mismo objeto](#287-cache-de-módulos-commonjs-por-qué-varios-require-suelen-ver-el-mismo-objeto)
     - [29. Pila (*Stack*) y Cola (*Queue*): estructuras para razonar sobre ejecución](#29-pila-stack-y-cola-queue-estructuras-para-razonar-sobre-ejecución)
       - [Stack — LIFO](#stack--lifo)
       - [Queue — FIFO](#queue--fifo)
@@ -198,6 +199,12 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [36.2 `await` suspende la función async; no bloquea el Event Loop](#362-await-suspende-la-función-async-no-bloquea-el-event-loop)
       - [36.3 Manejo de errores: `try`/`catch` en vez de `.catch`](#363-manejo-de-errores-trycatch-en-vez-de-catch)
       - [36.4 Tres errores comunes con `async`/`await`](#364-tres-errores-comunes-con-asyncawait)
+      - [36.5 Cuando una dependencia se vuelve asincrónica, cambia su contrato](#365-cuando-una-dependencia-se-vuelve-asincrónica-cambia-su-contrato)
+      - [36.6 Una función intermedia no siempre necesita `async` + `await`](#366-una-función-intermedia-no-siempre-necesita-async--await)
+      - [36.7 Capturar un error y propagar un error son decisiones diferentes](#367-capturar-un-error-y-propagar-un-error-son-decisiones-diferentes)
+      - [36.8 `catch` vacío: el error silencioso](#368-catch-vacío-el-error-silencioso)
+      - [36.9 `new Error(...)` crea; `throw` interrumpe y propaga](#369-new-error-crea-throw-interrumpe-y-propaga)
+      - [36.10 Express y errores de handlers `async`](#3610-express-y-errores-de-handlers-async)
     - [37. Eventos y `EventEmitter`](#37-eventos-y-eventemitter)
       - [37.1 `.on()` registra; `.emit()` dispara](#371-on-registra-emit-dispara)
       - [37.2 EventEmitter y Event Loop están relacionados, pero no son lo mismo](#372-eventemitter-y-event-loop-están-relacionados-pero-no-son-lo-mismo)
@@ -320,6 +327,10 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [53.10 El Repository no es la base de datos](#5310-el-repository-no-es-la-base-de-datos)
       - [53.11 Los nombres de las funciones forman contratos entre capas](#5311-los-nombres-de-las-funciones-forman-contratos-entre-capas)
       - [53.12 Una capa pasamanos puede ser válida, pero debe tener una razón](#5312-una-capa-pasamanos-puede-ser-válida-pero-debe-tener-una-razón)
+      - [53.13 Fuente de datos no significa solamente base de datos](#5313-fuente-de-datos-no-significa-solamente-base-de-datos)
+      - [53.14 Cachear datos introduce una política de frescura](#5314-cachear-datos-introduce-una-política-de-frescura)
+      - [53.15 Dos repositories son intercambiables solo si respetan el mismo contrato](#5315-dos-repositories-son-intercambiables-solo-si-respetan-el-mismo-contrato)
+      - [53.16 Cambiar implementación demuestra el valor de la separación](#5316-cambiar-implementación-demuestra-el-valor-de-la-separación)
     - [54. Crear recursos con `POST`: del body al Repository](#54-crear-recursos-con-post-del-body-al-repository)
       - [54.1 Una misma URI puede atender métodos distintos](#541-una-misma-uri-puede-atender-métodos-distintos)
       - [54.2 El Controller extrae el body](#542-el-controller-extrae-el-body)
@@ -363,10 +374,48 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [62.1 No imprimir indiscriminadamente objetos completos](#621-no-imprimir-indiscriminadamente-objetos-completos)
       - [62.2 Logging estructurado](#622-logging-estructurado)
     - [63. CRUD completo sobre memoria: qué se aprendió y qué falta](#63-crud-completo-sobre-memoria-qué-se-aprendió-y-qué-falta)
+    - [64. De memoria a SQL Server: persistencia real](#64-de-memoria-a-sql-server-persistencia-real)
+      - [64.1 Persistencia cambia la duración y autoridad del estado](#641-persistencia-cambia-la-duración-y-autoridad-del-estado)
+      - [64.2 Un esquema relacional distribuye la información entre tablas](#642-un-esquema-relacional-distribuye-la-información-entre-tablas)
+      - [64.3 SQL Server es otro proceso con su propio endpoint de red](#643-sql-server-es-otro-proceso-con-su-propio-endpoint-de-red)
+      - [64.4 Instancia, protocolo, host y puerto](#644-instancia-protocolo-host-y-puerto)
+      - [64.5 Firewall, red local e Internet son fronteras diferentes](#645-firewall-red-local-e-internet-son-fronteras-diferentes)
+    - [65. Conectar Node.js a SQL Server con `mssql`](#65-conectar-nodejs-a-sql-server-con-mssql)
+      - [65.1 `mssql` no es un ORM](#651-mssql-no-es-un-orm)
+      - [65.2 Dependencia de producción](#652-dependencia-de-producción)
+      - [65.3 Separar conexión, configuración y consultas](#653-separar-conexión-configuración-y-consultas)
+    - [66. Variables de entorno y configuración](#66-variables-de-entorno-y-configuración)
+      - [66.1 `.env` es un mecanismo de desarrollo, no la definición de variable de entorno](#661-env-es-un-mecanismo-de-desarrollo-no-la-definición-de-variable-de-entorno)
+      - [66.2 `process.env` entrega strings](#662-processenv-entrega-strings)
+      - [66.3 Fallar temprano ante configuración ausente](#663-fallar-temprano-ante-configuración-ausente)
+      - [66.4 `.env` no debe versionar secretos reales](#664-env-no-debe-versionar-secretos-reales)
+      - [66.5 No imprimir objetos de configuración completos](#665-no-imprimir-objetos-de-configuración-completos)
+      - [66.6 Usuario administrador vs. usuario de aplicación](#666-usuario-administrador-vs-usuario-de-aplicación)
+    - [67. Connection Pool: reutilizar conexiones](#67-connection-pool-reutilizar-conexiones)
+      - [67.1 Adquirir, usar y devolver](#671-adquirir-usar-y-devolver)
+      - [67.2 Pool no significa una única conexión global](#672-pool-no-significa-una-única-conexión-global)
+      - [67.3 Reutilizar el pool](#673-reutilizar-el-pool)
+    - [68. Ejecutar una consulta y entender el resultado de `mssql`](#68-ejecutar-una-consulta-y-entender-el-resultado-de-mssql)
+      - [68.1 `recordset` como colección de objetos JavaScript](#681-recordset-como-colección-de-objetos-javascript)
+      - [68.2 `console.table()` como herramienta de inspección](#682-consoletable-como-herramienta-de-inspección)
+    - [69. Primer Repository SQL: lectura completa](#69-primer-repository-sql-lectura-completa)
+      - [69.1 El Service no debería saber qué query se ejecutó](#691-el-service-no-debería-saber-qué-query-se-ejecutó)
+      - [69.2 No hace falta `USE` si la conexión ya selecciona la base](#692-no-hace-falta-use-si-la-conexión-ya-selecciona-la-base)
+    - [70. Repository intercambiable: la arquitectura puesta a prueba](#70-repository-intercambiable-la-arquitectura-puesta-a-prueba)
+      - [70.1 Qué demuestra realmente este cambio](#701-qué-demuestra-realmente-este-cambio)
+      - [70.2 Contrato estable, implementación variable](#702-contrato-estable-implementación-variable)
+      - [70.3 Esto se aproxima a depender de una abstracción](#703-esto-se-aproxima-a-depender-de-una-abstracción)
+    - [71. Queries dinámicas y SQL injection](#71-queries-dinámicas-y-sql-injection)
+    - [72. Depurar una conexión SQL por capas](#72-depurar-una-conexión-sql-por-capas)
+      - [72.1 Error de tipo en configuración](#721-error-de-tipo-en-configuración)
+      - [72.2 Login failed](#722-login-failed)
+      - [72.3 Fallo de conexión host/puerto](#723-fallo-de-conexión-hostpuerto)
+    - [73. Ejemplo integrado — `GET` desde HTTP hasta SQL Server](#73-ejemplo-integrado--get-desde-http-hasta-sql-server)
   - [Referencias técnicas](#referencias-técnicas)
     - [Git y GitHub](#git-y-github)
     - [JavaScript y TypeScript](#javascript-y-typescript)
     - [Node.js y módulos](#nodejs-y-módulos)
+    - [SQL Server, `mssql` y configuración](#sql-server-mssql-y-configuración)
     - [HTTP, Express y seguridad](#http-express-y-seguridad)
 
 ---
@@ -4582,6 +4631,100 @@ Cuando un módulo no parece funcionar:
 Esta secuencia suele ser más eficiente que modificar código al azar.
 
 
+
+#### 28.7 Cache de módulos CommonJS: por qué varios `require()` suelen ver el mismo objeto
+
+Cuando un módulo CommonJS se carga por primera vez, Node ejecuta su código y guarda el módulo en una cache asociada al archivo resuelto.
+
+Por eso:
+
+```javascript
+// estado.js
+module.exports = {
+  contador: 0,
+};
+```
+
+```javascript
+// a.js
+const estado = require("./estado");
+estado.contador++;
+```
+
+```javascript
+// b.js
+const estado = require("./estado");
+console.log(estado.contador);
+```
+
+normalmente ambos `require("./estado")` reciben una referencia al **mismo valor exportado que quedó cacheado**, siempre que resuelvan al mismo archivo y no se manipule manualmente la cache.
+
+La explicación correcta no es que:
+
+```text
+module.exports
+→ sea un objeto "static" de Java
+```
+
+ni que:
+
+```text
+CommonJS
+→ implemente automáticamente el patrón Singleton
+```
+
+`module.exports` es simplemente el valor que un módulo CommonJS expone.
+
+La sensación de “instancia única” aparece porque Node **cachea el módulo después de la primera carga**:
+
+```text
+primera carga
+→ ejecuta el archivo
+→ guarda el módulo en cache
+→ retorna module.exports
+
+cargas posteriores del mismo archivo resuelto
+→ reutilizan el módulo cacheado
+→ retornan su export actual
+```
+
+Esto puede utilizarse deliberadamente para compartir estado dentro de un proceso, pero también introduce riesgos.
+
+```javascript
+// cacheLocal.js
+const cache = new Map();
+
+module.exports = cache;
+```
+
+Cualquier módulo que importe ese mismo archivo puede modificar el mismo `Map`.
+
+Eso significa que el estado compartido:
+
+```text
+puede ser útil
++
+puede generar acoplamiento global difícil de rastrear
+```
+
+La cache de CommonJS tampoco equivale a persistencia:
+
+```text
+reiniciar el proceso Node
+→ se pierde la memoria
+→ se vuelve a construir la cache de módulos
+```
+
+Por lo tanto:
+
+```text
+cache CommonJS
+≠ base de datos
+≠ almacenamiento persistente
+```
+
+**Referencia técnica:** Node.js documenta que los módulos CommonJS se cachean después de la primera carga y que llamadas posteriores a `require()` obtienen el mismo objeto cuando resuelven al mismo archivo.
+
 ### 29. Pila (*Stack*) y Cola (*Queue*): estructuras para razonar sobre ejecución
 
 Antes de estudiar asincronía conviene comprender dos estructuras abstractas.
@@ -5395,6 +5538,338 @@ Si un `catch` captura un rechazo y termina normalmente —por ejemplo, solo regi
 1. **Usar `await` en un contexto donde no está permitido.** Dentro de scripts normales, un `await` fuera de una función `async` produce un `SyntaxError`. Los módulos permiten además *top-level await*; por eso la regla exacta depende del contexto sintáctico, no de que el archivo “compile” o no.
 2. **Suponer que toda función `async` necesita obligatoriamente un `try`/`catch` local.** Si una promesa esperada se rechaza y no se captura ahí, la función `async` devuelve una promesa rechazada y el error puede propagarse hacia quien la invocó. `try`/`catch` se usa cuando esa capa puede manejar, traducir o enriquecer el error; si no, propagarlo puede ser el comportamiento correcto.
 3. **Encadenar varios `await` de forma innecesariamente secuencial cuando las operaciones no dependen entre sí.** Esperar una tras otra, con un `await` detrás de otro, frena la ejecución de la función más de lo necesario — perdiendo buena parte del beneficio de la programación asincrónica. Si dos operaciones no dependen la una de la otra, conviene dispararlas en simultáneo en vez de esperarlas en fila (mecanismo que se desarrolla en profundidad más adelante).
+
+
+#### 36.5 Cuando una dependencia se vuelve asincrónica, cambia su contrato
+
+Supóngase que Repository inicialmente trabaja con memoria:
+
+```javascript
+function getAll() {
+  return datos;
+}
+```
+
+Su contrato temporal es:
+
+```text
+getAll()
+→ devuelve datos inmediatamente
+```
+
+Si después consulta una base de datos:
+
+```javascript
+async function getAll() {
+  return await ejecutarConsulta();
+}
+```
+
+su contrato pasa a ser:
+
+```text
+getAll()
+→ devuelve Promise
+→ esa Promise terminará entregando datos o un rechazo
+```
+
+El cambio es importante porque las capas consumidoras ya no reciben directamente:
+
+```javascript
+Array
+```
+
+sino:
+
+```javascript
+Promise<Array>
+```
+
+Si Service necesita los datos para operar sobre ellos:
+
+```javascript
+async function getLenguajes() {
+  const lenguajes = await repository.getAll();
+
+  return lenguajes.filter(/* ... */);
+}
+```
+
+debe esperar la resolución antes de aplicar `filter`.
+
+Controller, a su vez, puede necesitar esperar al Service:
+
+```javascript
+async function getLenguajes(req, res) {
+  const resultado = await service.getLenguajes();
+
+  return res.json(resultado);
+}
+```
+
+Por eso una dependencia asincrónica puede provocar un **efecto de propagación del contrato asincrónico** hacia las capas que necesitan su resultado.
+
+```mermaid
+flowchart LR
+    DB[(SQL Server)] -->|Promise| R[Repository async]
+    R -->|Promise| S[Service]
+    S -->|Promise| C[Controller async]
+    C --> RES[Response HTTP]
+```
+
+La causa no es que “todas las capas deban ser async por arquitectura”.
+
+La causa es:
+
+> **cada función que necesite esperar un resultado asincrónico antes de continuar debe tratar ese resultado como una promesa.**
+
+#### 36.6 Una función intermedia no siempre necesita `async` + `await`
+
+Si Service solamente reenvía la promesa:
+
+```javascript
+function getLenguajes() {
+  return repository.getAll();
+}
+```
+
+esto ya propaga correctamente la Promise.
+
+No es obligatorio escribir:
+
+```javascript
+async function getLenguajes() {
+  return await repository.getAll();
+}
+```
+
+Ambas formas entregan una promesa al llamador, aunque existen diferencias sutiles de identidad de promesas y trazas.
+
+`async`/`await` resulta especialmente útil cuando esa capa necesita:
+
+```text
+esperar
+→ inspeccionar el valor
+→ transformarlo
+→ validar reglas
+→ coordinar varias operaciones
+```
+
+Ejemplo:
+
+```javascript
+async function getLenguajesPublicables() {
+  const lenguajes = await repository.getAll();
+
+  return lenguajes.filter(
+    lenguaje => lenguaje.publicable === true
+  );
+}
+```
+
+Aquí `await` sí expresa una dependencia real:
+
+```text
+primero necesito los datos
+→ después puedo aplicar la regla
+```
+
+#### 36.7 Capturar un error y propagar un error son decisiones diferentes
+
+No es correcto establecer como regla universal:
+
+> “siempre que hay `async/await`, debe existir un `try/catch` en esa misma función”.
+
+Una función puede dejar que el rechazo viaje hacia arriba:
+
+```javascript
+async function repository() {
+  return await consultarDB();
+}
+
+async function service() {
+  return await repository();
+}
+```
+
+Si `consultarDB()` rechaza, `service()` también devuelve una promesa rechazada aunque no tenga `try/catch`.
+
+Se agrega `try/catch` cuando esa capa **puede hacer algo útil con el error**:
+
+```text
+traducirlo
+agregar contexto
+liberar recursos
+compensar una operación
+registrarlo en el nivel adecuado
+convertirlo en un error de dominio
+generar una respuesta HTTP
+```
+
+Un patrón posible:
+
+```javascript
+async function repository() {
+  try {
+    return await consultarDB();
+  } catch (error) {
+    throw new DatabaseError("No se pudo leer lenguajes", {
+      cause: error,
+    });
+  }
+}
+```
+
+Service puede no capturarlo si no sabe resolverlo:
+
+```javascript
+async function service() {
+  return repository();
+}
+```
+
+y la frontera HTTP puede transformarlo finalmente en una respuesta controlada.
+
+El objetivo es evitar dos extremos:
+
+```text
+capturar en todas las capas y repetir logs
+```
+
+o:
+
+```text
+no tener ningún punto de manejo del error
+```
+
+#### 36.8 `catch` vacío: el error silencioso
+
+Este patrón es especialmente peligroso:
+
+```javascript
+try {
+  await operacion();
+} catch (error) {
+}
+```
+
+La operación falló, pero el programa:
+
+```text
+no informa
+no transforma
+no propaga
+no compensa
+```
+
+La capa superior puede interpretar que la función terminó normalmente.
+
+En una función `async`, si el `catch` termina sin `throw`, la función suele resolverse con el valor que retorne esa rama —frecuentemente `undefined`.
+
+Por eso “capturar” no equivale a “manejar”.
+
+Manejar implica tomar una decisión explícita.
+
+#### 36.9 `new Error(...)` crea; `throw` interrumpe y propaga
+
+Estas dos expresiones hacen cosas diferentes:
+
+```javascript
+new Error("falló");
+```
+
+crea un objeto `Error`.
+
+Por sí sola no lanza ninguna excepción.
+
+En cambio:
+
+```javascript
+throw new Error("falló");
+```
+
+1. crea el objeto `Error`;
+2. interrumpe el flujo normal;
+3. busca un mecanismo de captura adecuado;
+4. si ocurre dentro de una función `async`, provoca que la promesa devuelta quede rechazada.
+
+Ejemplo:
+
+```javascript
+async function buscarUsuario(id) {
+  const usuario = await repository.findById(id);
+
+  if (!usuario) {
+    throw new Error("Usuario no encontrado");
+  }
+
+  return usuario;
+}
+```
+
+La diferencia conceptual:
+
+```text
+new Error(...)
+→ construir una descripción de error
+
+throw valor
+→ lanzar ese valor como excepción
+```
+
+JavaScript permite técnicamente lanzar otros valores:
+
+```javascript
+throw "falló";
+```
+
+pero `Error` aporta información estructurada como mensaje, tipo y stack, por lo que es la opción habitual.
+
+#### 36.10 Express y errores de handlers `async`
+
+En Express 5, un route handler o middleware que devuelve una Promise rechazada —incluidas funciones `async` que hacen `throw`— hace que Express reenvíe automáticamente ese error al mecanismo de error handling.
+
+Por eso:
+
+```javascript
+router.get("/", controller.getAll);
+```
+
+puede apuntar a:
+
+```javascript
+exports.getAll = async (req, res) => {
+  const datos = await service.getAll();
+
+  return res.json(datos);
+};
+```
+
+Si `service.getAll()` rechaza y el handler no lo captura localmente, Express 5 puede continuar hacia el middleware de errores.
+
+Una arquitectura más escalable puede centralizar la traducción final:
+
+```javascript
+app.use((err, req, res, next) => {
+  // log seguro
+  // mapear error → status
+  // responder sin filtrar detalles internos
+});
+```
+
+Esto evita repetir el mismo:
+
+```text
+try
+catch
+res.status(500)
+```
+
+en todos los controllers.
+
+> ⚠️ Express 4 no propaga automáticamente de la misma forma los rechazos de handlers `async`; allí se requiere adaptar el error mediante `next(err)` o un wrapper. El comportamiento depende de la versión del framework.
+
+**Referencia técnica:** la documentación de Express 5 indica que los handlers/middlewares que devuelven Promises rechazadas reenvían el error al error handler.
 
 ### 37. Eventos y `EventEmitter`
 
@@ -7950,7 +8425,7 @@ exports.create = lenguaje => {
 };
 ```
 
-Más adelante podría ser:
+La misma interfaz puede implementarse sobre SQL:
 
 ```javascript
 exports.create = async lenguaje => {
@@ -9650,7 +10125,7 @@ infoLenguajes.frontend
 
 Las capas superiores no necesitan conocer ese detalle.
 
-En una futura migración:
+Al migrar la persistencia a una base de datos:
 
 ```javascript
 exports.getAllFrontendLanguages = async () => {
@@ -10095,6 +10570,225 @@ sino:
 
 > “En esta arquitectura se usa Service para mantener separada la lógica de aplicación de HTTP y persistencia.”
 
+
+
+#### 53.13 Fuente de datos no significa solamente base de datos
+
+Repository se entiende mejor si se piensa como una frontera hacia **fuentes de datos**, no únicamente hacia SQL.
+
+Una operación puede obtener información desde:
+
+```text
+SQL Server
+MongoDB
+archivo
+memoria
+cache
+API externa
+servicio interno
+```
+
+Incluso puede combinar varias fuentes.
+
+Ejemplo conceptual:
+
+```javascript
+async function getCotizacion() {
+  const cacheada = await cache.get("usd");
+
+  if (cacheada && !estaVencida(cacheada)) {
+    return cacheada.valor;
+  }
+
+  const actual = await apiExterna.getCotizacion();
+
+  await cache.set("usd", actual);
+
+  return actual;
+}
+```
+
+La decisión:
+
+```text
+¿consulto cache?
+¿consulto fuente remota?
+¿cómo obtengo técnicamente el dato?
+```
+
+pertenece a infraestructura/acceso a datos.
+
+En cambio:
+
+```text
+si el dólar supera X, bloquear una operación comercial
+```
+
+es una regla del negocio y pertenece al Service.
+
+La palabra “Repository” no obliga a que exista una tabla SQL detrás.
+
+#### 53.14 Cachear datos introduce una política de frescura
+
+Una cache acelera acceso porque evita repetir operaciones costosas.
+
+```text
+sin cache
+request
+→ API externa
+→ red
+→ respuesta
+
+con cache
+request
+→ memoria/local
+→ respuesta
+```
+
+Pero aparece una nueva pregunta:
+
+> **¿cuánto tiempo puede considerarse válido el dato almacenado?**
+
+Ejemplo:
+
+```text
+TTL = 1 hora
+```
+
+permite:
+
+```text
+si todavía no venció
+→ usar cache
+
+si venció
+→ consultar fuente original
+→ refrescar cache
+```
+
+El beneficio:
+
+```text
+menos latencia
+menos tráfico
+menos carga sobre la fuente
+```
+
+El costo:
+
+```text
+posible dato desactualizado
+invalidación
+consistencia
+memoria/almacenamiento adicional
+```
+
+Por eso cachear no significa solamente “guardar una copia”.
+
+Es una decisión sobre **consistencia vs. rendimiento**.
+
+#### 53.15 Dos repositories son intercambiables solo si respetan el mismo contrato
+
+Supóngase:
+
+```javascript
+const memoryRepository =
+  require("./frontendMemoryRepository");
+```
+
+y:
+
+```javascript
+const sqlRepository =
+  require("./frontendSqlRepository");
+```
+
+Para poder sustituir uno por otro sin modificar Service, ambos deben ofrecer operaciones compatibles.
+
+```text
+getAll()
+findById(id)
+create(data)
+update(id, data)
+remove(id)
+```
+
+y, además, deben ser compatibles en cuestiones como:
+
+```text
+forma de los resultados
+semántica de "no encontrado"
+tipos de datos
+errores
+sincronía/asincronía
+```
+
+No alcanza con que exista una función llamada igual.
+
+Ejemplo de incompatibilidad:
+
+```text
+memoryRepository.findById(id)
+→ retorna null si no existe
+
+sqlRepository.findById(id)
+→ lanza error si no existe
+```
+
+Aunque compartan nombre, Service debería conocer dos comportamientos distintos.
+
+Un contrato consistente reduce ese acoplamiento.
+
+#### 53.16 Cambiar implementación demuestra el valor de la separación
+
+Si Service depende de:
+
+```javascript
+frontendRepository.getAll();
+```
+
+y el repository en memoria implementa esa operación:
+
+```javascript
+return infoLenguajes.frontend;
+```
+
+mientras el repository SQL implementa:
+
+```javascript
+return result.recordset;
+```
+
+la capa superior puede conservar su lógica si ambos entregan el mismo concepto:
+
+```text
+colección de lenguajes
+```
+
+La ganancia arquitectónica aparece al cambiar:
+
+```text
+fuente = array
+```
+
+por:
+
+```text
+fuente = SQL Server
+```
+
+sin rediseñar:
+
+```text
+Router
+Controller
+reglas de Service
+contrato HTTP
+```
+
+La separación no elimina todos los cambios. Si la nueva fuente modifica el contrato, aparecen nuevos tipos de error, transacciones o capacidades diferentes, otras capas pueden requerir ajustes.
+
+El objetivo real es **localizar el impacto**, no prometer que toda sustitución será gratuita.
 
 ### 54. Crear recursos con `POST`: del body al Repository
 
@@ -11415,28 +12109,1225 @@ reiniciar Node
 → se pierden los cambios de ejecución
 ```
 
-Por eso el próximo paso natural no consiste en aprender “otro CRUD”, sino en sustituir:
+El paso natural consiste en sustituir:
 
 ```text
 Repository
 → array
 ```
 
-por:
+por una fuente persistente:
 
 ```text
 Repository
 → SQL
 ```
 
-o:
+o, según el diseño:
 
 ```text
 Repository
 → MongoDB
 ```
 
-La arquitectura cobra especial sentido en ese momento: **las capas superiores no deberían necesitar ser rediseñadas solamente porque cambió el mecanismo de persistencia**.
+La sección siguiente realiza precisamente esa transición con SQL Server. La arquitectura cobra especial sentido allí: **las capas superiores no deberían necesitar ser rediseñadas solamente porque cambió el mecanismo de persistencia**.
+
+
+### 64. De memoria a SQL Server: persistencia real
+
+El cambio desde un array en memoria hacia SQL Server modifica una pieza fundamental:
+
+```text
+antes
+Repository → memoria del proceso
+
+ahora
+Repository → cliente SQL → SQL Server
+```
+
+El objetivo no es solamente “aprender a conectarse a una base”.
+
+Esta transición permite comprobar una hipótesis arquitectónica:
+
+> si las responsabilidades están bien separadas y el contrato del Repository se conserva, el resto de la aplicación puede seguir trabajando sin conocer cómo se persisten los datos.
+
+#### 64.1 Persistencia cambia la duración y autoridad del estado
+
+Con memoria:
+
+```text
+proceso Node vivo
+→ datos disponibles
+
+reinicio del proceso
+→ datos modificados durante ejecución desaparecen
+```
+
+Con una base persistente:
+
+```text
+proceso Node termina
+→ SQL Server conserva sus datos
+
+nuevo proceso Node
+→ vuelve a consultar el mismo estado persistido
+```
+
+La base se convierte en la **fuente autoritativa** del estado que debe sobrevivir a reinicios.
+
+Esto no significa que toda información de una aplicación deba persistirse.
+
+También existen datos:
+
+```text
+temporales
+cacheados
+derivados
+de sesión
+```
+
+La pregunta de diseño es:
+
+> ¿qué estado necesita sobrevivir y ser compartido de forma consistente?
+
+#### 64.2 Un esquema relacional distribuye la información entre tablas
+
+En el ejemplo se utilizan tablas relacionadas para representar conceptos como:
+
+```text
+lenguajes
+materias
+turnos
+comisiones
+```
+
+Un registro de `lenguajes` puede almacenar identificadores:
+
+```text
+idMateria
+idTurno
+idComision
+```
+
+en lugar de repetir textos completos.
+
+Después una consulta con `JOIN` reconstruye una vista más útil:
+
+```sql
+SELECT
+  l.nombre,
+  m.nombre AS materia,
+  t.nombre AS turno,
+  c.nombre AS comision,
+  l.cantidadAlumnos
+FROM lenguajes AS l
+JOIN materias AS m
+  ON m.id = l.idMateria
+JOIN turnos AS t
+  ON t.id = l.idTurno
+JOIN comisiones AS c
+  ON c.id = l.idComision;
+```
+
+La API no tiene obligación de exponer exactamente las columnas de una tabla.
+
+Repository obtiene datos; Service puede aplicar reglas/transformaciones; Controller define la representación HTTP.
+
+#### 64.3 SQL Server es otro proceso con su propio endpoint de red
+
+Cuando Node se conecta a SQL Server existen **dos servidores diferentes**:
+
+```text
+Cliente HTTP
+     │
+     │ http://127.0.0.1:3000
+     ▼
+Servidor Express / Node
+     │
+     │ TCP hacia SQL Server
+     ▼
+SQL Server
+```
+
+El puerto de Express y el puerto de SQL Server cumplen responsabilidades distintas.
+
+Ejemplo del entorno de práctica:
+
+```text
+API Express
+→ 3000
+
+SQL Server
+→ puerto TCP configurado para la instancia
+```
+
+Por eso cambiar el puerto de SQL Server no modifica la URL HTTP que consume el frontend.
+
+El cliente web nunca necesita conectarse directamente al motor SQL:
+
+```text
+frontend
+→ API
+→ Repository
+→ DB
+```
+
+Esta separación también es una frontera de seguridad: la base no debería exponerse innecesariamente al cliente final.
+
+#### 64.4 Instancia, protocolo, host y puerto
+
+Para que un cliente TCP alcance SQL Server necesita información equivalente a:
+
+```text
+host
+puerto
+instancia/configuración
+credenciales
+base de datos
+```
+
+SQL Server puede utilizar:
+
+```text
+TCP/IP
+Shared Memory
+Named Pipes
+```
+
+según entorno/configuración.
+
+El paquete `mssql` con su driver habitual utiliza TCP/IP, por lo que una instalación local puede requerir habilitar TCP/IP en SQL Server Configuration Manager.
+
+Después de cambiar la configuración de protocolos suele ser necesario reiniciar el servicio de SQL Server para que tome los cambios.
+
+El puerto `1433` es el puerto convencional de la instancia predeterminada, pero una instancia puede utilizar:
+
+```text
+otro puerto fijo
+puertos dinámicos
+una instancia nombrada
+```
+
+Por eso el valor configurado en la práctica no debe memorizarse como “el puerto universal de SQL Server”.
+
+#### 64.5 Firewall, red local e Internet son fronteras diferentes
+
+Habilitar TCP/IP en SQL Server no implica que deba publicarse el motor hacia Internet.
+
+Hay varias fronteras posibles:
+
+```text
+aplicación y DB en la misma máquina
+aplicación y DB en máquinas de la misma red
+aplicación y DB en una red privada cloud
+DB expuesta públicamente
+```
+
+Cada escenario requiere reglas distintas.
+
+Abrir un puerto de base de datos en:
+
+```text
+Firewall de Windows
+router doméstico
+security group cloud
+```
+
+no son operaciones equivalentes.
+
+Como principio:
+
+> **la base debe ser alcanzable únicamente desde los sistemas que necesitan conectarse a ella.**
+
+No conviene realizar *port forwarding* del motor SQL hacia Internet solo para “hacerlo funcionar”.
+
+### 65. Conectar Node.js a SQL Server con `mssql`
+
+El paquete `mssql` ofrece un cliente para Microsoft SQL Server desde Node.js.
+
+```bash
+npm install mssql
+```
+
+Su responsabilidad incluye:
+
+```text
+crear conexiones/pools
+ejecutar queries
+manejar parámetros
+transacciones
+prepared statements
+convertir resultados SQL a estructuras JavaScript
+```
+
+#### 65.1 `mssql` no es un ORM
+
+Un **ORM** intenta mapear entidades/objetos del dominio hacia estructuras relacionales mediante una capa de abstracción superior.
+
+Ejemplos de conceptos típicos de un ORM:
+
+```text
+modelo Usuario
+relación hasMany / belongsTo
+migraciones
+persistencia mediante métodos del modelo
+query builder / abstracción de SQL
+```
+
+`mssql` es principalmente un **cliente/driver de acceso a SQL Server** con utilidades de pooling, requests, parámetros y transacciones.
+
+Este código sigue escribiendo SQL explícitamente:
+
+```javascript
+const result = await pool
+  .request()
+  .query("SELECT * FROM lenguajes");
+```
+
+Que el resultado llegue como objetos JavaScript no convierte automáticamente a la librería en un ORM.
+
+#### 65.2 Dependencia de producción
+
+Si la aplicación necesita `mssql` para funcionar en ejecución:
+
+```bash
+npm install mssql
+```
+
+debe quedar como dependencia de runtime.
+
+La misma lógica aplica a `dotenv` si el proceso depende de ese paquete para cargar configuración desde `.env`:
+
+```bash
+npm install dotenv
+```
+
+Una dependencia de desarrollo es aquella necesaria para construir, probar o desarrollar, pero no para la ejecución normal del programa desplegado.
+
+#### 65.3 Separar conexión, configuración y consultas
+
+Una organización posible:
+
+```text
+database/
+├── config.js
+├── connection.js
+└── queries.js
+```
+
+Responsabilidades:
+
+```text
+config.js
+→ construir configuración desde el entorno
+
+connection.js
+→ crear/obtener pool de conexiones
+
+queries.js
+→ centralizar sentencias cuando ese diseño aporte valor
+```
+
+y:
+
+```text
+repositories/
+└── frontendSqlRepository.js
+→ utilizar la conexión para obtener/persistir datos
+```
+
+Separar archivos no tiene valor por sí mismo.
+
+La utilidad aparece cuando cada archivo responde a una razón de cambio distinta:
+
+```text
+cambia una credencial/config
+→ config
+
+cambia la estrategia de conexión
+→ connection
+
+cambia la consulta de lenguajes
+→ repository/query
+```
+
+### 66. Variables de entorno y configuración
+
+Las credenciales de infraestructura no deberían quedar hardcodeadas:
+
+```javascript
+const password = "123456";
+```
+
+Una alternativa es recibirlas desde el entorno del proceso.
+
+```text
+DB_USER
+DB_PASSWORD
+DB_SERVER
+DB_NAME
+DB_PORT
+```
+
+#### 66.1 `.env` es un mecanismo de desarrollo, no la definición de variable de entorno
+
+Una variable de entorno pertenece al **entorno del proceso**.
+
+`dotenv` agrega una comodidad:
+
+```text
+archivo .env
+→ dotenv.config()
+→ process.env
+```
+
+Ejemplo:
+
+```env
+DB_USER=app_user
+DB_PASSWORD=una_clave_local
+DB_SERVER=localhost
+DB_NAME=ifts_11_alumnos
+DB_PORT=51123
+```
+
+Carga:
+
+```javascript
+require("dotenv").config();
+```
+
+Uso:
+
+```javascript
+const configDB = {
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER,
+  database: process.env.DB_NAME,
+  port: Number(process.env.DB_PORT),
+};
+```
+
+En producción, el entorno puede proveerse mediante:
+
+```text
+secret manager
+variables del servicio cloud
+contenedores
+CI/CD
+orquestador
+sistema operativo
+```
+
+sin que exista necesariamente un archivo `.env` en el servidor.
+
+#### 66.2 `process.env` entrega strings
+
+Aunque el archivo contenga:
+
+```env
+DB_PORT=51123
+```
+
+el valor recibido es textual:
+
+```javascript
+typeof process.env.DB_PORT;
+// "string"
+```
+
+Si una librería espera un número:
+
+```javascript
+const port = Number(process.env.DB_PORT);
+```
+
+o:
+
+```javascript
+const port = Number.parseInt(
+  process.env.DB_PORT,
+  10
+);
+```
+
+Además de convertir conviene validar:
+
+```javascript
+if (!Number.isInteger(port)) {
+  throw new Error("DB_PORT inválido");
+}
+```
+
+Este patrón generaliza:
+
+```text
+entrada externa
+→ convertir
+→ validar
+→ recién después usar
+```
+
+#### 66.3 Fallar temprano ante configuración ausente
+
+Un error de configuración detectado al iniciar suele ser más fácil de diagnosticar que un fallo ambiguo durante la primera request.
+
+```javascript
+const required = [
+  "DB_USER",
+  "DB_PASSWORD",
+  "DB_SERVER",
+  "DB_NAME",
+  "DB_PORT",
+];
+
+for (const name of required) {
+  if (!process.env[name]) {
+    throw new Error(
+      `Falta la variable ${name}`
+    );
+  }
+}
+```
+
+La configuración puede tratarse como otro contrato:
+
+```text
+la aplicación necesita ciertos valores
+→ si no están, no puede iniciar correctamente
+```
+
+#### 66.4 `.env` no debe versionar secretos reales
+
+```gitignore
+.env
+.env.*
+!.env.example
+```
+
+Una estrategia habitual es compartir un archivo sin secretos:
+
+```env
+# .env.example
+DB_USER=
+DB_PASSWORD=
+DB_SERVER=
+DB_NAME=
+DB_PORT=
+```
+
+El repositorio comunica **qué configuración necesita**, pero no publica las credenciales.
+
+Si una credencial ya fue commiteada:
+
+```text
+agregar .env al .gitignore
+```
+
+no la elimina del historial.
+
+Debe considerarse comprometida y rotarse cuando corresponda.
+
+#### 66.5 No imprimir objetos de configuración completos
+
+Un pool o una configuración pueden contener:
+
+```text
+usuario
+password
+host
+puerto
+opciones TLS
+```
+
+Por eso:
+
+```javascript
+console.log(pool);
+```
+
+puede filtrar secretos en logs.
+
+Para diagnóstico conviene registrar información segura:
+
+```javascript
+console.log({
+  server: configDB.server,
+  database: configDB.database,
+  connected: pool.connected,
+});
+```
+
+sin incluir credenciales.
+
+#### 66.6 Usuario administrador vs. usuario de aplicación
+
+En una práctica local puede utilizarse una cuenta administrativa para simplificar la configuración.
+
+En una aplicación real no conviene ejecutar la API con una cuenta `sysadmin` como `sa`.
+
+Principio:
+
+```text
+aplicación
+→ solo permisos que necesita
+```
+
+Por ejemplo, si una API únicamente necesita CRUD sobre ciertas tablas, su usuario no necesita administrar toda la instancia SQL Server.
+
+Esto aplica **least privilege**:
+
+```text
+si una credencial se compromete
+→ limitar el alcance de lo que puede hacer
+```
+
+Microsoft recomienda privilegiar cuentas con permisos mínimos y desaconseja usar/habilitar `sa` salvo que exista una necesidad concreta.
+
+### 67. Connection Pool: reutilizar conexiones
+
+Abrir una conexión TCP y autenticar contra la base para cada request tiene costo.
+
+```text
+request HTTP
+→ abrir conexión DB
+→ autenticar
+→ ejecutar SQL
+→ cerrar conexión
+
+request HTTP
+→ repetir todo
+```
+
+Un **connection pool** mantiene varias conexiones reutilizables.
+
+```mermaid
+flowchart LR
+    R1[Request A] --> P[Connection Pool]
+    R2[Request B] --> P
+    R3[Request C] --> P
+
+    P --> C1[Conexión 1]
+    P --> C2[Conexión 2]
+    P --> C3[Conexión 3]
+
+    C1 --> DB[(SQL Server)]
+    C2 --> DB
+    C3 --> DB
+```
+
+#### 67.1 Adquirir, usar y devolver
+
+Conceptualmente:
+
+```text
+pool.request()
+→ adquiere una conexión disponible
+→ ejecuta la operación
+→ la conexión vuelve al pool
+```
+
+La aplicación no necesita decidir manualmente qué socket concreto corresponde a cada request.
+
+Esto permite atender varias operaciones concurrentes sin crear una conexión nueva desde cero cada vez.
+
+#### 67.2 Pool no significa una única conexión global
+
+Un pool representa un **conjunto administrado de conexiones**.
+
+Por eso es incorrecto imaginar:
+
+```text
+"me conecté una vez y toda la app usa el mismo socket"
+```
+
+Puede haber varias conexiones abiertas y el pool decide cuál reservar para cada Request/Transaction/PreparedStatement.
+
+#### 67.3 Reutilizar el pool
+
+Una función de conexión puede devolver el pool ya conectado:
+
+```javascript
+const sql = require("mssql");
+const { configDB } = require("./config");
+
+let poolPromise;
+
+function getSqlConnection() {
+  if (!poolPromise) {
+    poolPromise = sql.connect(configDB);
+  }
+
+  return poolPromise;
+}
+
+module.exports = {
+  getSqlConnection,
+};
+```
+
+El código exacto puede variar según la estrategia elegida y si se utiliza el pool global o instancias propias.
+
+La idea estable es:
+
+> no abrir una conexión completamente nueva para cada endpoint si la librería ya ofrece pooling.
+
+La documentación de `mssql` destaca precisamente la reutilización del pool como mecanismo para evitar ese costo.
+
+### 68. Ejecutar una consulta y entender el resultado de `mssql`
+
+Una consulta básica:
+
+```javascript
+const pool = await getSqlConnection();
+
+const result = await pool
+  .request()
+  .query(`
+    SELECT *
+    FROM lenguajes
+  `);
+```
+
+`result` no es directamente el array de filas.
+
+Contiene información adicional.
+
+Entre las propiedades relevantes:
+
+```text
+recordset
+→ primer conjunto de filas devuelto
+
+recordsets
+→ colección de conjuntos de filas
+
+rowsAffected
+→ cantidad de filas afectadas por cada sentencia aplicable
+
+output
+→ parámetros de salida
+```
+
+#### 68.1 `recordset` como colección de objetos JavaScript
+
+Para:
+
+```sql
+SELECT id, nombre
+FROM lenguajes;
+```
+
+un `recordset` puede verse conceptualmente así:
+
+```javascript
+[
+  {
+    id: 1,
+    nombre: "JavaScript",
+  },
+  {
+    id: 2,
+    nombre: "HTML",
+  },
+];
+```
+
+Cada objeto representa una fila y cada propiedad una columna seleccionada.
+
+Esto explica por qué Repository puede devolver:
+
+```javascript
+return result.recordset;
+```
+
+y conservar hacia Service un contrato semejante al del repository en memoria:
+
+```text
+Array de objetos de lenguaje
+```
+
+#### 68.2 `console.table()` como herramienta de inspección
+
+Para resultados tabulares:
+
+```javascript
+console.table(result.recordset);
+```
+
+puede ser más legible que imprimir un objeto completo.
+
+Debe seguirse el mismo criterio de seguridad:
+
+```text
+inspeccionar datos de prueba
+≠ loguear indiscriminadamente datos sensibles en producción
+```
+
+### 69. Primer Repository SQL: lectura completa
+
+Una implementación pedagógica:
+
+```javascript
+const { getSqlConnection } =
+  require("../database/connection");
+
+exports.getAllFrontendLanguages =
+  async () => {
+    const pool =
+      await getSqlConnection();
+
+    const result =
+      await pool
+        .request()
+        .query(`
+          SELECT *
+          FROM lenguajes
+        `);
+
+    return result.recordset;
+  };
+```
+
+El contrato hacia Service:
+
+```text
+getAllFrontendLanguages()
+→ Promise<Array<Lenguaje>>
+```
+
+El detalle interno:
+
+```text
+pool
+request
+SQL
+recordset
+```
+
+queda encapsulado en Repository.
+
+#### 69.1 El Service no debería saber qué query se ejecutó
+
+Service puede hacer:
+
+```javascript
+const lenguajes =
+  await frontendRepository
+    .getAllFrontendLanguages();
+```
+
+y aplicar una regla:
+
+```javascript
+return lenguajes.filter(/* ... */);
+```
+
+sin conocer:
+
+```text
+nombre de la tabla
+JOIN utilizado
+driver
+puerto
+credenciales
+ConnectionPool
+```
+
+Ese desconocimiento deliberado es una forma de desacoplamiento.
+
+#### 69.2 No hace falta `USE` si la conexión ya selecciona la base
+
+Si el objeto de configuración especifica:
+
+```javascript
+database: "ifts_11_alumnos"
+```
+
+las queries de esa conexión ya se ejecutan contra esa base salvo que se cambie explícitamente el contexto.
+
+Por eso:
+
+```sql
+USE ifts_11_alumnos;
+SELECT * FROM lenguajes;
+```
+
+puede ser redundante en un repository cuya conexión ya está configurada para esa DB.
+
+Mantener la base como parte de la configuración facilita cambiar entorno:
+
+```text
+desarrollo
+testing
+producción
+```
+
+sin hardcodear el nombre dentro de cada query.
+
+### 70. Repository intercambiable: la arquitectura puesta a prueba
+
+Considérese dos implementaciones.
+
+Repository en memoria:
+
+```javascript
+exports.getAllFrontendLanguages =
+  async () => {
+    return infoLenguajes.frontend;
+  };
+```
+
+Repository SQL:
+
+```javascript
+exports.getAllFrontendLanguages =
+  async () => {
+    const pool =
+      await getSqlConnection();
+
+    const result =
+      await pool.request().query(
+        "SELECT * FROM lenguajes"
+      );
+
+    return result.recordset;
+  };
+```
+
+Service puede depender de una sola interfaz conceptual:
+
+```javascript
+frontendRepository
+  .getAllFrontendLanguages();
+```
+
+Si se cambia:
+
+```javascript
+const frontendRepository =
+  require("../repositories/frontendMemoryRepository");
+```
+
+por:
+
+```javascript
+const frontendRepository =
+  require("../repositories/frontendSqlRepository");
+```
+
+Router y Controller pueden permanecer iguales.
+
+#### 70.1 Qué demuestra realmente este cambio
+
+No demuestra que:
+
+> “las capas hacen que nunca haya que modificar código”.
+
+Demuestra algo más preciso:
+
+> **el detalle que cambió —la fuente de datos— quedó concentrado detrás de la frontera que había sido diseñada para cambiar por ese motivo.**
+
+Eso es localidad del cambio.
+
+#### 70.2 Contrato estable, implementación variable
+
+El cambio funciona mientras ambos repositories entreguen algo compatible:
+
+```text
+nombre de método
+entradas
+salidas
+semántica
+errores
+asincronía
+```
+
+Si el repository SQL devolviera:
+
+```javascript
+{
+  rows: [...],
+  metadata: ...,
+}
+```
+
+mientras el repository en memoria devuelve directamente:
+
+```javascript
+[...]
+```
+
+Service quedaría obligado a conocer qué implementación está activa.
+
+Una adaptación correcta puede normalizar dentro del Repository:
+
+```javascript
+return result.recordset;
+```
+
+y mantener estable el contrato.
+
+#### 70.3 Esto se aproxima a depender de una abstracción
+
+En el código actual, Service todavía importa un archivo concreto:
+
+```javascript
+require("../repositories/frontendSqlRepository");
+```
+
+Por lo tanto, existe acoplamiento a una implementación específica en el punto de composición.
+
+Un paso más avanzado sería inyectar la dependencia:
+
+```javascript
+function createFrontendService(repository) {
+  return {
+    async getAll() {
+      return repository.getAll();
+    },
+  };
+}
+```
+
+Entonces:
+
+```javascript
+const service =
+  createFrontendService(
+    frontendSqlRepository
+  );
+```
+
+o:
+
+```javascript
+const service =
+  createFrontendService(
+    frontendMemoryRepository
+  );
+```
+
+Service depende del **contrato esperado**, no de la ruta física de un archivo concreto.
+
+No hace falta aplicar este patrón en todos los proyectos, pero ayuda a comprender hacia dónde apunta el desacoplamiento.
+
+### 71. Queries dinámicas y SQL injection
+
+Una consulta estática:
+
+```javascript
+await pool.request().query(
+  "SELECT * FROM lenguajes"
+);
+```
+
+no incorpora entrada del usuario.
+
+El problema aparece al construir SQL concatenando valores externos:
+
+```javascript
+const id = req.params.id;
+
+const query =
+  `SELECT * FROM lenguajes
+   WHERE id = ${id}`;
+```
+
+Con strings, el riesgo es todavía más evidente:
+
+```javascript
+const nombre = req.query.nombre;
+
+const query =
+  `SELECT * FROM lenguajes
+   WHERE nombre = '${nombre}'`;
+```
+
+No debe confiarse en que:
+
+```text
+el frontend valida
+el usuario "no va a mandar eso"
+se reemplazaron algunos caracteres
+```
+
+La defensa principal para valores es usar parámetros.
+
+Con `mssql`:
+
+```javascript
+const result = await pool
+  .request()
+  .input(
+    "id",
+    sql.Int,
+    id
+  )
+  .query(`
+    SELECT *
+    FROM lenguajes
+    WHERE id = @id
+  `);
+```
+
+Esto separa:
+
+```text
+estructura SQL
+≠
+valor aportado por el usuario
+```
+
+La librería también ofrece *tagged templates* parametrizados.
+
+Los identificadores dinámicos —por ejemplo nombres de columnas o tablas— requieren estrategias diferentes; no deben tratarse como si fueran parámetros de valor comunes.
+
+### 72. Depurar una conexión SQL por capas
+
+Los errores de conexión suelen aportar pistas distintas.
+
+#### 72.1 Error de tipo en configuración
+
+Ejemplo conceptual:
+
+```text
+port must be of type number
+```
+
+indica:
+
+```text
+la variable existe
+pero tiene forma/tipo incorrecto
+```
+
+Revisar:
+
+```text
+process.env
+conversión Number(...)
+validación
+```
+
+#### 72.2 Login failed
+
+```text
+login failed for user ...
+```
+
+sugiere que ya se llegó al servidor, pero falló la autenticación.
+
+Revisar:
+
+```text
+usuario
+password
+modo de autenticación
+estado del login
+permisos
+```
+
+#### 72.3 Fallo de conexión host/puerto
+
+```text
+failed to connect ...
+```
+
+puede orientar hacia:
+
+```text
+host
+puerto
+servicio apagado
+TCP/IP deshabilitado
+firewall
+DNS/red
+```
+
+La depuración sigue la misma idea de las capas:
+
+```text
+¿la API recibe la request?
+↓
+¿Controller llega a Service?
+↓
+¿Service llega al Repository?
+↓
+¿Repository obtiene pool?
+↓
+¿pool alcanza SQL Server?
+↓
+¿la query devuelve filas?
+```
+
+No conviene revisar simultáneamente Router, SQL, firewall y lógica de negocio si todavía no se sabe en qué frontera desaparece el dato.
+
+### 73. Ejemplo integrado — `GET` desde HTTP hasta SQL Server
+
+Request:
+
+```http
+GET /api/lenguajes/frontend
+```
+
+Flujo:
+
+```mermaid
+sequenceDiagram
+    participant CL as Cliente
+    participant R as Router
+    participant C as Controller
+    participant S as Service
+    participant RP as SQL Repository
+    participant P as Connection Pool
+    participant DB as SQL Server
+
+    CL->>R: GET /api/lenguajes/frontend
+    R->>C: handler(req, res)
+    C->>S: await getAll()
+    S->>RP: await getAll()
+    RP->>P: getSqlConnection()
+    P->>DB: SELECT ...
+    DB-->>P: filas
+    P-->>RP: result.recordset
+    RP-->>S: Array de objetos
+    S-->>C: resultado de aplicación
+    C-->>CL: 200 + JSON
+```
+
+El recorrido permite conectar temas que antes aparecían separados:
+
+```text
+HTTP
++ Router
++ callbacks
++ Controller
++ Service
++ Repository
++ Promises
++ async/await
++ variables de entorno
++ networking
++ SQL
++ Connection Pool
++ JSON
+```
+
+La arquitectura se vuelve especialmente valiosa porque el cliente continúa viendo el mismo contrato HTTP aunque el mecanismo interno haya cambiado radicalmente.
+
+La próxima extensión natural consiste en implementar también:
+
+```text
+INSERT
+UPDATE
+DELETE
+```
+
+sobre SQL, manteniendo el mismo principio:
+
+> **el Repository cambia la tecnología de persistencia; las capas superiores conservan su responsabilidad.**
 
 ## Referencias técnicas
 
@@ -11464,9 +13355,19 @@ Las clases determinan el alcance temático. Para detalles normativos, semántica
 - [Node.js — Packages / determining module system](https://nodejs.org/api/packages.html)
 - [Node.js — TypeScript](https://nodejs.org/api/typescript.html)
 
+
+### SQL Server, `mssql` y configuración
+
+- [Microsoft Learn — SQL Server Configuration Manager](https://learn.microsoft.com/sql/relational-databases/sql-server-configuration-manager)
+- [Microsoft Learn — Enable TCP/IP connections](https://learn.microsoft.com/sql/relational-databases/lesson-2-connecting-from-another-computer)
+- [Microsoft Learn — SQL Server security best practices](https://learn.microsoft.com/sql/relational-databases/security/sql-server-security-best-practices)
+- [`mssql` — documentación oficial del proyecto](https://github.com/tediousjs/node-mssql)
+- [`dotenv` — documentación del paquete](https://www.npmjs.com/package/dotenv)
+
 ### HTTP, Express y seguridad
 
 - [Express — Routing](https://expressjs.com/en/guide/routing.html)
+- [Express — Error handling](https://expressjs.com/en/guide/error-handling.html)
 - [Express — API Reference](https://expressjs.com/en/api.html)
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)
 - [RFC 8259 — JSON](https://www.rfc-editor.org/rfc/rfc8259)
