@@ -168,11 +168,16 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
     - [41. URL, DNS, rutas y parámetros](#41-url-dns-rutas-y-parámetros)
       - [41.1 Parámetros de ruta (*path params*)](#411-parámetros-de-ruta-path-params)
       - [41.2 Parámetros de consulta (*query params*)](#412-parámetros-de-consulta-query-params)
+        - [Query params como modificadores de una consulta](#query-params-como-modificadores-de-una-consulta)
+        - [`req.query` es entrada no confiable](#reqquery-es-entrada-no-confiable)
+        - [Ordenar el resultado sin mezclar responsabilidades](#ordenar-el-resultado-sin-mezclar-responsabilidades)
     - [42. Servidor HTTP básico con Node.js](#42-servidor-http-básico-con-nodejs)
     - [43. Express.js](#43-expressjs)
       - [43.1 Routing](#431-routing)
       - [43.2 Objetos `req` y `res`](#432-objetos-req-y-res)
       - [43.3 Respuestas JSON con Express](#433-respuestas-json-con-express)
+        - [No serializar dos veces](#no-serializar-dos-veces)
+        - [Un array también es JSON válido](#un-array-también-es-json-válido)
       - [43.4 Rutas parametrizadas y filtrado de datos](#434-rutas-parametrizadas-y-filtrado-de-datos)
       - [43.5 Cerrar siempre el ciclo request/response](#435-cerrar-siempre-el-ciclo-requestresponse)
       - [43.6 Diagnóstico básico de rutas y errores](#436-diagnóstico-básico-de-rutas-y-errores)
@@ -182,6 +187,10 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [43.8 La respuesta HTTP como contrato](#438-la-respuesta-http-como-contrato)
         - [El navegador como cliente de prueba](#el-navegador-como-cliente-de-prueba)
       - [43.9 Middleware: funciones dentro del ciclo request/response](#439-middleware-funciones-dentro-del-ciclo-requestresponse)
+      - [43.10 Parseo del body JSON con `express.json()`](#4310-parseo-del-body-json-con-expressjson)
+        - [El orden de registro importa](#el-orden-de-registro-importa)
+        - [`Content-Type` y parser deben coincidir](#content-type-y-parser-deben-coincidir)
+        - [Parsear no equivale a validar](#parsear-no-equivale-a-validar)
     - [44. Reinicio automático durante el desarrollo: Nodemon y `node --watch`](#44-reinicio-automático-durante-el-desarrollo-nodemon-y-node---watch)
       - [44.1 Nodemon](#441-nodemon)
       - [44.2 `node --watch`](#442-node---watch)
@@ -209,6 +218,8 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [49.4 La regla de dependencias: no saltear capas](#494-la-regla-de-dependencias-no-saltear-capas)
       - [49.5 Por qué separar el Repository de la lógica de negocio](#495-por-qué-separar-el-repository-de-la-lógica-de-negocio)
       - [49.6 Lógica de negocio, validación de entrada y frontera HTTP](#496-lógica-de-negocio-validación-de-entrada-y-frontera-http)
+      - [49.7 La request no tiene que viajar completa por todas las capas](#497-la-request-no-tiene-que-viajar-completa-por-todas-las-capas)
+      - [49.8 Dependencia entre capas y conocimiento mínimo](#498-dependencia-entre-capas-y-conocimiento-mínimo)
     - [50. Routing modular con `express.Router`](#50-routing-modular-con-expressrouter)
       - [50.1 Un `Router` es un componente de routing montable](#501-un-router-es-un-componente-de-routing-montable)
       - [50.2 `app.use(prefijo, router)`: montar un router](#502-appuseprefijo-router-montar-un-router)
@@ -227,6 +238,30 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [50.15 Diagnóstico práctico después de modularizar](#5015-diagnóstico-práctico-después-de-modularizar)
       - [50.16 `node_modules` es reconstruible: el manifiesto es la fuente](#5016-node_modules-es-reconstruible-el-manifiesto-es-la-fuente)
     - [51. Ejemplo integrado — Servidor modularizado por routers](#51-ejemplo-integrado--servidor-modularizado-por-routers)
+    - [52. CRUD: operaciones de datos y su relación con HTTP](#52-crud-operaciones-de-datos-y-su-relación-con-http)
+      - [52.1 CRUD, ABM y operaciones reales](#521-crud-abm-y-operaciones-reales)
+      - [52.2 Persistencia: CRUD no implica automáticamente guardar para siempre](#522-persistencia-crud-no-implica-automáticamente-guardar-para-siempre)
+      - [52.3 La creación y el status HTTP](#523-la-creación-y-el-status-http)
+    - [53. Implementación de la arquitectura completa: Router → Controller → Service → Repository](#53-implementación-de-la-arquitectura-completa-router--controller--service--repository)
+      - [53.1 Repository: encapsular la fuente de datos](#531-repository-encapsular-la-fuente-de-datos)
+      - [53.2 Service: trabajar con datos y reglas, no con HTTP](#532-service-trabajar-con-datos-y-reglas-no-con-http)
+      - [53.3 Controller: traducir HTTP ↔ aplicación](#533-controller-traducir-http--aplicación)
+      - [53.4 Router: método + path → controller](#534-router-método--path--controller)
+      - [53.5 `exports.nombre = función`: módulos con varias operaciones](#535-exportsnombre--función-módulos-con-varias-operaciones)
+      - [53.6 El beneficio aparece cuando cambian requisitos](#536-el-beneficio-aparece-cuando-cambian-requisitos)
+    - [54. Crear recursos con `POST`: del body al Repository](#54-crear-recursos-con-post-del-body-al-repository)
+      - [54.1 Una misma URI puede atender métodos distintos](#541-una-misma-uri-puede-atender-métodos-distintos)
+      - [54.2 El Controller extrae el body](#542-el-controller-extrae-el-body)
+      - [54.3 El Service recibe datos, no `req.body`](#543-el-service-recibe-datos-no-reqbody)
+      - [54.4 El Repository modifica la fuente de datos actual](#544-el-repository-modifica-la-fuente-de-datos-actual)
+      - [54.5 Por qué el primer `POST` puede terminar insertando `undefined`](#545-por-qué-el-primer-post-puede-terminar-insertando-undefined)
+      - [54.6 No confiar en el frontend](#546-no-confiar-en-el-frontend)
+    - [55. Depuración por capas: localizar dónde se rompe el contrato](#55-depuración-por-capas-localizar-dónde-se-rompe-el-contrato)
+      - [55.1 Diagnóstico desde la frontera hacia adentro](#551-diagnóstico-desde-la-frontera-hacia-adentro)
+      - [55.2 Si ya está roto arriba, no investigar abajo](#552-si-ya-está-roto-arriba-no-investigar-abajo)
+      - [55.3 Error de routing vs. request sin respuesta](#553-error-de-routing-vs-request-sin-respuesta)
+      - [55.4 Los archivos `.http` convierten requests en casos reproducibles](#554-los-archivos-http-convierten-requests-en-casos-reproducibles)
+      - [55.5 Código comentado no es control de versiones](#555-código-comentado-no-es-control-de-versiones)
 
 ---
 
@@ -4303,6 +4338,137 @@ app.get("/buscar", (req, res) => {
 
 > ⚠️ No existe una regla universal según la cual “path param = obligatorio” y “query param = opcional”. La obligatoriedad real depende del contrato de la aplicación. Un patrón puede contener segmentos opcionales y un endpoint puede exigir determinados query params mediante validación.
 
+
+##### Query params como modificadores de una consulta
+
+Una forma práctica de pensar la diferencia es separar **identidad** de **opciones de consulta**.
+
+```text
+/api/lenguajes/frontend/css
+                    └── css identifica qué subconjunto/recurso se solicita
+
+/api/lenguajes/frontend/css?ordenar=desc
+                        └──────────── opción que modifica cómo se devuelve el resultado
+```
+
+En Express:
+
+```javascript
+const lenguaje = req.params.lenguaje;
+const ordenar = req.query.ordenar;
+```
+
+La query string **no participa del matching del path**. Para Express, estas solicitudes alcanzan el mismo patrón de ruta:
+
+```text
+GET /api/lenguajes/frontend/css
+GET /api/lenguajes/frontend/css?ordenar=asc
+GET /api/lenguajes/frontend/css?ordenar=desc
+```
+
+Lo que cambia es el contenido disponible en `req.query`.
+
+También pueden viajar varios parámetros:
+
+```text
+/api/lenguajes?turno=noche&ordenar=asc&limite=10
+```
+
+```javascript
+req.query;
+// aproximación conceptual:
+// { turno: "noche", ordenar: "asc", limite: "10" }
+```
+
+El separador `?` inicia la query string; `&` separa pares adicionales.
+
+##### `req.query` es entrada no confiable
+
+Aunque una query se use solo para ordenar o filtrar, sigue siendo información controlada por el cliente. No conviene asumir que la propiedad existe ni que siempre es un `string`.
+
+Una normalización defensiva puede ser:
+
+```javascript
+const ordenarRaw = req.query.ordenar;
+
+const ordenar =
+  typeof ordenarRaw === "string"
+    ? ordenarRaw.toLocaleLowerCase()
+    : null;
+```
+
+Si el contrato admite únicamente opciones conocidas, conviene aplicar una **lista permitida** (*allowlist*):
+
+```javascript
+const DIRECCIONES_VALIDAS = ["asc", "desc"];
+
+if (ordenar !== null && !DIRECCIONES_VALIDAS.includes(ordenar)) {
+  return res.status(400).json({
+    error: "El parámetro ordenar debe ser asc o desc",
+  });
+}
+```
+
+La ventaja es que el resto del sistema ya no necesita trabajar con una entrada arbitraria. El controller transforma una entrada HTTP potencialmente inválida en un valor pequeño y explícito del contrato:
+
+```text
+entrada HTTP
+→ validar
+→ normalizar
+→ dato de aplicación
+```
+
+##### Ordenar el resultado sin mezclar responsabilidades
+
+Si la API permite ordenar por cantidad de alumnos, la query expresa **qué desea el cliente**, pero el algoritmo de ordenamiento no necesita conocer `req` ni `res`.
+
+El controller puede extraer:
+
+```javascript
+const lenguaje = req.params.lenguaje;
+const orderBy = req.query.ordenar;
+```
+
+y entregar al service únicamente esos valores:
+
+```javascript
+frontendService.buscarLenguajes(lenguaje, orderBy);
+```
+
+Dentro del service:
+
+```javascript
+if (orderBy === "asc") {
+  resultados.sort(
+    (a, b) => a.cantidadAlumnos - b.cantidadAlumnos
+  );
+}
+
+if (orderBy === "desc") {
+  resultados.sort(
+    (a, b) => b.cantidadAlumnos - a.cantidadAlumnos
+  );
+}
+```
+
+La función comparadora debe retornar:
+
+```text
+valor < 0  → a queda antes que b
+valor > 0  → b queda antes que a
+valor = 0  → se consideran equivalentes para ese criterio
+```
+
+Por eso:
+
+```javascript
+(a, b) => a.cantidadAlumnos - b.cantidadAlumnos
+```
+
+produce orden numérico ascendente, mientras que invertir la resta produce descendente.
+
+> ⚠️ `Array.prototype.sort()` **muta el array sobre el que se ejecuta**. En el ejemplo de la materia el ordenamiento se aplica después de `filter()`, y `filter()` ya produjo un array nuevo; por eso no se modifica directamente la colección original. Si se ordenara la colección del repository sin copiarla, el orden persistiría en esa estructura en memoria para requests posteriores.
+
 ### 42. Servidor HTTP básico con Node.js
 
 Express simplifica el trabajo, pero **Node.js puede crear un servidor HTTP sin instalar paquetes externos** mediante el módulo incorporado `node:http`.
@@ -4484,6 +4650,69 @@ flowchart LR
 ```
 
 > **Puente conceptual:** `JSON.stringify` permite entender qué ocurre con la serialización; `res.json` aparece después como una abstracción de Express que evita repetir esa mecánica en cada ruta.
+
+
+##### No serializar dos veces
+
+Una vez que se elige `res.json(...)`, el valor que se le entrega debería seguir siendo un **valor de JavaScript**, no un string JSON ya serializado.
+
+Correcto:
+
+```javascript
+const resultado = [
+  { id: 1, nombre: "JavaScript" },
+  { id: 2, nombre: "CSS" },
+];
+
+return res.status(200).json(resultado);
+```
+
+Problemático:
+
+```javascript
+const resultado = JSON.stringify([
+  { id: 1, nombre: "JavaScript" },
+]);
+
+return res.status(200).json(resultado);
+```
+
+En el segundo caso, `resultado` ya es un `string`. `res.json` serializa ese string nuevamente y la respuesta representa **un string que contiene texto JSON**, no directamente el array original. Por eso pueden aparecer comillas y caracteres escapados.
+
+La frontera recomendable es:
+
+```text
+Repository → datos JavaScript
+Service    → datos JavaScript
+Controller → res.json(datos)
+             └── aquí ocurre la serialización HTTP
+```
+
+Esto también mantiene al service independiente de Express y del formato de transporte.
+
+##### Un array también es JSON válido
+
+No hace falta envolver siempre un array dentro de un objeto para que la respuesta sea JSON válida:
+
+```javascript
+return res.json([
+  { id: 1, nombre: "JavaScript" },
+  { id: 2, nombre: "CSS" },
+]);
+```
+
+es perfectamente válido. JSON admite objetos, arrays y también otros valores compatibles.
+
+Aun así, algunas APIs eligen una envoltura por razones de contrato y extensibilidad:
+
+```javascript
+return res.json({
+  data: resultados,
+  total: resultados.length,
+});
+```
+
+La diferencia es de **diseño del contrato**, no de validez del formato.
 
 El **código de estado y el contenido deben ser coherentes**. Una respuesta que entrega correctamente los datos pero usa `404`, o una que informa `200` mientras ocurrió un error, transmite información contradictoria al cliente.
 
@@ -4962,6 +5191,113 @@ flowchart LR
 No todo elemento que conceptualmente “está en el medio” entre cliente y servidor es automáticamente middleware de Express. En Express, *middleware* tiene un significado técnico concreto: una función incorporada a la cadena de procesamiento de la aplicación/router, con acceso a `req`, `res` y normalmente `next`.
 
 Los middlewares permiten implementar responsabilidades transversales —por ejemplo logging, autenticación, validación o parseo— sin repetir la misma lógica dentro de cada endpoint.
+
+
+#### 43.10 Parseo del body JSON con `express.json()`
+
+Un cliente puede enviar un body con JSON correcto y el header apropiado:
+
+```http
+POST /api/lenguajes/frontend HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": 5,
+  "nombre": "Astro",
+  "turno": "noche"
+}
+```
+
+pero eso no implica que Express convierta automáticamente esos bytes en un objeto JavaScript disponible en `req.body`.
+
+Para eso se registra un **middleware de parsing**:
+
+```javascript
+app.use(express.json());
+```
+
+O, si se quiere limitar el alcance a un router:
+
+```javascript
+router.use(express.json());
+```
+
+El flujo es:
+
+```mermaid
+flowchart LR
+    C[Cliente] -->|body JSON + Content-Type| P[express.json]
+    P -->|parsea| R[req.body]
+    R --> H[Handler / Controller]
+```
+
+Sin un body parser que corresponda al tipo de contenido, `req.body` queda sin poblar. Esto explica un error muy frecuente:
+
+```text
+la request llega al router
+→ el controller sí se ejecuta
+→ req.body es undefined
+→ el repository termina recibiendo undefined
+```
+
+La solución no está en el repository porque el dato **ya se perdió antes de llegar a esa capa**. El problema pertenece a la frontera HTTP/parsing.
+
+##### El orden de registro importa
+
+El middleware debe ejecutarse **antes** del handler que intenta leer `req.body`:
+
+```javascript
+const app = express();
+
+app.use(express.json());
+
+app.post("/api/productos", crearProducto);
+```
+
+Si se registra después del handler, no puede retroactivamente parsear una request que ya atravesó esa ruta.
+
+##### `Content-Type` y parser deben coincidir
+
+`express.json()` está pensado para payloads JSON y decide si debe parsearlos según el tipo de contenido de la request. Por eso el cliente debe declarar correctamente:
+
+```http
+Content-Type: application/json
+```
+
+El header describe el formato del cuerpo enviado; el middleware lo interpreta y construye un valor JavaScript.
+
+##### Parsear no equivale a validar
+
+Después de `express.json()` esto puede ser un objeto JavaScript:
+
+```javascript
+req.body;
+```
+
+pero sigue siendo **entrada no confiable**.
+
+```javascript
+const nuevoLenguaje = req.body;
+```
+
+no debería implicar automáticamente:
+
+```javascript
+repository.insertar(nuevoLenguaje);
+```
+
+Antes deben verificarse, según el contrato:
+
+```text
+campos requeridos
++ tipos
++ formato
++ rangos
++ reglas de negocio
++ permisos/autorización cuando corresponda
+```
+
+`express.json()` resuelve el problema de **parsing**, no los de validación, seguridad ni autorización.
 
 ### 44. Reinicio automático durante el desarrollo: Nodemon y `node --watch`
 
@@ -5896,6 +6232,108 @@ flowchart LR
 
 La frontera exacta puede variar entre proyectos. Lo importante es que cada decisión tenga una **responsabilidad identificable** y no se coloque en una capa solo porque “hay que ponerla en algún lado”.
 
+
+#### 49.7 La request no tiene que viajar completa por todas las capas
+
+La arquitectura puede representarse como una cadena, pero eso no significa que cada capa deba recibir los objetos HTTP completos.
+
+Una request entra por Express y el controller puede extraer de ella lo necesario:
+
+```javascript
+const lenguaje = req.params.lenguaje;
+const orderBy = req.query.ordenar;
+```
+
+Después, el service puede trabajar con esos valores:
+
+```javascript
+frontendService.buscar(lenguaje, orderBy);
+```
+
+en vez de recibir:
+
+```javascript
+frontendService.buscar(req, res); // acopla el service a HTTP/Express
+```
+
+El mismo principio se aplica al repository. Una función de acceso a datos debería recibir criterios o entidades, no objetos HTTP:
+
+```javascript
+frontendRepository.obtenerTodos();
+frontendRepository.crear(nuevoLenguaje);
+```
+
+La idea es ir **traduciendo entre niveles**:
+
+```mermaid
+flowchart LR
+    HTTP[req / res] --> C[Controller]
+    C -->|valores de aplicación| S[Service]
+    S -->|criterios / entidades| R[Repository]
+    R --> D[(Datos)]
+    D -->|datos| R
+    R -->|resultado| S
+    S -->|resultado de negocio| C
+    C -->|status + JSON| CLIENT[Cliente]
+```
+
+En la ida:
+
+```text
+HTTP request
+→ datos de entrada
+→ reglas de negocio
+→ operación de datos
+```
+
+En la vuelta:
+
+```text
+resultado de datos
+→ resultado de negocio
+→ respuesta HTTP
+```
+
+Este detalle tiene una consecuencia práctica importante: `Service` y `Repository` pueden probarse sin levantar un servidor Express, porque no dependen directamente de `req` y `res`.
+
+#### 49.8 Dependencia entre capas y conocimiento mínimo
+
+Una forma concreta de comprobar si se está respetando la separación es mirar los `require(...)` de cada módulo.
+
+En la arquitectura de la materia:
+
+```text
+Router
+└── importa Controller
+
+Controller
+└── importa Service
+
+Service
+└── importa Repository
+
+Repository
+└── importa/accede a la fuente de datos
+```
+
+Un router que importa directamente `src/lenguajes.js` está revelando que conoce un detalle que no le corresponde.
+
+El objetivo es que cada capa conozca **la siguiente abstracción necesaria**, no toda la aplicación.
+
+Esto explica por qué, después de refactorizar correctamente, el router deja de necesitar:
+
+```javascript
+const { infoLenguajes } = require("../src/lenguajes");
+```
+
+y solo conserva algo del estilo:
+
+```javascript
+const frontendController = require("../controllers/frontendController");
+```
+
+La reducción de imports no es un objetivo estético: es una señal de **menor acoplamiento**.
+
 ### 50. Routing modular con `express.Router`
 
 Cuando un servidor tiene pocas rutas, escribir todo directamente sobre `app` resulta comprensible:
@@ -6737,5 +7175,671 @@ primer backend modular
 
 El paso posterior será retirar del router la lógica que todavía no le corresponde y delegarla al **Controller**, avanzando gradualmente hacia la arquitectura `Router → Controller → Service → Repository`.
 
-**Fuentes oficiales de actualización técnica:** documentación de Node.js (`node:http`, `node:fs`, modo `--watch`, CommonJS), documentación de NPM (`package.json`, dependencias e instalación), documentación de Express 5.x (API, routing, `express.Router`, `app.use`, respuestas y middleware) y especificación HTTP Semantics (RFC 9110). Las explicaciones de clase se conservaron como eje temático; los detalles actuales se normalizaron contra esas referencias.
+### 52. CRUD: operaciones de datos y su relación con HTTP
+
+**CRUD** resume cuatro operaciones fundamentales sobre datos:
+
+```text
+C → Create → crear
+R → Read   → leer
+U → Update → actualizar
+D → Delete → eliminar
+```
+
+La sigla describe operaciones de aplicación/datos; **no es un protocolo**.
+
+En una API HTTP suele existir una correlación habitual:
+
+| CRUD | Método HTTP habitual | Ejemplo |
+|---|---|---|
+| Create | `POST` | `POST /api/lenguajes` |
+| Read | `GET` | `GET /api/lenguajes` |
+| Update | `PUT` o `PATCH` | `PATCH /api/lenguajes/5` |
+| Delete | `DELETE` | `DELETE /api/lenguajes/5` |
+
+Esta tabla es una guía de diseño, no una equivalencia matemática. HTTP aporta semántica propia: `PUT` y `PATCH`, por ejemplo, no significan exactamente lo mismo aunque ambos puedan participar de un “Update”.
+
+#### 52.1 CRUD, ABM y operaciones reales
+
+En sistemas administrativos también aparece la sigla **ABM**:
+
+```text
+Alta
+Baja
+Modificación
+```
+
+CRUD incorpora explícitamente la lectura (`Read`) y resulta especialmente útil al hablar de APIs y repositorios.
+
+Una aplicación real puede exponer permisos diferentes para cada operación:
+
+```text
+usuario lector
+→ Read
+
+editor
+→ Read + Update
+
+administrador
+→ Create + Read + Update + Delete
+```
+
+La existencia de CRUD no obliga a que **todo usuario** tenga acceso a las cuatro operaciones. Autenticación y autorización definen quién puede ejecutar cada una.
+
+#### 52.2 Persistencia: CRUD no implica automáticamente guardar para siempre
+
+**Persistir** significa que el estado sobreviva al proceso que lo creó y pueda recuperarse después.
+
+Una colección en memoria:
+
+```javascript
+const lenguajes = [];
+
+lenguajes.push({ id: 1, nombre: "JavaScript" });
+```
+
+permite hacer operaciones parecidas a CRUD mientras el proceso está vivo, pero **no ofrece persistencia duradera**. Si el proceso de Node se reinicia, esa modificación se pierde.
+
+```text
+array en memoria
+→ estado temporal del proceso
+
+archivo / base de datos
+→ almacenamiento persistente
+```
+
+Por eso, en esta etapa el array cumple el papel de **fuente de datos pedagógica**, no todavía de base de datos persistente.
+
+Este puente es importante para las próximas clases: cuando aparezcan SQL o MongoDB, la arquitectura no cambia conceptualmente. Cambia la implementación del Repository.
+
+```text
+hoy:
+Repository → array en memoria
+
+más adelante:
+Repository → SQL
+         o → MongoDB
+```
+
+#### 52.3 La creación y el status HTTP
+
+En la práctica inicial puede utilizarse `200 OK` para comprobar que el flujo funciona. En un contrato HTTP orientado a creación de recursos, una respuesta exitosa a un `POST` que realmente creó un recurso suele expresarse con:
+
+```http
+201 Created
+```
+
+Por ejemplo:
+
+```javascript
+return res.status(201).json(nuevoLenguaje);
+```
+
+La API también puede devolver una representación del recurso creado y, cuando corresponde, un header `Location` con su URI.
+
+El status no debe memorizarse como decoración: comunica al cliente **qué ocurrió**.
+
+### 53. Implementación de la arquitectura completa: Router → Controller → Service → Repository
+
+La clase anterior había separado el Router. El paso siguiente consiste en hacer real la arquitectura completa.
+
+Una operación de lectura puede dividirse así:
+
+```text
+GET /api/lenguajes/frontend
+        │
+        ▼
+Router
+→ reconoce método + path
+        │
+        ▼
+Controller
+→ recibe req/res y coordina la frontera HTTP
+        │
+        ▼
+Service
+→ aplica reglas / transformación de negocio
+        │
+        ▼
+Repository
+→ accede a la fuente de datos
+        │
+        ▼
+Array / DB
+```
+
+El resultado vuelve por el mismo camino lógico hasta que el controller construye la response.
+
+#### 53.1 Repository: encapsular la fuente de datos
+
+Ejemplo simplificado:
+
+```javascript
+// repositories/frontendRepository.js
+const { infoLenguajes } = require("../src/lenguajes");
+
+exports.getAllFrontendLanguages = () => {
+  return infoLenguajes.frontend;
+};
+```
+
+Esta capa conoce que hoy los datos viven en:
+
+```javascript
+infoLenguajes.frontend
+```
+
+Las capas superiores no necesitan conocer ese detalle.
+
+En una futura migración:
+
+```javascript
+exports.getAllFrontendLanguages = async () => {
+  return db.query(/* ... */);
+};
+```
+
+el contrato conceptual puede mantenerse aunque cambie por completo la implementación.
+
+#### 53.2 Service: trabajar con datos y reglas, no con HTTP
+
+```javascript
+// services/frontendService.js
+const frontendRepository = require("../repositories/frontendRepository");
+
+exports.getAllFrontendLanguages = () => {
+  return frontendRepository.getAllFrontendLanguages();
+};
+```
+
+En este ejemplo el service parece un pasamanos. Eso es esperable cuando todavía no hay reglas complejas.
+
+Su valor arquitectónico aparece al agregar operaciones como:
+
+```text
+filtrar
+ordenar
+normalizar
+validar reglas del dominio
+coordinar varios repositories
+```
+
+Por ejemplo:
+
+```javascript
+exports.getFrontendLanguages = (nombre, orderBy) => {
+  const resultados = frontendRepository
+    .getAllFrontendLanguages()
+    .filter(item =>
+      item.nombre.toLocaleLowerCase() === nombre.toLocaleLowerCase()
+    );
+
+  if (orderBy === "desc") {
+    resultados.sort(
+      (a, b) => b.cantidadAlumnos - a.cantidadAlumnos
+    );
+  }
+
+  return resultados;
+};
+```
+
+El service no debería hacer:
+
+```javascript
+res.status(200).json(...);
+```
+
+porque eso lo acoplaría a Express y mezclaría reglas del negocio con transporte HTTP.
+
+#### 53.3 Controller: traducir HTTP ↔ aplicación
+
+El controller conoce `req` y `res`:
+
+```javascript
+// controllers/frontendController.js
+const frontendService = require("../services/frontendService");
+
+exports.readFrontendLanguages = (req, res) => {
+  const datos = frontendService.getAllFrontendLanguages();
+
+  return res.status(200).json(datos);
+};
+```
+
+Para una búsqueda:
+
+```javascript
+exports.readFrontendLanguage = (req, res) => {
+  const lenguaje = req.params.lenguaje;
+  const orderBy = req.query.ordenar;
+
+  const resultados = frontendService.getFrontendLanguages(
+    lenguaje,
+    orderBy
+  );
+
+  if (resultados.length === 0) {
+    return res.status(404).json({
+      error: `No se encontró ${lenguaje}`,
+    });
+  }
+
+  return res.status(200).json(resultados);
+};
+```
+
+La decisión de responder `404` pertenece a la frontera HTTP: el service devuelve un resultado de aplicación y el controller decide cómo representarlo en el protocolo.
+
+#### 53.4 Router: método + path → controller
+
+```javascript
+// routers/frontendRouter.js
+const express = require("express");
+const frontendController = require("../controllers/frontendController");
+
+const router = express.Router();
+
+router.get("/", frontendController.readFrontendLanguages);
+router.get("/:lenguaje", frontendController.readFrontendLanguage);
+
+module.exports = router;
+```
+
+Si no hace falta adaptar argumentos ni ejecutar lógica adicional, Express puede recibir **directamente la referencia a la función del controller**.
+
+Estas dos formas son equivalentes para un handler simple:
+
+```javascript
+router.get("/", (req, res) => {
+  return frontendController.readFrontendLanguages(req, res);
+});
+```
+
+```javascript
+router.get("/", frontendController.readFrontendLanguages);
+```
+
+La segunda evita una callback de pasamanos innecesaria. La primera puede resultar pedagógicamente útil mientras se está visualizando el flujo o cuando hace falta agregar lógica específica en ese nivel.
+
+#### 53.5 `exports.nombre = función`: módulos con varias operaciones
+
+Una capa suele exponer varias operaciones:
+
+```javascript
+exports.readFrontendLanguages = (req, res) => { /* ... */ };
+exports.readFrontendLanguage = (req, res) => { /* ... */ };
+exports.createFrontendLanguage = (req, res) => { /* ... */ };
+```
+
+Esto aprovecha la semántica CommonJS ya estudiada: `exports` referencia inicialmente a `module.exports` y cada asignación agrega una propiedad al objeto exportado.
+
+Luego:
+
+```javascript
+const frontendController = require("../controllers/frontendController");
+```
+
+produce conceptualmente:
+
+```javascript
+{
+  readFrontendLanguages: [Function],
+  readFrontendLanguage: [Function],
+  createFrontendLanguage: [Function]
+}
+```
+
+La arquitectura reutiliza así conocimientos anteriores de objetos, propiedades, funciones, CommonJS y callbacks.
+
+#### 53.6 El beneficio aparece cuando cambian requisitos
+
+Supóngase que una respuesta textual cambia:
+
+```text
+"Este es un nuevo método"
+```
+
+por:
+
+```text
+"Felicitaciones, adivinaste el texto secreto"
+```
+
+Si la respuesta pertenece al controller, el cambio queda localizado allí.
+
+Si después el “texto secreto” deja de estar hardcodeado y debe salir de una base de datos:
+
+```text
+Controller
+→ pide al Service
+→ Service aplica normalización/regla
+→ Repository consulta la fuente
+```
+
+El Router no necesita conocer el cambio.
+
+Eso es **localidad del cambio**: modificar una decisión debería afectar principalmente a la capa responsable de esa decisión.
+
+### 54. Crear recursos con `POST`: del body al Repository
+
+La operación Create agrega un nuevo tipo de entrada: el **body**.
+
+Una request conceptual:
+
+```http
+POST /api/lenguajes/frontend HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": 5,
+  "nombre": "Astro",
+  "turno": "noche",
+  "comision": "C",
+  "cantidadAlumnos": 19
+}
+```
+
+#### 54.1 Una misma URI puede atender métodos distintos
+
+Estas dos operaciones comparten path, pero no endpoint semántico:
+
+```text
+GET  /api/lenguajes/frontend
+POST /api/lenguajes/frontend
+```
+
+Express puede registrarlas por separado:
+
+```javascript
+router.get("/", frontendController.readFrontendLanguages);
+router.post("/", frontendController.createFrontendLanguage);
+```
+
+El par **método + path** determina qué handler corresponde.
+
+#### 54.2 El Controller extrae el body
+
+```javascript
+exports.createFrontendLanguage = (req, res) => {
+  const nuevoLenguaje = req.body;
+
+  const creado = frontendService.createFrontendLanguage(
+    nuevoLenguaje
+  );
+
+  return res.status(201).json(creado);
+};
+```
+
+El controller conoce el formato HTTP de entrada y salida.
+
+Antes de delegar puede validar requisitos de transporte/contrato:
+
+```javascript
+if (!nuevoLenguaje || typeof nuevoLenguaje !== "object") {
+  return res.status(400).json({
+    error: "Body inválido",
+  });
+}
+```
+
+La validación real debería ser más específica: tipos, campos obligatorios y límites del dominio.
+
+#### 54.3 El Service recibe datos, no `req.body`
+
+```javascript
+exports.createFrontendLanguage = nuevoLenguaje => {
+  // validar reglas de negocio / normalizar
+  return frontendRepository.createFrontendLanguage(
+    nuevoLenguaje
+  );
+};
+```
+
+Aunque el objeto provenga originalmente del body, el service no necesita saberlo. Podría recibir el mismo valor desde un test, un job interno u otra interfaz.
+
+#### 54.4 El Repository modifica la fuente de datos actual
+
+Con la fuente pedagógica en memoria:
+
+```javascript
+exports.createFrontendLanguage = nuevoLenguaje => {
+  infoLenguajes.frontend.push(nuevoLenguaje);
+  return nuevoLenguaje;
+};
+```
+
+`push(...)` **no devuelve el elemento agregado**: devuelve la **nueva longitud del array**. Por eso, si el contrato del repository quiere retornar el recurso creado, debe devolverlo explícitamente.
+
+Otra posibilidad pedagógica es devolver la colección actualizada:
+
+```javascript
+exports.createFrontendLanguage = nuevoLenguaje => {
+  infoLenguajes.frontend.push(nuevoLenguaje);
+  return infoLenguajes.frontend;
+};
+```
+
+En APIs reales suele ser más conveniente retornar el recurso creado o un resultado de persistencia, no toda la colección, pero eso forma parte del diseño del contrato.
+
+#### 54.5 Por qué el primer `POST` puede terminar insertando `undefined`
+
+El flujo de error puede ser:
+
+```text
+cliente envía JSON
+→ Router recibe POST
+→ Controller lee req.body
+→ req.body === undefined
+→ Service recibe undefined
+→ Repository hace push(undefined)
+```
+
+Si se inspecciona recién el repository, parece que el error está en `push`. Pero el primer valor incorrecto ya existía en el controller.
+
+Al habilitar:
+
+```javascript
+router.use(express.json());
+```
+
+o globalmente:
+
+```javascript
+app.use(express.json());
+```
+
+antes de las rutas, Express puede parsear bodies `application/json` y poblar `req.body`.
+
+El puente conceptual completo:
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente HTTP
+    participant M as express.json
+    participant R as Router
+    participant CT as Controller
+    participant S as Service
+    participant P as Repository
+    participant D as Datos en memoria
+
+    C->>M: POST + JSON body
+    M->>R: req.body parseado
+    R->>CT: delega request
+    CT->>S: nuevoLenguaje
+    S->>P: crear(nuevoLenguaje)
+    P->>D: push / persistir
+    D-->>P: resultado
+    P-->>S: creado
+    S-->>CT: creado
+    CT-->>C: 201 + JSON
+```
+
+#### 54.6 No confiar en el frontend
+
+Que un frontend valide un formulario mejora la experiencia del usuario, pero **no protege al backend**.
+
+Un cliente puede:
+
+```text
+modificar la request
+usar otro cliente HTTP
+llamar la API directamente
+enviar tipos inesperados
+omitir campos
+agregar campos no previstos
+```
+
+Por eso el backend valida nuevamente los datos que cruzan su frontera.
+
+La regla útil es:
+
+```text
+todo dato externo
+→ no confiable hasta ser validado
+```
+
+Esta validación debe distinguirse de la protección específica contra inyección SQL. Cuando se utilice SQL, la defensa principal para valores consiste en **consultas parametrizadas/prepared statements**; validar entradas es una capa adicional, pero no vuelve segura una query construida concatenando strings.
+
+### 55. Depuración por capas: localizar dónde se rompe el contrato
+
+La arquitectura agrega archivos, pero también crea **puntos de observación** mucho más claros.
+
+Cuando un dato llega como `undefined`, no conviene revisar todas las capas a la vez. Se rastrea el valor en orden.
+
+#### 55.1 Diagnóstico desde la frontera hacia adentro
+
+Para un `POST`:
+
+```text
+1. ¿la request llegó al Router?
+2. ¿el método y path coinciden?
+3. ¿el middleware de parsing se ejecutó?
+4. ¿qué valor tiene req.body en el Controller?
+5. ¿qué argumento recibió el Service?
+6. ¿qué argumento recibió el Repository?
+7. ¿qué devolvió la fuente de datos?
+8. ¿qué respuesta construyó el Controller?
+```
+
+Logs temporales pueden demostrar el recorrido:
+
+```text
+[router] entrando POST /api/lenguajes/frontend
+[controller] body = {...}
+[service] creando lenguaje
+[repository] insertando {...}
+[repository] creación terminada
+[controller] enviando 201
+```
+
+El objetivo no es llenar el proyecto de `console.log`, sino usarlos para responder una pregunta concreta: **¿en qué frontera cambia el valor esperado por uno incorrecto?**
+
+#### 55.2 Si ya está roto arriba, no investigar abajo
+
+Supóngase:
+
+```javascript
+// controller
+console.log(req.body); // undefined
+```
+
+En ese punto ya se sabe que:
+
+```text
+Service
+Repository
+Base de datos
+```
+
+no pueden ser la causa original de que `req.body` esté vacío. Solo recibirán el valor incorrecto que les llegue.
+
+Esto reduce drásticamente el espacio de búsqueda.
+
+#### 55.3 Error de routing vs. request sin respuesta
+
+Dos síntomas distintos:
+
+```text
+404 / Cannot POST ...
+→ normalmente la combinación método + ruta no tiene un handler coincidente
+
+request cargando indefinidamente
+→ algún handler recibió la request pero no terminó la response ni continuó correctamente
+```
+
+Por ejemplo, registrar:
+
+```javascript
+router.post("/", (req, res) => {
+  console.log("entró");
+});
+```
+
+hace match, pero no envía respuesta. El cliente queda esperando.
+
+Al separar Router y Controller, una causa típica es olvidar delegar:
+
+```javascript
+router.post("/", frontendController.createFrontendLanguage);
+```
+
+#### 55.4 Los archivos `.http` convierten requests en casos reproducibles
+
+Un navegador es suficiente para muchos `GET`, pero no resulta cómodo para construir bodies y métodos distintos.
+
+Un archivo de prueba puede mantener solicitudes reproducibles junto al proyecto:
+
+```http
+### Obtener lenguajes frontend
+GET http://127.0.0.1:3000/api/lenguajes/frontend
+
+### Crear lenguaje frontend
+POST http://127.0.0.1:3000/api/lenguajes/frontend
+Content-Type: application/json
+
+{
+  "id": 5,
+  "nombre": "Astro",
+  "turno": "noche",
+  "comision": "C",
+  "cantidadAlumnos": 19
+}
+```
+
+Esto transforma una prueba manual en un pequeño documento ejecutable del contrato:
+
+```text
+método
++ URL
++ headers
++ body
+```
+
+Cuando algo falla, se puede repetir exactamente la misma request después de cada cambio.
+
+#### 55.5 Código comentado no es control de versiones
+
+Durante una refactorización es tentador conservar la implementación vieja comentándola:
+
+```javascript
+// app.get(... implementación anterior ...)
+```
+
+Si el código dejó de formar parte del sistema, mantener bloques grandes comentados añade ruido y crea dudas sobre cuál versión es válida.
+
+La versión anterior ya debería estar preservada por Git:
+
+```text
+código actual
+→ solo lo que realmente ejecuta/describe la aplicación
+
+historial de Git
+→ versiones anteriores recuperables
+```
+
+Los comentarios son útiles para explicar **por qué** existe una decisión no obvia; no deberían utilizarse como depósito de código muerto.
+
+**Fuentes oficiales de actualización técnica:** documentación de Node.js (`node:http`, `node:fs`, modo `--watch`, CommonJS), documentación de NPM (`package.json`, dependencias e instalación), documentación de Express 5.x (Request/Response API, routing, `express.Router`, `app.use`, `express.json` y middleware), especificaciones HTTP/JSON (RFC 9110 y RFC 8259), MDN para semántica de JavaScript/HTTP y OWASP para validación e inyección SQL. Las explicaciones de clase se conservaron como eje temático; los detalles actuales se normalizaron contra esas referencias.
 
