@@ -118,6 +118,7 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [26.4 Sistemas de módulos: CommonJS vs. ES Modules](#264-sistemas-de-módulos-commonjs-vs-es-modules)
     - [27. NPM (*Node Package Manager*)](#27-npm-node-package-manager)
       - [27.1 Comandos más usados](#271-comandos-más-usados)
+        - [Verificar el estado del proyecto desde `package.json`](#verificar-el-estado-del-proyecto-desde-packagejson)
       - [27.2 Scripts de NPM](#272-scripts-de-npm)
       - [27.3 Cómo leer la página de un paquete en npmjs.com](#273-cómo-leer-la-página-de-un-paquete-en-npmjscom)
     - [28. Módulos locales: crear y exportar código propio](#28-módulos-locales-crear-y-exportar-código-propio)
@@ -147,6 +148,7 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [35.1 Por qué hace falta encadenar](#351-por-qué-hace-falta-encadenar)
       - [35.2 La regla más importante: `return` dentro del `.then`](#352-la-regla-más-importante-return-dentro-del-then)
       - [35.3 Un único `.catch` para toda la cadena](#353-un-único-catch-para-toda-la-cadena)
+      - [35.4 Separar operaciones asincrónicas de la función que las coordina](#354-separar-operaciones-asincrónicas-de-la-función-que-las-coordina)
   - [Ejemplo práctico — Promesas encadenadas: validar stock antes de vender](#ejemplo-práctico--promesas-encadenadas-validar-stock-antes-de-vender)
     - [36. `async`/`await`: azúcar sintáctico para trabajar con promesas](#36-asyncawait-azúcar-sintáctico-para-trabajar-con-promesas)
       - [36.1 Sintaxis básica](#361-sintaxis-básica)
@@ -183,6 +185,12 @@ Apuntes de referencia de la materia **Desarrollo de Sistemas Web - BackEnd**, IF
       - [46.1 De una ruta fija a una API consultable](#461-de-una-ruta-fija-a-una-api-consultable)
       - [46.2 Estructura mínima del ejemplo de API de lenguajes](#462-estructura-mínima-del-ejemplo-de-api-de-lenguajes)
       - [46.3 Recorrido completo de una petición](#463-recorrido-completo-de-una-petición)
+      - [46.4 Secuencia segura para armar y comprobar un servidor desde cero](#464-secuencia-segura-para-armar-y-comprobar-un-servidor-desde-cero)
+    - [47. Integración — De un parámetro de ruta a una operación asincrónica](#47-integración--de-un-parámetro-de-ruta-a-una-operación-asincrónica)
+      - [47.1 El parámetro de ruta es entrada, no lógica de búsqueda](#471-el-parámetro-de-ruta-es-entrada-no-lógica-de-búsqueda)
+      - [47.2 Validar la existencia antes de ejecutar la operación dependiente](#472-validar-la-existencia-antes-de-ejecutar-la-operación-dependiente)
+      - [47.3 Conectar la promesa con la respuesta HTTP](#473-conectar-la-promesa-con-la-respuesta-http)
+      - [47.4 Puente conceptual completo](#474-puente-conceptual-completo)
 
 ---
 
@@ -1042,7 +1050,7 @@ Existen tres formas de declarar variables en JavaScript:
 |---|---|---|
 | `var` | Sí | De función (*function scope*) — histórica, hoy se evita salvo casos puntuales |
 | `let` | Sí | De bloque (*block scope*) — la recomendada por defecto |
-| `const` | No (el valor es inalterable) | De bloque (*block scope*) |
+| `const` | No (el *binding* no se puede reasignar) | De bloque (*block scope*) |
 
 **Sintaxis:** `TipoDeVariable Nombre = Valor;`
 
@@ -1080,7 +1088,7 @@ console.log(miNumero);       // undefined (no da error)
 console.log(typeof miNumero); // 'undefined'
 ```
 
-Con `const` esto **no se puede hacer**: como es un valor inalterable, tiene que declararse **con** su valor asignado en el mismo momento — si se intenta declarar una `const` vacía, tira un error de sintaxis (*"Missing initializer in const declaration"*).
+Con `const` esto **no se puede hacer**: una constante debe inicializarse en la misma declaración y su *binding* no puede reasignarse después. Eso no significa que un objeto o array declarado con `const` sea inmutable: sus propiedades o elementos pueden modificarse mientras la variable siga apuntando al mismo objeto. Si se intenta declarar una `const` vacía, se produce un error de sintaxis (*"Missing initializer in const declaration"*).
 
 **Concatenación clásica vs. template literals:** para armar un texto combinando strings fijos con variables, la forma clásica es concatenar con `+`:
 
@@ -1312,7 +1320,9 @@ La razón se explica en la sección 20.4: lo que la constante fija es la **refer
 
 Uno de los conceptos más importantes para entender el comportamiento de los objetos en JavaScript — y una fuente muy común de errores difíciles de detectar cuando no está claro.
 
-**Tipos primitivos: paso por valor.** Al asignar una variable de tipo primitivo (`string`, `number`, `boolean`, `undefined`, `null`, etc.) a otra, JavaScript **copia el valor**. A partir de ese momento las dos variables son completamente independientes: modificar una no afecta a la otra.
+**Precisión terminológica:** en JavaScript las asignaciones y los argumentos de función se transmiten **por valor**. La diferencia es qué clase de valor se copia. Para un primitivo se copia el valor primitivo; para un objeto se copia un **valor de referencia** que identifica al mismo objeto. Por eso suele decirse informalmente “los objetos se pasan por referencia”, aunque la formulación técnica más precisa es “se copia la referencia por valor”.
+
+**Tipos primitivos.** Al asignar una variable de tipo primitivo (`string`, `number`, `boolean`, `undefined`, `null`, etc.) a otra, JavaScript copia ese valor. A partir de ese momento las dos variables son completamente independientes: modificar una no afecta a la otra.
 
 ```javascript
 let mes = "febrero";
@@ -1324,7 +1334,7 @@ console.log(mes);     // "febrero"   → no cambió
 console.log(mes2);    // "diciembre"
 ```
 
-**Objetos: paso por referencia.** Los objetos se comportan distinto. Al crear un objeto, JavaScript lo guarda en un espacio de memoria — una "caja" — y la variable no contiene el objeto en sí, sino una **referencia** a esa caja (en clase también se la nombró como "puntero" o "flecha": los tres términos apuntan a lo mismo, el mecanismo por el cual una variable señala hacia la caja de memoria de un objeto sin contener el objeto en sí). Al asignar un objeto ya existente a otra variable (`objeto2 = objeto1`), **no se copia el contenido de la caja: se copia la referencia**. Las dos variables terminan apuntando a la misma caja.
+**Objetos: se copia un valor de referencia.** Al crear un objeto, puede pensarse de forma pedagógica que vive en una “caja” de memoria y que la variable contiene un valor que permite referenciar esa caja. Al asignar un objeto ya existente a otra variable (`objeto2 = objeto1`), **no se clona el contenido del objeto: se copia el valor de referencia**. Las dos variables terminan observando el mismo objeto.
 
 ```javascript
 let objeto1 = { id: 1 };
@@ -1706,7 +1716,7 @@ Los parámetros, al momento de ejecutarse la función, se comportan como variabl
 
 En JavaScript, **las funciones son objetos**. Esto tiene una consecuencia importante: se pueden guardar en variables o constantes, y también se pueden **pasar como argumento a otra función**.
 
-Una función que recibe otra función como argumento (o que retorna una función) se conoce como **callback** (retrollamada). Es uno de los conceptos centrales de JavaScript — se va a retomar con más profundidad más adelante, al ver sincronía y asincronía.
+La función que **se pasa** como argumento para que otra la invoque se denomina **callback** (retrollamada). La función que la **recibe** —o que retorna otra función— es una **función de orden superior** (*higher-order function*). Esta distinción se vuelve especialmente útil al leer Express: el *handler* que se entrega a `app.get(...)` es una callback, mientras que `app.get(...)` cumple el rol de función de orden superior al recibirla.
 
 ```javascript
 // fB = Función B
@@ -2447,7 +2457,33 @@ Esta sintaxis aparece con frecuencia al importar únicamente partes concretas de
 const { createServer } = require("node:http");
 ```
 
-`require("node:http")` devuelve el objeto exportado por el módulo y `{ createServer }` extrae solo la propiedad `createServer` en una constante del mismo nombre.
+`require("node:http")` devuelve el valor exportado por el módulo y `{ createServer }` extrae la propiedad `createServer` en una constante del mismo nombre.
+
+La misma sintaxis se utiliza con módulos locales CommonJS:
+
+```javascript
+// src/inscripcion.js
+function ejecutarInscripcion(alumno, materia) {
+  // ...
+}
+
+module.exports = { ejecutarInscripcion };
+```
+
+```javascript
+const { ejecutarInscripcion } = require("./src/inscripcion");
+```
+
+Conceptualmente ocurren **dos pasos distintos**:
+
+1. `require("./src/inscripcion")` resuelve y carga el módulo, y devuelve su `module.exports`;
+2. `{ ejecutarInscripcion }` desestructura ese valor y asigna la propiedad a una constante local.
+
+Las llaves del lado izquierdo **no crean un objeto nuevo para exportar**: forman parte de la sintaxis de destructuring.
+
+> ⚠️ Desestructurar un `require(...)` **no hace que CommonJS cargue solo esa propiedad**. El módulo se resuelve y ejecuta normalmente; la desestructuración únicamente selecciona qué propiedad del valor devuelto se guarda en una variable local.
+
+> 📌 **Para el examen:** distinguir `const modulo = require("./modulo")` de `const { propiedad } = require("./modulo")`, y recordar que la propiedad desestructurada debe existir en la forma real de `module.exports`.
 
 ---
 
@@ -2801,6 +2837,47 @@ Node.js también trae, además del entorno de ejecución en sí, un conjunto de 
 Como convención de la terminal (no específica de NPM): los flags de una sola letra se escriben con un solo guión (`-D`, `-g`), y los flags de palabra completa con doble guión (`--save-dev`, `--global`) — por eso `-D` y `--save-dev` son equivalentes, al igual que `-g` y `--global`.
 
 Al instalar o desinstalar un paquete, NPM además **audita** el resto de las dependencias ya instaladas en el proyecto, revisando si hay actualizaciones o vulnerabilidades reportadas en alguna de ellas — no solo evalúa el paquete que se está por instalar.
+
+##### Verificar el estado del proyecto desde `package.json`
+
+Durante el armado inicial de un backend conviene mirar `package.json` después de instalar cada dependencia. El archivo funciona como **manifiesto del paquete/proyecto**: registra metadatos, scripts y las dependencias declaradas que permiten reconstruir el entorno.
+
+Ejemplo mínimo:
+
+```json
+{
+  "dependencies": {
+    "express": "^5.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}
+```
+
+La distinción expresa una intención:
+
+- `express` forma parte del código que la aplicación necesita para funcionar;
+- `nodemon` es una herramienta utilizada durante el desarrollo y por eso corresponde a `devDependencies`.
+
+Si un paquete se instaló en la categoría equivocada, no hace falta borrar `node_modules` a mano para “arreglarlo”. Se puede desinstalar y volver a instalar con el flag adecuado:
+
+```bash
+npm uninstall nodemon
+npm install -D nodemon
+```
+
+Después se verifica nuevamente `package.json`.
+
+Eliminar `node_modules` tampoco elimina la declaración de dependencias del proyecto. Mientras se conserven `package.json` —y normalmente `package-lock.json`— las dependencias se pueden reinstalar con:
+
+```bash
+npm install
+```
+
+Por eso `node_modules` es regenerable, mientras que `package.json` forma parte de la definición del proyecto y debe conservarse.
+
+> 📌 **Para el examen:** `npm init` / `npm init -y` generan el paquete, `package.json` es el archivo central donde se declara su configuración y sus dependencias, y debe distinguirse `dependencies` de `devDependencies`.
 
 #### 27.2 Scripts de NPM
 
@@ -3645,6 +3722,70 @@ Dentro del `.then` que encadena la segunda promesa, hace falta **retornar su eje
 
 Un solo `.catch`, al final de la cadena, es suficiente para capturar el error de **cualquiera** de las promesas encadenadas — no hace falta (ni es la forma habitual) un `.catch` por cada `.then`. Si la primera promesa se rechaza, la ejecución salta directamente a ese `.catch`, sin pasar por ninguno de los `.then` que siguen; si la primera se resuelve pero la segunda se rechaza, pasa exactamente lo mismo.
 
+#### 35.4 Separar operaciones asincrónicas de la función que las coordina
+
+Cuando dos operaciones tienen responsabilidades diferentes, conviene que cada una conserve su propia función y que una tercera función describa **el proceso completo**.
+
+Ejemplo conceptual de inscripción de un alumno:
+
+```javascript
+function validarCorrelativas(alumno) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (!alumno.debeCorrelativa) {
+        resolve(alumno);
+      } else {
+        reject(new Error("El alumno debe una correlativa"));
+      }
+    }, 2000);
+  });
+}
+
+function inscribirAlumno(alumno, materia) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      alumno.inscriptoMaterias.push(materia);
+      resolve(alumno);
+    }, 5000);
+  });
+}
+```
+
+Las funciones anteriores tienen responsabilidades separadas:
+
+- `validarCorrelativas` decide si el proceso puede continuar;
+- `inscribirAlumno` modifica la inscripción;
+- ninguna de las dos necesita saber desde qué ruta HTTP se las invoca.
+
+La coordinación se concentra en otra función:
+
+```javascript
+function ejecutarInscripcion(alumno, materia) {
+  return validarCorrelativas(alumno)
+    .then(alumnoValidado => {
+      return inscribirAlumno(alumnoValidado, materia);
+    });
+}
+```
+
+El segundo `return` es el puente entre ambas promesas: la inscripción pasa a formar parte de la misma cadena y solo comienza si la validación se resolvió correctamente.
+
+El primer `return` también es importante. Hace que **`ejecutarInscripcion` retorne la cadena completa**, permitiendo que otra capa pueda hacer:
+
+```javascript
+ejecutarInscripcion(alumno, materia)
+  .then(resultado => {
+    // reaccionar al éxito
+  })
+  .catch(error => {
+    // reaccionar a cualquier rechazo de la cadena
+  });
+```
+
+Esta separación prepara el código para integrarlo con Express: el handler de la ruta puede ocuparse de HTTP, mientras que `ejecutarInscripcion` se ocupa del proceso de negocio.
+
+> 📌 **Para el examen:** recordar la diferencia entre declarar una callback y ejecutarla, parámetro vs. argumento, y especialmente el `return` de la promesa dentro del `.then` cuando la operación siguiente depende de la anterior.
+
 ---
 
 ## Ejemplo práctico — Promesas encadenadas: validar stock antes de vender
@@ -3948,7 +4089,7 @@ const express = require("express");
 const app = express();
 ```
 
-`express` referencia la función exportada por el módulo; `express()` la invoca y devuelve el objeto aplicación. Sobre `app` se registran rutas y finalmente se inicia la escucha.
+`express` referencia la función exportada por el módulo; `express()` la invoca y devuelve la **aplicación Express**. Técnicamente, ese valor es una función callable enriquecida con métodos y propiedades (`get`, `use`, `listen`, etc.), no un objeto ordinario. Sobre `app` se registran rutas/middleware y finalmente se inicia la escucha.
 
 ```javascript
 const express = require("express");
@@ -4261,7 +4402,7 @@ Cuando una petición falla, conviene diagnosticar de lo más general a lo más e
 
 1. **¿El proceso está ejecutándose?** Revisar la terminal y el mensaje de inicio.
 2. **¿Host y puerto son correctos?** Una petición al puerto equivocado nunca llegará a esa instancia.
-3. **¿Express responde?** Si una ruta inexistente devuelve el `404` de Express, al menos hay comunicación con el servidor.
+3. **¿Express responde?** Si aparece una respuesta de Express como `Cannot GET /ruta`, la conexión sí llegó al servidor: el problema está en la coincidencia de método/ruta o en la ausencia de ese endpoint. En cambio, un error de conexión rechazada indica que no se alcanzó ningún proceso escuchando en esa combinación de host y puerto.
 4. **¿Coinciden método y path?** `GET /api/lenguajes` no es lo mismo que `GET /api/lenguaje`.
 5. **¿El handler lanza una excepción?** Un fallo interno suele terminar en `500`.
 6. **¿Se envió una respuesta?** Si queda en estado pendiente, revisar los caminos del handler.
@@ -4822,6 +4963,197 @@ flowchart LR
 
 La utilidad pedagógica de este recorrido es mostrar que Express no reemplaza los conceptos anteriores: **los coordina**. El handler de una ruta sigue siendo una callback; los datos siguen siendo objetos y arrays; la búsqueda sigue usando métodos de array; JSON sigue siendo la representación de intercambio; HTTP sigue definiendo la request y la response.
 
+#### 46.4 Secuencia segura para armar y comprobar un servidor desde cero
+
+Cuando se construye un servidor bajo presión conviene validar el proyecto por etapas, en vez de escribir toda la lógica y recién probar al final.
+
+```text
+1. npm init / npm init -y
+2. instalar dependencias
+3. verificar package.json
+4. require("express")
+5. const app = express()
+6. definir host y puerto
+7. app.listen(...)
+8. ejecutar y comprobar que el proceso escucha
+9. recién después agregar rutas y lógica de negocio
+```
+
+Código mínimo:
+
+```javascript
+const express = require("express");
+
+const app = express();
+const HOSTNAME = "127.0.0.1";
+const PORT = 3000;
+
+app.listen(PORT, HOSTNAME, () => {
+  console.log(`Servidor en http://${HOSTNAME}:${PORT}`);
+});
+```
+
+Si al visitar una ruta todavía no registrada Express responde con un `Cannot GET /...`, esa respuesta es útil: demuestra que el cliente **sí alcanzó a Express**. Todavía falta implementar la ruta, pero host, puerto y proceso ya quedaron verificados.
+
+A partir de ahí se agregan los endpoints:
+
+```javascript
+app.get("/", (req, res) => {
+  return res.status(200).send("Servidor funcionando");
+});
+```
+
+Esta estrategia reduce el espacio de búsqueda de errores: primero se valida infraestructura básica; después routing; después datos y lógica.
+
+> 📌 **Para el examen:** el flujo mínimo es `require("express")` → `express()` → `app.listen(...)`. Cuando se proporciona `hostname`, el orden relevante es **puerto, host, callback**.
+
+### 47. Integración — De un parámetro de ruta a una operación asincrónica
+
+Las rutas parametrizadas dejan de ser un tema aislado cuando el valor capturado se utiliza para localizar un objeto y, a partir de ese objeto, iniciar un proceso asincrónico.
+
+Supóngase un módulo de alumnos con esta forma:
+
+```javascript
+const alumnos = [
+  {
+    nombre: "Pepe",
+    edad: 23,
+    inscriptoMaterias: ["Backend"],
+    debeCorrelativa: false,
+  },
+  // ...
+];
+
+module.exports = { alumnos };
+```
+
+y un módulo de inscripción que exporta:
+
+```javascript
+module.exports = { ejecutarInscripcion };
+```
+
+La importación con destructuring deja disponibles exactamente las piezas que necesita el servidor:
+
+```javascript
+const { alumnos } = require("./src/instituto");
+const { ejecutarInscripcion } = require("./src/inscripcion");
+```
+
+#### 47.1 El parámetro de ruta es entrada, no lógica de búsqueda
+
+Una ruta como:
+
+```javascript
+app.get("/alumnos/:nombre", handler);
+```
+
+captura el segmento variable en:
+
+```javascript
+req.params.nombre;
+```
+
+Ese valor es solamente **entrada proveniente de la request**. Express no busca automáticamente un alumno en el array.
+
+El programa debe decidir qué criterio aplicar:
+
+```javascript
+const nombreBuscado = req.params.nombre.toLocaleLowerCase();
+
+const alumnoEncontrado = alumnos.find(
+  alumno => alumno.nombre.toLocaleLowerCase() === nombreBuscado
+);
+```
+
+`find` es apropiado cuando interesa un único alumno: retorna el primer elemento coincidente o `undefined`.
+
+#### 47.2 Validar la existencia antes de ejecutar la operación dependiente
+
+No debe invocarse la inscripción con un alumno inexistente:
+
+```javascript
+if (!alumnoEncontrado) {
+  return res.status(404).json({
+    error: "Alumno no encontrado",
+  });
+}
+```
+
+Solo después se inicia la operación asincrónica:
+
+```javascript
+ejecutarInscripcion(alumnoEncontrado, "Ingeniería de Software");
+```
+
+La secuencia conceptual queda:
+
+```text
+req.params.nombre
+→ buscar en el array
+→ ¿existe?
+   ├─ no → 404
+   └─ sí → ejecutar inscripción
+```
+
+#### 47.3 Conectar la promesa con la respuesta HTTP
+
+Si `ejecutarInscripcion(...)` retorna la cadena de promesas, el handler puede esperar su resultado y traducirlo a una respuesta HTTP:
+
+```javascript
+app.get("/alumnos/:nombre", (req, res) => {
+  const nombreBuscado = req.params.nombre.toLocaleLowerCase();
+
+  const alumnoEncontrado = alumnos.find(
+    alumno => alumno.nombre.toLocaleLowerCase() === nombreBuscado
+  );
+
+  if (!alumnoEncontrado) {
+    return res.status(404).json({
+      error: "Alumno no encontrado",
+    });
+  }
+
+  return ejecutarInscripcion(
+    alumnoEncontrado,
+    "Ingeniería de Software"
+  )
+    .then(alumnoActualizado => {
+      return res.status(200).json(alumnoActualizado);
+    })
+    .catch(error => {
+      return res.status(400).json({
+        error: error.message,
+      });
+    });
+});
+```
+
+El ejemplo usa `400` para representar pedagógicamente una falla de la regla de negocio; en una API real el código exacto forma parte del contrato y debe elegirse según la semántica del caso.
+
+Además, la práctica utiliza `GET` para ejercitar parámetros de ruta. En una API real, una operación que **modifica estado** —como inscribir una materia— no debería modelarse como `GET`: corresponde utilizar un método apropiado para la operación, por ejemplo `POST`, según el contrato diseñado.
+
+#### 47.4 Puente conceptual completo
+
+Esta práctica conecta conceptos vistos en momentos distintos:
+
+```mermaid
+flowchart LR
+    O[Objeto con arrays] --> M[module.exports]
+    M --> R[require + destructuring]
+    C[Cliente] --> E[Ruta Express]
+    E --> P[req.params]
+    R --> F[Array.find]
+    P --> F
+    F --> Q{¿Alumno existe?}
+    Q -- No --> NF[404]
+    Q -- Sí --> COORD[ejecutarInscripcion]
+    COORD --> PR[Cadena de promesas]
+    PR --> RESP[res.status().json()]
+    RESP --> C
+```
+
+La ruta administra el intercambio HTTP; `find` resuelve la búsqueda en memoria; la función coordinadora expresa el proceso asincrónico; y la respuesta HTTP comunica el resultado al cliente. Separar esas responsabilidades es el primer paso hacia una arquitectura con capas más definidas.
 
 **Fuentes oficiales de actualización técnica:** documentación de Node.js (`node:http`, `node:fs`, modo `--watch`, CommonJS) y documentación de Express 5.x (API, routing, respuestas y manejo de errores). Las explicaciones de clase se conservaron como eje temático; los detalles actuales se normalizaron contra esas referencias.
 
